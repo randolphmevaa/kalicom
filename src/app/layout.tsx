@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     siteName: "Kalicom",
     images: [
       {
-        url: "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png",
+        url: "Artboard 4.svg",
         width: 800,
         height: 600,
         alt: "Logo Kalicom",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     description:
       "Découvrez nos solutions.",
     images: [
-      "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png",
+      "Artboard 4.svg",
     ],
   },
   // Optionally, add other metadata fields like authors, publisher, etc.
