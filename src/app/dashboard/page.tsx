@@ -13,9 +13,9 @@ import {
   LineChart,
   Line,
   CartesianGrid,
-  Legend,
+  // Legend,
   AreaChart,
-  Area
+  Area,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -27,72 +27,15 @@ import {
   FiActivity,
   FiClock,
   FiPhoneForwarded,
-  FiCalendar,
-  FiFilter
+  // FiCalendar,
+  FiFilter,
+  FiArrowRight,
+  FiMousePointer,
 } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
-// import dynamic from 'next/dynamic';
-
-// type WithChildren<P = object> = P & { children?: ReactNode };
-
-// -------------------------------------------------------------------
-// Define a type for geography items (adjust properties as needed)
-// type Geo = {
-//   rsmKey: string;
-//   [key: string]: unknown;
-// };
-
-// -------------------------------------------------------------------
-// Define prop types for react-simple-maps components as type aliases
-// type ComposableMapProps = WithChildren<{ width: number; height: number }>;
-
-// type ZoomableGroupProps = WithChildren<{
-//   zoom: number;
-//   center: number[];
-//   onMoveEnd: (params: { zoom: number; coordinates: number[] }) => void;
-// }>;
-
-// type GeographiesProps = WithChildren<{
-//   geography: string;
-//   children: (props: { geographies: Geo[] }) => ReactNode;
-// }>;
-
-// interface GeographyProps {
-//   geography: unknown;
-//   fill?: string;
-//   stroke?: string;
-//   style?: {
-//     default: CSSProperties;
-//     hover: CSSProperties;
-//     pressed: CSSProperties;
-//   };
-// }
-
-// type MarkerProps = WithChildren<{
-//   coordinates: number[];
-// }>;
-
-// -------------------------------------------------------------------
-// Dynamic imports with proper types (using ComponentType)
-// const WorldMap = dynamic<React.ComponentType<ComposableMapProps>>(() =>
-//   import('react-simple-maps').then(mod => mod.ComposableMap), { ssr: false }
-// );
-
-// const ZoomableGroup = dynamic<React.ComponentType<ZoomableGroupProps>>(() =>
-//   import('react-simple-maps').then(mod => mod.ZoomableGroup), { ssr: false }
-// );
-
-// const Geographies = dynamic<React.ComponentType<GeographiesProps>>(() =>
-//   import('react-simple-maps').then(mod => mod.Geographies), { ssr: false }
-// );
-
-// const Geography = dynamic<React.ComponentType<GeographyProps>>(() =>
-//   import('react-simple-maps').then(mod => mod.Geography), { ssr: false }
-// );
-
-// const Marker = dynamic<React.ComponentType<MarkerProps>>(() =>
-//   import('react-simple-maps').then(mod => mod.Marker), { ssr: false }
-// );
+import 'mapbox-gl/dist/mapbox-gl.css';
+import EnhancedGeographicMap from "./EnhancedGeographicMap"
+import { Cell } from 'recharts';
 
 // -------------------------------------------------------------------
 // Other interfaces
@@ -102,6 +45,16 @@ interface DashboardCardProps {
   icon: ReactNode;
   trend: string;
   chart: ReactNode;
+}
+
+// Extend the ActiveCall interface to include a "staff" property.
+interface ActiveCall {
+  id: number;
+  number: string;
+  duration: string;
+  status: 'answered' | 'ringing' | 'onHold' | string;
+  location: string;
+  staff: string; // New property for staff info
 }
 
 interface SystemHealthIndicatorProps {
@@ -132,12 +85,12 @@ interface ChartClickData {
   activePayload?: { payload: CallData }[];
 }
 
-interface CallLocation {
-  name: string;
-  coordinates: number[];
-  calls: number;
-  radius: number;
-}
+// interface CallLocation {
+//   name: string;
+//   coordinates: number[];
+//   calls: number;
+//   radius: number;
+// }
 
 interface TimePeriod {
   id: string;
@@ -152,18 +105,18 @@ const callData: CallData[] = [
   // ... more data if needed
 ];
 
-const callLocations: CallLocation[] = [
-  { name: 'Paris', coordinates: [2.3522, 48.8566], calls: 1560, radius: 18 },
-  { name: 'New York', coordinates: [-74.0060, 40.7128], calls: 1250, radius: 16 },
-  { name: 'London', coordinates: [-0.1278, 51.5074], calls: 980, radius: 15 },
-  { name: 'Berlin', coordinates: [13.4050, 52.5200], calls: 890, radius: 14 },
-  { name: 'Tokyo', coordinates: [139.6917, 35.6895], calls: 670, radius: 13 },
-  { name: 'Sydney', coordinates: [151.2093, -33.8688], calls: 540, radius: 12 },
-  { name: 'São Paulo', coordinates: [-46.6333, -23.5505], calls: 480, radius: 11 },
-  { name: 'Mumbai', coordinates: [72.8777, 19.0760], calls: 420, radius: 10 },
-  { name: 'Dubai', coordinates: [55.2708, 25.2048], calls: 390, radius: 9 },
-  { name: 'Toronto', coordinates: [-79.3832, 43.6532], calls: 350, radius: 8 },
-];
+// const callLocations: CallLocation[] = [
+//   { name: 'Paris', coordinates: [2.3522, 48.8566], calls: 1560, radius: 18 },
+//   { name: 'New York', coordinates: [-74.0060, 40.7128], calls: 1250, radius: 16 },
+//   { name: 'London', coordinates: [-0.1278, 51.5074], calls: 980, radius: 15 },
+//   { name: 'Berlin', coordinates: [13.4050, 52.5200], calls: 890, radius: 14 },
+//   { name: 'Tokyo', coordinates: [139.6917, 35.6895], calls: 670, radius: 13 },
+//   { name: 'Sydney', coordinates: [151.2093, -33.8688], calls: 540, radius: 12 },
+//   { name: 'São Paulo', coordinates: [-46.6333, -23.5505], calls: 480, radius: 11 },
+//   { name: 'Mumbai', coordinates: [72.8777, 19.0760], calls: 420, radius: 10 },
+//   { name: 'Dubai', coordinates: [55.2708, 25.2048], calls: 390, radius: 9 },
+//   { name: 'Toronto', coordinates: [-79.3832, 43.6532], calls: 350, radius: 8 },
+// ];
 
 const timePeriods: TimePeriod[] = [
   { id: 'day', label: 'Jour' },
@@ -171,6 +124,8 @@ const timePeriods: TimePeriod[] = [
   { id: 'month', label: 'Mois' },
   { id: 'year', label: 'Année' },
 ];
+
+const MotionCell = motion(Cell);
 
 // -------------------------------------------------------------------
 // Dashboard Card component
@@ -191,7 +146,13 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ title, value, icon, trend
 );
 
 // System Health Indicator component
-const SystemHealthIndicator: React.FC<SystemHealthIndicatorProps> = ({ label, value, color, icon, suffix = '' }) => (
+const SystemHealthIndicator: React.FC<SystemHealthIndicatorProps> = ({
+  label,
+  value,
+  color,
+  icon,
+  suffix = '',
+}) => (
   <div className="flex items-center">
     <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
       {icon}
@@ -199,7 +160,8 @@ const SystemHealthIndicator: React.FC<SystemHealthIndicatorProps> = ({ label, va
     <div className="ml-4">
       <div className="text-sm">{label}</div>
       <div className="text-lg font-bold">
-        {value}{suffix}
+        {value}
+        {suffix}
       </div>
     </div>
   </div>
@@ -208,21 +170,24 @@ const SystemHealthIndicator: React.FC<SystemHealthIndicatorProps> = ({ label, va
 export default function PBXDashboard() {
   const router = useRouter();
   // Only the state value is needed (setter removed)
-  const [activeCalls] = useState<ActiveCall[]>([
-    { id: 1, number: '+33 6 12 34 56 78', duration: '00:02:45', status: 'answered', location: 'Paris' },
-    { id: 2, number: '+1 212 555 0199', duration: '00:01:23', status: 'ringing', location: 'New York' },
-    { id: 3, number: '+49 30 12345678', duration: '00:04:12', status: 'onHold', location: 'Berlin' },
-  ]);
+  // Update the initial activeCalls state with staff information.
+const [activeCalls] = useState<ActiveCall[]>([
+  { id: 1, number: '+33 6 12 34 56 78', duration: '00:02:45', status: 'answered', location: 'Paris', staff: 'John Doe' },
+  { id: 2, number: '+1 212 555 0199', duration: '00:01:23', status: 'ringing', location: 'New York', staff: 'Jane Smith' },
+  { id: 3, number: '+49 30 12345678', duration: '00:04:12', status: 'onHold', location: 'Berlin', staff: 'Carlos Garcia' },
+]);
 
   const [selectedPeriod, setSelectedPeriod] = useState('day');
   const [filteredData, setFilteredData] = useState<CallData[]>(callData);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedCallData, setSelectedCallData] = useState<CallData | null>(null);
-  const [ , setMapZoom] = useState(1);
-  const [ , setMapCenter] = useState<number[]>([0, 0]);
+  // const [, setMapZoom] = useState(1);
+  // const [, setMapCenter] = useState<number[]>([0, 0]);
 
   const totalCalls = callData.reduce((sum: number, item: CallData) => sum + item.appels, 0);
-  const totalDuration = callData.reduce((sum: number, item: CallData) => sum + (item.duree * item.appels), 0).toFixed(0);
+  const totalDuration = callData
+    .reduce((sum: number, item: CallData) => sum + item.duree * item.appels, 0)
+    .toFixed(0);
 
   useEffect(() => {
     // In a real app, filter based on the selected period.
@@ -236,10 +201,10 @@ export default function PBXDashboard() {
     }
   };
 
-  const handleResetMap = () => {
-    setMapZoom(1);
-    setMapCenter([0, 0]);
-  };
+  // const handleResetMap = () => {
+  //   setMapZoom(1);
+  //   setMapCenter([0, 0]);
+  // };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-20 min-h-screen">
@@ -260,12 +225,17 @@ export default function PBXDashboard() {
             </p>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-3 bg-gradient-to-r from-emerald-50 to-emerald-100 px-5 py-3 rounded-xl">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-sm font-semibold text-emerald-700">Syst&egrave;me optimal</span>
+            <div
+              className="flex items-center space-x-3 px-5 py-3 rounded-xl"
+              style={{
+                backgroundImage: 'linear-gradient(to right, rgba(75,178,246,0.2), rgba(0,74,200,0.2))',
+              }}
+            >
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#004AC8' }} />
+              <span className="text-sm font-semibold text-[#1B0353]">Syst&egrave;me optimal</span>
             </div>
             <button className="p-3 hover:bg-gray-100 rounded-xl transition-all active:scale-95">
-              <FiSettings className="text-gray-700 w-6 h-6" />
+              <FiSettings className="w-6 h-6 text-[#64748b]" />
             </button>
           </div>
         </div>
@@ -275,21 +245,21 @@ export default function PBXDashboard() {
           <DashboardCard
             title="Appels Actifs"
             value={activeCalls.length}
-            icon={<FiPhoneCall className="w-6 h-6 text-blue-600" />}
+            icon={<FiPhoneCall className="w-6 h-6 text-[#004AC8]" />}
             trend="+8.3%"
             chart={
               <ResponsiveContainer width="100%" height={80}>
                 <AreaChart data={filteredData.slice(-8)}>
                   <defs>
                     <linearGradient id="activeCallsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#004AC8" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#004AC8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area
                     type="monotone"
                     dataKey="appels"
-                    stroke="#3b82f6"
+                    stroke="#004AC8"
                     strokeWidth={2}
                     fill="url(#activeCallsGradient)"
                   />
@@ -301,12 +271,12 @@ export default function PBXDashboard() {
           <DashboardCard
             title="Nombre d'appels"
             value={totalCalls}
-            icon={<FiPhoneForwarded className="w-6 h-6 text-violet-600" />}
+            icon={<FiPhoneForwarded className="w-6 h-6 text-[#4BB2F6]" />}
             trend="+12.4%"
             chart={
               <ResponsiveContainer width="100%" height={80}>
                 <BarChart data={filteredData.slice(-6)}>
-                  <Bar dataKey="appels" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="appels" fill="#1B0353" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             }
@@ -315,7 +285,7 @@ export default function PBXDashboard() {
           <DashboardCard
             title="Dur&eacute;e d'appels"
             value={`${totalDuration} min`}
-            icon={<FiClock className="w-6 h-6 text-amber-600" />}
+            icon={<FiClock className="w-6 h-6 text-[#1B0353]" />}
             trend="+5.7%"
             chart={
               <ResponsiveContainer width="100%" height={80}>
@@ -323,7 +293,7 @@ export default function PBXDashboard() {
                   <Line
                     type="monotone"
                     dataKey="duree"
-                    stroke="#f59e0b"
+                    stroke="#4BB2F6"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -334,17 +304,26 @@ export default function PBXDashboard() {
 
           <DashboardCard
             title="Direct"
-            value={activeCalls.filter(call => call.status === 'answered').length}
-            icon={<FiUsers className="w-6 h-6 text-emerald-600" />}
+            value={activeCalls.filter((call) => call.status === 'answered').length}
+            icon={<FiUsers className="w-6 h-6 text-[#004AC8]" />}
             trend="Stable"
             chart={
               <div className="relative w-full h-full flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-emerald-300 flex items-center justify-center animate-pulse">
-                        <span className="text-lg font-bold text-emerald-700">
-                          {activeCalls.filter(call => call.status === 'answered').length}
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(75,178,246,0.2)' }}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(0,74,200,0.3)' }}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center animate-pulse"
+                        style={{ backgroundColor: '#1B0353' }}
+                      >
+                        <span className="text-lg font-bold text-white">
+                          {activeCalls.filter((call) => call.status === 'answered').length}
                         </span>
                       </div>
                     </div>
@@ -356,202 +335,185 @@ export default function PBXDashboard() {
         </div>
 
         {/* Enhanced Geographic Map */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white p-6 rounded-3xl shadow-xl mb-8 overflow-hidden"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-gray-800">R&eacute;partition G&eacute;ographique</h3>
-              <p className="text-sm text-gray-500">Visualisation en temps r&eacute;el des appels par localisation</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="px-4 py-2 bg-blue-50 rounded-lg text-blue-700 text-sm font-medium">
-                Total: {callLocations.reduce((sum: number, loc: CallLocation) => sum + loc.calls, 0)} appels
-              </div>
-              <button
-                onClick={handleResetMap}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 text-sm font-medium transition"
-              >
-                R&eacute;initialiser
-              </button>
-            </div>
-          </div>
-
-          <div className="border border-gray-100 rounded-2xl overflow-hidden bg-gray-50">
-            <div className="h-96">
-              {/* <WorldMap width={900} height={500}>
-                <ZoomableGroup
-                  zoom={mapZoom}
-                  center={mapCenter}
-                  onMoveEnd={({ zoom, coordinates }: { zoom: number; coordinates: number[] }) => {
-                    setMapZoom(zoom);
-                    setMapCenter(coordinates);
-                  }}
-                >
-                  <Geographies geography="/world-110m.json">
-                    {({ geographies }: { geographies: Geo[] }) =>
-                      geographies.map((geo: Geo) => (
-                        <Geography
-                          key={geo.rsmKey}
-                          geography={geo}
-                          fill="#E5E7EB"
-                          stroke="#D1D5DB"
-                          style={{
-                            default: { outline: 'none' },
-                            hover: { fill: '#F3F4F6', outline: 'none' },
-                            pressed: { outline: 'none' },
-                          }}
-                        />
-                      ))
-                    }
-                  </Geographies>
-
-                  {callLocations.map(({ name, coordinates, calls, radius }: CallLocation) => (
-                    <Marker key={name} coordinates={coordinates}>
-                      <circle
-                        r={radius}
-                        fill="#3b82f6"
-                        fillOpacity={0.7}
-                        stroke="#2563eb"
-                        strokeWidth={1}
-                      />
-                      <circle
-                        r={radius}
-                        fill="transparent"
-                        stroke="#93c5fd"
-                        strokeWidth={2}
-                        strokeOpacity={0.3}
-                        className="animate-ping"
-                      />
-                      <text
-                        textAnchor="middle"
-                        y={-radius - 5}
-                        style={{
-                          fontFamily: 'system-ui',
-                          fill: '#1e40af',
-                          fontSize: 10,
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        {name}
-                      </text>
-                      <text
-                        textAnchor="middle"
-                        y={-radius - 18}
-                        style={{ fontFamily: 'system-ui', fill: '#3b82f6', fontSize: 8 }}
-                      >
-                        {calls} appels
-                      </text>
-                    </Marker>
-                  ))}
-                </ZoomableGroup>
-              </WorldMap> */}
-            </div>
-          </div>
-        </motion.div>
+        <EnhancedGeographicMap />
 
         {/* Enhanced Analytics with Filtering */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+         {/* Enhanced Call Performance Analytics */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white p-6 rounded-3xl shadow-xl overflow-hidden"
+            className="relative bg-white p-6 rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
           >
-            <div className="flex flex-wrap items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Performance des Appels</h3>
-              <div className="flex space-x-2 mt-2 sm:mt-0">
-                <div className="p-1 bg-gray-100 rounded-lg flex">
-                  {timePeriods.map((period: TimePeriod) => (
-                    <button
+            {/* Gradient Background Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#004AC8]/5 to-[#4BB2F6]/5 opacity-30 pointer-events-none" />
+            
+            {/* Header with Enhanced Controls */}
+            <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
+              <div>
+                <h3 className="text-2xl font-bold text-[#1B0353] mb-1">Performance des Appels</h3>
+                <p className="text-sm text-gray-500 flex items-center gap-1">
+                  <FiActivity className="w-4 h-4" />
+                  Données en temps réel
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <div className="p-1 bg-gray-100/80 backdrop-blur-sm rounded-xl flex border border-gray-200">
+                  {timePeriods.map((period) => (
+                    <motion.button
                       key={period.id}
                       onClick={() => setSelectedPeriod(period.id)}
-                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all relative ${
                         selectedPeriod === period.id
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'text-gray-600 hover:bg-gray-200'
+                          ? 'bg-gradient-to-br from-[#004AC8] to-[#4BB2F6] text-white shadow-lg'
+                          : 'text-gray-600 hover:bg-gray-200/50'
                       }`}
+                      whileHover={{ scale: 1.05 }}
                     >
-                      {period.label}
-                    </button>
+                      {selectedPeriod === period.id && (
+                        <motion.div
+                          layoutId="periodBg"
+                          className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#004AC8] to-[#4BB2F6]"
+                          transition={{ type: 'spring', bounce: 0.2 }}
+                        />
+                      )}
+                      <span className="relative z-10">{period.label}</span>
+                    </motion.button>
                   ))}
                 </div>
-                <button className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-                  <FiFilter className="w-5 h-5 text-gray-600" />
-                </button>
+                
+                <motion.button 
+                  whileHover={{ rotate: -15 }}
+                  className="p-2 bg-gray-100/80 backdrop-blur-sm hover:bg-gray-200/50 rounded-xl border border-gray-200 transition-colors"
+                >
+                  <FiFilter className="w-5 h-5 text-[#004AC8]" />
+                </motion.button>
               </div>
             </div>
 
-            <div className="h-96">
+            {/* Enhanced Chart Container */}
+            <div className="h-[420px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={filteredData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
                   onClick={handleDataPointClick}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="#e2e8f0" 
+                    vertical={false}
+                  />
+                  
                   <XAxis
                     dataKey="heure"
-                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'Inter' }}
                     axisLine={{ stroke: '#cbd5e1' }}
-                    tickLine={{ stroke: '#cbd5e1' }}
+                    tickLine={{ stroke: 'transparent' }}
+                    tickMargin={12}
                   />
+                  
                   <YAxis
                     yAxisId="left"
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    axisLine={{ stroke: '#cbd5e1' }}
-                    tickLine={{ stroke: '#cbd5e1' }}
+                    tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'Inter' }}
+                    axisLine={{ stroke: 'transparent' }}
+                    tickLine={{ stroke: 'transparent' }}
                   />
+                  
                   <YAxis
                     yAxisId="right"
                     orientation="right"
                     domain={[0, 100]}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    axisLine={{ stroke: '#cbd5e1' }}
-                    tickLine={{ stroke: '#cbd5e1' }}
+                    tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'Inter' }}
+                    axisLine={{ stroke: 'transparent' }}
+                    tickLine={{ stroke: 'transparent' }}
                   />
+                  
                   <Tooltip
-                    cursor={{ fill: 'rgba(224, 231, 255, 0.2)' }}
-                    contentStyle={{
-                      background: 'rgba(255, 255, 255, 0.95)',
-                      border: 'none',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-                      padding: '12px 16px',
-                    }}
-                    labelStyle={{ fontWeight: 'bold', marginBottom: '8px' }}
+                    cursor={false}
+                    content={({ payload }) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-2xl border border-gray-100"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <FiClock className="w-4 h-4 text-[#004AC8]" />
+                            <strong className="text-gray-800">{payload?.[0]?.payload.heure}</strong>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-[#1B0353] rounded-full" />
+                            <span className="text-sm">Appels: {payload?.[0]?.value}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-[#4BB2F6] rounded-full" />
+                            <span className="text-sm">Taux: {payload?.[1]?.value}%</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   />
-                  <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingTop: '8px' }} />
+                  
                   <Bar
                     name="Nombre d'appels"
                     dataKey="appels"
                     yAxisId="left"
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                    barSize={30}
-                    cursor="pointer"
-                  />
+                    fill="url(#barGradient)"
+                    radius={[6, 6, 0, 0]}
+                    barSize={24}
+                  >
+                    {filteredData.map((_, index) => (
+                      <MotionCell
+                        key={`bar-${index}`}
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: 0.5, delay: index * 0.02 }}
+                      />
+                    ))}
+                  </Bar>
+                  
                   <Line
-                    name="Taux de r&eacute;ponse (%)"
+                    name="Taux de réponse"
                     type="monotone"
                     dataKey="taux"
                     yAxisId="right"
-                    stroke="#f59e0b"
+                    stroke="url(#lineGradient)"
                     strokeWidth={3}
-                    dot={{ r: 4, fill: '#f59e0b', strokeWidth: 0 }}
-                    activeDot={{ r: 6, fill: '#f59e0b', stroke: '#fff', strokeWidth: 2 }}
+                    dot={{ r: 4, fill: '#fff', stroke: '#4BB2F6', strokeWidth: 2 }}
+                    activeDot={{
+                      r: 8,
+                      fill: '#fff',
+                      stroke: '#4BB2F6',
+                      strokeWidth: 2,
+                    }}
                   />
+                  
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1B0353" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="#004AC8" stopOpacity={0.9} />
+                    </linearGradient>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#4BB2F6" />
+                      <stop offset="100%" stopColor="#004AC8" />
+                    </linearGradient>
+                  </defs>
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
-            <div className="flex justify-center mt-4 text-sm text-gray-500">
-              <FiCalendar className="w-4 h-4 mr-1" />
-              <span>Cliquez sur un point pour voir les d&eacute;tails</span>
-            </div>
+            {/* Enhanced Footer */}
+            <motion.div 
+              whileHover={{ x: 5 }}
+              className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500 cursor-pointer"
+            >
+              <FiMousePointer className="w-4 h-4 animate-pulse" />
+              <span>Cliquez sur un point pour explorer les détails</span>
+              <FiArrowRight className="w-4 h-4" />
+            </motion.div>
           </motion.div>
 
           {/* System Health with Gradient Background */}
@@ -561,7 +523,7 @@ export default function PBXDashboard() {
             transition={{ delay: 0.5 }}
             className="relative overflow-hidden rounded-3xl shadow-xl"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#004AC8] via-[#1B0353] to-[#4BB2F6]" />
             <div
               className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)]"
               style={{ backgroundSize: '20px 20px' }}
@@ -572,25 +534,25 @@ export default function PBXDashboard() {
                 <SystemHealthIndicator
                   label="Qualit&eacute; VoIP"
                   value={98.7}
-                  color="#22d3ee"
+                  color="#004AC8"
                   icon={<FiPhoneCall className="w-5 h-5" />}
                 />
                 <SystemHealthIndicator
                   label="Charge Serveurs"
                   value={32}
-                  color="#a5b4fc"
+                  color="#1B0353"
                   icon={<FiServer className="w-5 h-5" />}
                 />
                 <SystemHealthIndicator
                   label="Stockage"
                   value={78}
-                  color="#fbbf24"
+                  color="#4BB2F6"
                   icon={<FiActivity className="w-5 h-5" />}
                 />
                 <SystemHealthIndicator
                   label="Latence Moyenne"
                   value={28}
-                  color="#c4b5fd"
+                  color="#4BB2F6"
                   icon={<FiGlobe className="w-5 h-5" />}
                   suffix="ms"
                 />
@@ -611,18 +573,36 @@ export default function PBXDashboard() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Num&eacute;ro</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dur&eacute;e</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localisation</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Num&eacute;ro
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Dur&eacute;e
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Statut
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Localisation
+                  </th>
+                  {/* New Staff Column */}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Personnel
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {activeCalls.map((call) => (
                   <tr key={call.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{call.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      #{call.id}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{call.number}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{call.duration}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -631,9 +611,9 @@ export default function PBXDashboard() {
                           call.status === 'answered'
                             ? 'bg-green-100 text-green-800'
                             : call.status === 'ringing'
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'bg-[#004AC8]/20 text-[#004AC8]'
                             : call.status === 'onHold'
-                            ? 'bg-amber-100 text-amber-800'
+                            ? 'bg-[#4BB2F6]/20 text-[#4BB2F6]'
                             : ''
                         }`}
                       >
@@ -646,11 +626,17 @@ export default function PBXDashboard() {
                           : call.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{call.location}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {call.location}
+                    </td>
+                    {/* New column for staff info */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {call.staff}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
                         onClick={() => router.push(`/dashboard/pbx/call/${call.id}`)}
-                        className="text-[#1B0353] hover:text-[#a0c8f0] font-medium"
+                        className="text-[#1B0353] hover:text-[#4BB2F6] font-medium"
                       >
                         D&eacute;tails
                       </button>
@@ -661,6 +647,7 @@ export default function PBXDashboard() {
             </table>
           </div>
         </motion.div>
+
       </div>
 
       {/* Detail Modal */}
@@ -696,19 +683,36 @@ export default function PBXDashboard() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-xl">
-                  <div className="text-blue-800 text-sm font-medium mb-1">Nombre d&apos;appels</div>
-                  <div className="text-2xl font-bold text-blue-700">{selectedCallData.appels}</div>
+                <div
+                  className="p-4 rounded-xl"
+                  style={{ backgroundColor: 'rgba(75,178,246,0.2)' }}
+                >
+                  <div className="text-sm font-medium" style={{ color: '#004AC8' }}>
+                    Nombre d&apos;appels
+                  </div>
+                  <div className="text-2xl font-bold" style={{ color: '#004AC8' }}>
+                    {selectedCallData.appels}
+                  </div>
                 </div>
-                <div className="bg-amber-50 p-4 rounded-xl">
-                  <div className="text-amber-800 text-sm font-medium mb-1">Dur&eacute;e moyenne</div>
-                  <div className="text-2xl font-bold text-amber-700">
+                <div
+                  className="p-4 rounded-xl"
+                  style={{ backgroundColor: 'rgba(0,74,200,0.2)' }}
+                >
+                  <div className="text-sm font-medium" style={{ color: '#1B0353' }}>
+                    Dur&eacute;e moyenne
+                  </div>
+                  <div className="text-2xl font-bold" style={{ color: '#1B0353' }}>
                     {selectedCallData.duree} min
                   </div>
                 </div>
-                <div className="bg-emerald-50 p-4 rounded-xl">
-                  <div className="text-emerald-800 text-sm font-medium mb-1">Taux de r&eacute;ponse</div>
-                  <div className="text-2xl font-bold text-emerald-700">
+                <div
+                  className="p-4 rounded-xl"
+                  style={{ backgroundColor: 'rgba(27,3,83,0.2)' }}
+                >
+                  <div className="text-sm font-medium" style={{ color: '#FFFFFF' }}>
+                    Taux de r&eacute;ponse
+                  </div>
+                  <div className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
                     {selectedCallData.taux}%
                   </div>
                 </div>
@@ -721,7 +725,8 @@ export default function PBXDashboard() {
                     <LineChart
                       data={[...Array(24)].map((_, i) => ({
                         time: `${String(i).padStart(2, '0')}:00`,
-                        calls: Math.floor(Math.random() * selectedCallData.appels * 0.3) + 1,
+                        calls:
+                          Math.floor(Math.random() * selectedCallData.appels * 0.3) + 1,
                       }))}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -739,9 +744,9 @@ export default function PBXDashboard() {
                       <Line
                         type="monotone"
                         dataKey="calls"
-                        stroke="#3b82f6"
+                        stroke="#004AC8"
                         strokeWidth={2}
-                        dot={{ r: 3, fill: '#3b82f6' }}
+                        dot={{ r: 3, fill: '#004AC8' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>

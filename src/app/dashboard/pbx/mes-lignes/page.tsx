@@ -16,6 +16,12 @@ import {
   FiPieChart,
   FiActivity,
   FiChevronDown,
+  FiChevronUp,
+  FiServer,
+  FiClock,
+  FiHash,
+  FiSmartphone,
+  FiX,
 } from 'react-icons/fi';
 import {
   LineChart,
@@ -98,7 +104,7 @@ const totalDuration = callData.reduce((sum, item) => sum + (item.duration * item
 const averageDuration = (totalDuration / totalCalls).toFixed(1);
 const peakCallTime = callData.reduce((max, item) => (item.calls > max.calls ? item : max), callData[0]).time;
 
-const COLORS = ['#6366f1', '#10b981'];
+const COLORS = ['#004AC8', '#4BB2F6'];
 
 // Main Component
 export default function PBXMesLignes() {
@@ -113,7 +119,7 @@ export default function PBXMesLignes() {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#004AC8]/10 to-[#4BB2F6]/10 rounded-3xl pointer-events-none" />
           <div className="relative flex justify-between items-center p-8">
             <div>
               <h1 className="text-3xl font-bold text-[#1B0353]">Gestion des Lignes</h1>
@@ -121,29 +127,82 @@ export default function PBXMesLignes() {
             </div>
             <div className="flex space-x-4">
               <button className="p-2 hover:bg-gray-200 rounded-xl transition" title="Ajouter une ligne">
-                <FiPlus className="text-gray-600 w-6 h-6" />
+                <FiPlus className="text-[#1B0353] w-6 h-6" />
               </button>
               <button className="p-2 hover:bg-gray-200 rounded-xl transition" title="Paramètres">
-                <FiSettings className="text-gray-600 w-6 h-6" />
+                <FiSettings className="text-[#1B0353] w-6 h-6" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-8 mb-10 border-b-2 border-gray-300">
-          {['Mes lignes', "Résumé d'utilisation", 'Devices'].map((tab: string) => (
-            <motion.button
-              key={tab}
-              onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
-              whileHover={{ y: -2 }}
-              className={`pb-3 px-2 font-semibold text-md transition-colors ${
-                activeTab === tab.toLowerCase().replace(' ', '-') ? 'text-[#1B0353] border-b-4 border-indigo-700' : 'text-gray-700 hover:text-[#a0c8f0]'
-              }`}
-            >
-              {tab}
-            </motion.button>
-          ))}
+        {/* Enhanced Tab Navigation */}
+        <div className="relative mb-12">
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#004AC8]/20 to-transparent" />
+          
+          <div className="flex gap-6 px-2">
+            {['Mes lignes', "Résumé d'utilisation", 'Devices'].map((tab) => {
+              const isActive = activeTab === tab.toLowerCase().replace(' ', '-');
+              return (
+                <motion.button
+                  key={tab}
+                  onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
+                  className="relative py-4"
+                >
+                  {/* Animated background */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="tabHighlight"
+                      className="absolute inset-0 bg-gradient-to-b from-[#004AC8]/10 to-transparent rounded-t-2xl"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+
+                  {/* Tab Content */}
+                  <div className="relative flex items-center gap-2 px-4">
+                    <span className={`text-sm font-semibold transition-colors ${
+                      isActive 
+                        ? 'text-[#004AC8] bg-clip-text bg-gradient-to-r from-[#004AC8] to-[#4BB2F6]' 
+                        : 'text-gray-600 hover:text-[#1B0353]'
+                    }`}>
+                      {tab}
+                    </span>
+
+                    {/* Active indicator */}
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="w-1.5 h-1.5 bg-[#4BB2F6] rounded-full"
+                      />
+                    )}
+                  </div>
+
+                  {/* Hover effect */}
+                  <motion.div
+                    initial={false}
+                    whileHover={{ 
+                      y: -2,
+                      transition: { duration: 0.1 }
+                    }}
+                    className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+                      isActive ? 'bg-[#004AC8]' : 'bg-transparent'
+                    }`}
+                  />
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Animated underline */}
+          <motion.div
+            className="absolute bottom-0 h-0.5 bg-[#004AC8]"
+            animate={{
+              width: 'var(--underline-width)',
+              left: 'var(--underline-left)',
+            }}
+            transition={{ type: 'spring', bounce: 0.25, duration: 0.6 }}
+          />
         </div>
 
         {/* Tab Content */}
@@ -193,15 +252,17 @@ function MesLignesTab({ lines }: { lines: LineType[] }) {
     setSortConfig({ key, direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc' });
   };
 
+  const cardStyles = [
+    { label: 'Total Lignes', value: totalLines, icon: FiPhone, color: 'from-[#1B0353] to-[#004AC8]' },
+    { label: 'Lignes Actives', value: activeLines, icon: FiCheckCircle, color: 'from-[#004AC8] to-[#4BB2F6]' },
+    { label: 'Lignes Inactives', value: inactiveLines, icon: FiXCircle, color: 'from-[#4BB2F6] to-[#1B0353]' },
+  ];
+
   return (
     <div>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {[
-          { label: 'Total Lignes', value: totalLines, icon: FiPhone, color: 'from-indigo-500 to-blue-600' },
-          { label: 'Lignes Actives', value: activeLines, icon: FiCheckCircle, color: 'from-green-500 to-emerald-600' },
-          { label: 'Lignes Inactives', value: inactiveLines, icon: FiXCircle, color: 'from-red-500 to-rose-600' },
-        ].map((card, index: number) => (
+        {cardStyles.map((card, index: number) => (
           <motion.div
             key={index}
             whileHover={{ scale: 1.03, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.15)' }}
@@ -218,82 +279,160 @@ function MesLignesTab({ lines }: { lines: LineType[] }) {
         ))}
       </div>
 
-      {/* Search and Table */}
-      <div className="bg-white p-8 rounded-3xl shadow-2xl border border-gray-200">
-        <div className="flex items-center justify-between mb-8">
-          <div className="relative w-1/3">
-            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher par numéro..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-800"
-            />
+      {/* Search and Table Section */}
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+      {/* Enhanced Search & Filter */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3.5">
+            <FiSearch className="w-5 h-5 text-[#1B0353]/80" />
           </div>
-          <div className="relative">
-            <select
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-800"
-            >
-              <option>Tous</option>
-              <option>Actifs</option>
-              <option>Inactifs</option>
-            </select>
-            <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher par numéro de ligne..."
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#004AC8] focus:ring-2 focus:ring-[#004AC8]/20 transition-all duration-200 text-gray-800 placeholder-gray-400"
+          />
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-300">
-            <thead className="bg-gray-100 sticky top-0 z-10">
+        
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#004AC8]/10 to-[#4BB2F6]/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <select
+            value={selectedFilter}
+            onChange={(e) => setSelectedFilter(e.target.value)}
+            className="relative pl-4 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#004AC8] focus:ring-2 focus:ring-[#004AC8]/20 text-gray-800 appearance-none transition-all duration-200"
+          >
+            <option className="bg-white">Tous</option>
+            <option className="bg-white">Actifs</option>
+            <option className="bg-white">Inactifs</option>
+          </select>
+          <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+        </div>
+      </div>
+
+      {/* Enhanced Table */}
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+          <table className="w-full">
+            {/* Table Header */}
+            <thead className="bg-gradient-to-r from-[#004AC8]/5 to-[#4BB2F6]/5">
               <tr>
-                <th
-                  onClick={() => handleSort('number')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-indigo-700 transition"
-                >
-                  Numéro {sortConfig.key === 'number' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th
-                  onClick={() => handleSort('status')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-indigo-700 transition"
-                >
-                  Statut {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                {['Numéro', 'Statut', 'Actions'].map((header, idx) => (
+                  <th
+                    key={header}
+                    className={`px-6 py-4 text-left text-sm font-semibold text-[#1B0353] ${
+                      idx === 0 ? 'rounded-tl-xl' : idx === 2 ? 'rounded-tr-xl' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {header}
+                      {['Numéro', 'Statut'].includes(header) && (
+                        <button
+                          onClick={() => handleSort(header.toLowerCase() as keyof LineType)}
+                          className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                          {sortConfig.key === header.toLowerCase() ? (
+                            sortConfig.direction === 'asc' ? (
+                              <FiChevronUp className="w-4 h-4 text-[#004AC8]" />
+                            ) : (
+                              <FiChevronDown className="w-4 h-4 text-[#004AC8]" />
+                            )
+                          ) : (
+                            <FiChevronDown className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredLines.map((line: LineType, index: number) => (
+
+            {/* Table Body */}
+            <tbody className="divide-y divide-gray-200/80">
+              {filteredLines.map((line) => (
                 <motion.tr
                   key={line.id}
-                  whileHover={{ scale: 1.01, backgroundColor: '#f9fafb' }}
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ backgroundColor: '#f8fafc' }}
+                  className="group transition-colors"
                 >
-                  <td className="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-900">{line.number}</td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <span
-                      className={`px-4 py-2 inline-flex text-xs font-semibold rounded-full ${
-                        line.status === 'Active' ? 'bg-green-200 text-green-900' : 'bg-red-200 text-red-900'
-                      }`}
-                    >
-                      {line.status === 'Active' ? 'Actif' : 'Inactif'}
-                    </span>
+                  {/* Number Column */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <FiPhone className="w-5 h-5 text-[#004AC8]/80 shrink-0" />
+                      <span className="font-medium text-gray-900">{line.number}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm">
-                    <motion.button whileHover={{ scale: 1.2 }} className="text-[#1B0353] hover:text-indigo-800 mr-4">
-                      <FiEdit />
-                    </motion.button>
-                    <motion.button whileHover={{ scale: 1.2 }} className="text-red-600 hover:text-red-800">
-                      <FiTrash2 />
-                    </motion.button>
+
+                  {/* Status Column */}
+                  <td className="px-6 py-4">
+                    <motion.div
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      className="inline-flex items-center gap-1.5"
+                    >
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          line.status === 'Active' ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                      />
+                      <span
+                        className={`px-3 py-1.5 text-sm font-medium rounded-full ${
+                          line.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {line.status === 'Active' ? 'Actif' : 'Inactif'}
+                      </span>
+                    </motion.div>
+                  </td>
+
+                  {/* Actions Column */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 hover:bg-blue-100 rounded-lg text-[#004AC8] transition-colors"
+                        title="Modifier"
+                      >
+                        <FiEdit className="w-5 h-5" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
+                        title="Supprimer"
+                      >
+                        <FiTrash2 className="w-5 h-5" />
+                      </motion.button>
+                    </div>
                   </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
+
+          {/* Enhanced Empty State */}
           {filteredLines.length === 0 && (
-            <div className="text-center py-6 text-gray-600">Aucune ligne trouvée.</div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-12 text-center"
+            >
+              <div className="mx-auto mb-4 text-[#004AC8]/50">
+                <FiSearch className="w-12 h-12" />
+              </div>
+              <p className="text-gray-600 font-medium">
+                Aucune ligne trouvée avec ces critères de recherche
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Essayez d&apos;ajuster votre recherche ou vos filtres
+              </p>
+            </motion.div>
           )}
         </div>
       </div>
@@ -313,7 +452,7 @@ function UsageSummaryTab({ callData, callDistribution }: { callData: CallData[];
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="appearance-none pl-4 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-800"
+            className="appearance-none pl-4 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-[#004AC8] text-gray-800"
           >
             <option value="24h">Dernières 24 heures</option>
             <option value="7d">7 derniers jours</option>
@@ -327,10 +466,10 @@ function UsageSummaryTab({ callData, callDistribution }: { callData: CallData[];
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
         {[
-          { label: 'Appels Totaux', value: totalCalls, icon: FiBarChart2, color: 'from-indigo-500 to-blue-600' },
-          { label: 'Durée Totale (min)', value: totalDuration.toFixed(1), icon: FiActivity, color: 'from-green-500 to-emerald-600' },
-          { label: 'Durée Moyenne (min)', value: averageDuration, icon: FiActivity, color: 'from-purple-500 to-pink-600' },
-          { label: 'Heure de Pointe', value: peakCallTime, icon: FiPieChart, color: 'from-yellow-500 to-orange-600' },
+          { label: 'Appels Totaux', value: totalCalls, icon: FiBarChart2, color: 'from-[#1B0353] to-[#004AC8]' },
+          { label: 'Durée Totale (min)', value: totalDuration.toFixed(1), icon: FiActivity, color: 'from-[#004AC8] to-[#4BB2F6]' },
+          { label: 'Durée Moyenne (min)', value: averageDuration, icon: FiActivity, color: 'from-[#4BB2F6] to-[#1B0353]' },
+          { label: 'Heure de Pointe', value: peakCallTime, icon: FiPieChart, color: 'from-[#1B0353] to-[#004AC8]' },
         ].map((metric, index: number) => (
           <motion.div
             key={index}
@@ -359,7 +498,7 @@ function UsageSummaryTab({ callData, callDistribution }: { callData: CallData[];
               <YAxis stroke="#4b5563" />
               <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', color: '#1f2937' }} />
               <Legend />
-              <Line type="monotone" dataKey="calls" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} name="Appels" />
+              <Line type="monotone" dataKey="calls" stroke="#004AC8" strokeWidth={2} dot={{ r: 4 }} name="Appels" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -372,7 +511,7 @@ function UsageSummaryTab({ callData, callDistribution }: { callData: CallData[];
               <YAxis stroke="#4b5563" />
               <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', color: '#1f2937' }} />
               <Legend />
-              <Bar dataKey="duration" fill="#10b981" name="Durée (min)" />
+              <Bar dataKey="duration" fill="#4BB2F6" name="Durée (min)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -441,20 +580,20 @@ function DevicesTab({ devices }: { devices: Device[] }) {
       <div className="bg-white p-8 rounded-3xl shadow-2xl border border-gray-200 mb-8">
         <div className="flex items-center justify-between">
           <div className="relative w-1/3 mr-6">
-            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#1B0353]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher un appareil ou une ligne..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-800"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-[#004AC8] text-gray-800"
             />
           </div>
           <div className="relative">
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-800"
+              className="appearance-none pl-4 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-[#004AC8] text-gray-800"
             >
               <option>Tous</option>
               <option>En ligne</option>
@@ -472,14 +611,14 @@ function DevicesTab({ devices }: { devices: Device[] }) {
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={() => handleBulkAction('restart')}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
+              className="px-6 py-2 bg-[#004AC8] text-white rounded-xl hover:bg-[#004AC8] transition"
             >
               Redémarrer
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={() => handleBulkAction('remove')}
-              className="px-6 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition"
+              className="px-6 py-2 bg-[#4BB2F6] text-white rounded-xl hover:bg-[#4BB2F6] transition"
             >
               Supprimer
             </motion.button>
@@ -487,97 +626,227 @@ function DevicesTab({ devices }: { devices: Device[] }) {
         )}
       </div>
 
-      {/* Devices Table */}
-      <div className="bg-white p-8 rounded-3xl shadow-2xl border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-300">
-            <thead className="bg-gray-100 sticky top-0 z-10">
+      {/* Enhanced Devices Table */}
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        {/* Bulk Actions Bar */}
+        {selectedDevices.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-[#f8fafc] rounded-xl flex items-center justify-between shadow-sm border border-[#004AC8]/20"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-[#1B0353]">
+                {selectedDevices.length} sélectionné{selectedDevices.length > 1 ? 's' : ''}
+              </span>
+              <div className="h-5 w-px bg-gray-200" />
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 bg-[#004AC8] text-white rounded-lg flex items-center gap-2 hover:bg-[#003DA8] transition-colors"
+                  onClick={() => handleBulkAction('restart')}
+                >
+                  <FiRefreshCw className="w-4 h-4" />
+                  Redémarrer
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 bg-red-100 text-red-600 rounded-lg flex items-center gap-2 hover:bg-red-200 transition-colors"
+                  onClick={() => handleBulkAction('remove')}
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  Supprimer
+                </motion.button>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedDevices([])}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
+
+        {/* Table Container */}
+        <div className="overflow-hidden rounded-xl border border-gray-200">
+          <table className="w-full">
+            {/* Table Header */}
+            <thead className="bg-gradient-to-r from-[#004AC8]/5 to-[#4BB2F6]/5">
               <tr>
-                <th className="px-6 py-4">
+                <th className="px-6 py-4 w-12">
                   <input
                     type="checkbox"
-                    onChange={(e) =>
-                      setSelectedDevices(
-                        e.target.checked ? filteredDevices.map((d: Device) => d.id) : []
-                      )
-                    }
+                    onChange={(e) => setSelectedDevices(e.target.checked ? filteredDevices.map(d => d.id) : [])}
                     checked={selectedDevices.length === filteredDevices.length && filteredDevices.length > 0}
-                    className="w-4 h-4 text-[#1B0353] border-gray-300 rounded focus:ring-indigo-500"
+                    className="w-4 h-4 text-[#004AC8] border-gray-300 rounded focus:ring-[#004AC8]"
                   />
                 </th>
-                <th
-                  onClick={() => handleSort('name')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-indigo-700 transition"
-                >
-                  Nom {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th
-                  onClick={() => handleSort('type')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-indigo-700 transition"
-                >
-                  Type {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th
-                  onClick={() => handleSort('line')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-indigo-700 transition"
-                >
-                  Ligne {sortConfig.key === 'line' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th
-                  onClick={() => handleSort('status')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-indigo-700 transition"
-                >
-                  Statut {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Dernière Activité</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                {['Nom', 'Type', 'Ligne', 'Statut', 'Dernière Activité', 'Actions'].map((header, idx) => (
+                  <th
+                    key={header}
+                    className={`px-6 py-4 text-left text-sm font-semibold text-[#1B0353] ${
+                      idx === 0 ? 'rounded-tl-xl' : idx === 5 ? 'rounded-tr-xl' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {header}
+                      {['Nom', 'Type', 'Ligne', 'Statut'].includes(header) && (
+                        <button
+                          onClick={() => handleSort(header.toLowerCase() as keyof Device)}
+                          className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                          {sortConfig.key === header.toLowerCase() ? (
+                            sortConfig.direction === 'asc' ? (
+                              <FiChevronUp className="w-4 h-4 text-[#004AC8]" />
+                            ) : (
+                              <FiChevronDown className="w-4 h-4 text-[#004AC8]" />
+                            )
+                          ) : (
+                            <FiChevronDown className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredDevices.map((device: Device, index: number) => (
+
+            {/* Table Body */}
+            <tbody className="divide-y divide-gray-200/80">
+              {filteredDevices.map((device) => (
                 <motion.tr
                   key={device.id}
-                  whileHover={{ scale: 1.01, backgroundColor: '#f9fafb' }}
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ backgroundColor: '#f8fafc' }}
+                  className="group transition-colors"
                 >
-                  <td className="px-6 py-5">
+                  {/* Checkbox */}
+                  <td className="px-6 py-4">
                     <input
                       type="checkbox"
                       checked={selectedDevices.includes(device.id)}
                       onChange={() => toggleDeviceSelection(device.id)}
-                      className="w-4 h-4 text-[#1B0353] border-gray-300 rounded focus:ring-indigo-500"
+                      className="w-4 h-4 text-[#004AC8] border-gray-300 rounded focus:ring-[#004AC8]"
                     />
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-900">{device.name}</td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">{device.type}</td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">{device.line}</td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <span
-                      className={`px-4 py-2 inline-flex text-xs font-semibold rounded-full ${
-                        device.status === 'Online' ? 'bg-green-200 text-green-900' : 'bg-red-200 text-red-900'
-                      }`}
-                    >
-                      {device.status === 'Online' ? 'En ligne' : 'Hors ligne'}
-                    </span>
+
+                  {/* Device Name */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#004AC8]/10 rounded-lg">
+                        {device.type === 'IP Phone' ? (
+                          <FiPhone className="w-5 h-5 text-[#004AC8]" />
+                        ) : (
+                          <FiSmartphone className="w-5 h-5 text-[#4BB2F6]" />
+                        )}
+                      </div>
+                      <span className="font-medium text-gray-900">{device.name}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">{device.lastSeen}</td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm">
-                    <motion.button whileHover={{ scale: 1.2 }} className="text-[#1B0353] hover:text-indigo-800 mr-4" title="Configurer">
-                      <FiEdit />
-                    </motion.button>
-                    <motion.button whileHover={{ scale: 1.2 }} className="text-blue-600 hover:text-blue-800 mr-4" title="Redémarrer">
-                      <FiRefreshCw />
-                    </motion.button>
-                    <motion.button whileHover={{ scale: 1.2 }} className="text-red-600 hover:text-red-800" title="Supprimer">
-                      <FiTrash2 />
-                    </motion.button>
+
+                  {/* Device Type */}
+                  <td className="px-6 py-4 text-sm text-gray-600">{device.type}</td>
+
+                  {/* Line Number */}
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <FiHash className="w-4 h-4 text-gray-400" />
+                      {device.line}
+                    </div>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-6 py-4">
+                    <motion.div
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      className="inline-flex items-center gap-1.5"
+                    >
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          device.status === 'Online' ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                      />
+                      <span
+                        className={`px-3 py-1.5 text-sm font-medium rounded-full ${
+                          device.status === 'Online'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {device.status === 'Online' ? 'En ligne' : 'Hors ligne'}
+                      </span>
+                    </motion.div>
+                  </td>
+
+                  {/* Last Activity */}
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <FiClock className="w-4 h-4 text-gray-400" />
+                      {new Date(device.lastSeen).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </div>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 hover:bg-blue-100 rounded-lg text-[#004AC8] transition-colors"
+                        title="Configurer"
+                      >
+                        <FiEdit className="w-5 h-5" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors"
+                        title="Redémarrer"
+                      >
+                        <FiRefreshCw className="w-5 h-5" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
+                        title="Supprimer"
+                      >
+                        <FiTrash2 className="w-5 h-5" />
+                      </motion.button>
+                    </div>
                   </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
+
+          {/* Enhanced Empty State */}
           {filteredDevices.length === 0 && (
-            <div className="text-center py-6 text-gray-600">Aucun appareil trouvé.</div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-12 text-center"
+            >
+              <div className="mx-auto mb-4 text-[#004AC8]/50">
+                <FiServer className="w-12 h-12" />
+              </div>
+              <p className="text-gray-600 font-medium">
+                Aucun appareil trouvé
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Essayez d&apos;ajuster vos filtres de recherche
+              </p>
+            </motion.div>
           )}
         </div>
       </div>

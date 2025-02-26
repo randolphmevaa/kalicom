@@ -18,7 +18,7 @@ import {
   FiMail,
   FiBox,
   FiFileText,
-  FiDollarSign,
+  // FiDollarSign,
   FiTool,
   FiFile,
   FiUpload,
@@ -36,6 +36,7 @@ import {
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { FaEuroSign } from 'react-icons/fa';
 
 type SidebarProps = {
   isOpen: boolean;
@@ -65,7 +66,7 @@ const sections: Record<string, MenuSection> = {
       { name: 'Mes lignes', href: '/dashboard/pbx/mes-lignes', icon: <FiPhoneOutgoing size={20} className="text-white" /> },
       { name: 'Mes numéros', href: '/dashboard/pbx/mes-numeros', icon: <FiSmartphone size={20} className="text-white" /> },
       { name: 'Application', href: '/dashboard/pbx/application', icon: <FiMail size={20} className="text-white" /> },
-      { name: 'Journal d’appels', href: '/dashboard/pbx/journal-appels', icon: <FiPhoneCall size={20} className="text-white" /> },
+      { name: 'Journal d’appels & Enregistrements', href: '/dashboard/pbx/journal-appels', icon: <FiPhoneCall size={20} className="text-white" /> },
       { name: 'Statistiques', href: '/dashboard/pbx/statistique', icon: <FiBarChart size={20} className="text-white" /> },
       { name: 'Parc téléphonique', href: '/dashboard/pbx/parc-telephone', icon: <FiMonitor size={20} className="text-white" /> },
       { name: 'Statut système', href: '/dashboard/pbx/statut', icon: <FiActivity size={20} className="text-white" /> },
@@ -109,9 +110,9 @@ const sections: Record<string, MenuSection> = {
   },
   reglements_comptabilite: {
     title: 'Reglements/Comptabilite',
-    icon: <FiDollarSign size={20} className="text-white" />,
+    icon: <FaEuroSign size={20} className="text-white" />,
     items: [
-      { name: 'Reglements/Comptabilite', href: '/dashboard/crm/reglements-comptabilite', icon: <FiDollarSign size={20} className="text-white" /> },
+      { name: 'Reglements/Comptabilite', href: '/dashboard/crm/reglements-comptabilite', icon: <FaEuroSign size={20} className="text-white" /> },
     ],
   },
   parametre_societe: {
@@ -201,7 +202,7 @@ function ContextMenuItem({ item }: { item: MenuItem }) {
               <Link
                 key={subItem.href}
                 href={subItem.href}
-                className="block p-2 rounded hover:bg-white/10 text-xs transition-colors"
+                className="flex items-center block p-2 rounded hover:bg-white/10 text-xs transition-colors"
               >
                 {subItem.icon && <span className="mr-2">{subItem.icon}</span>}
                 {subItem.name}
@@ -236,7 +237,7 @@ export default function Sidebar({ isOpen, toggleSidebar, sidebarWidth }: Sidebar
       <motion.aside
         initial={{ width: isOpen ? sidebarWidth : 80 }}
         animate={{ width: isOpen ? sidebarWidth : 80 }}
-        style={{ background: '#1B0353' }}
+        style={{ background: 'linear-gradient(to bottom,#004AC8, #1B0353)' }}
         className="h-screen text-white shadow-2xl fixed z-50 top-0 left-0 flex flex-col"
       >
         <div className="flex flex-col flex-1">
@@ -323,7 +324,7 @@ export default function Sidebar({ isOpen, toggleSidebar, sidebarWidth }: Sidebar
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            style={{ left: sidebarWidth, background: '#1B0353' }}
+            style={{ left: sidebarWidth, background: 'linear-gradient(to bottom,#004AC8, #1B0353)' }}
             className="fixed z-40 h-screen w-64 shadow-2xl top-0 text-white"
           >
             <div className="p-6 border-b border-white/10">
