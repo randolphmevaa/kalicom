@@ -35,23 +35,31 @@ export default function Header({ sidebarWidth }: HeaderProps) {
           {/* Navigation */}
           <nav className="flex items-center space-x-6">
             <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center group cursor-pointer">
-              <FiPhone className="w-6 h-6 text-gray-600 group-hover:text-blue-500 transition-colors" />
-              <span className="text-xs font-medium mt-1 text-gray-500 group-hover:text-blue-500">Webphone</span>
+              <FiPhone className="w-6 h-6 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors" />
+              <span className="text-xs font-medium mt-1 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors">
+                Webphone
+              </span>
             </motion.div>
 
             <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center group cursor-pointer">
-              <FiHome className="w-6 h-6 text-gray-600 group-hover:text-emerald-500 transition-colors" />
-              <span className="text-xs font-medium mt-1 text-gray-500 group-hover:text-emerald-500">Tableau de bord</span>
+              <FiHome className="w-6 h-6 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors" />
+              <span className="text-xs font-medium mt-1 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors">
+                Tableau de bord
+              </span>
             </motion.div>
 
             <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center group cursor-pointer">
-              <FiMonitor className="w-6 h-6 text-gray-600 group-hover:text-purple-500 transition-colors" />
-              <span className="text-xs font-medium mt-1 text-gray-500 group-hover:text-purple-500">Parc téléphonique</span>
+              <FiMonitor className="w-6 h-6 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors" />
+              <span className="text-xs font-medium mt-1 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors">
+                Parc téléphonique
+              </span>
             </motion.div>
 
             <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center group cursor-pointer">
-              <FiPlusCircle className="w-6 h-6 text-gray-600 group-hover:text-cyan-500 transition-colors" />
-              <span className="text-xs font-medium mt-1 text-gray-500 group-hover:text-cyan-500">Commander</span>
+              <FiPlusCircle className="w-6 h-6 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors" />
+              <span className="text-xs font-medium mt-1 text-[#004AC8] group-hover:text-[#4BB2F6] transition-colors">
+                Commander
+              </span>
             </motion.div>
           </nav>
 

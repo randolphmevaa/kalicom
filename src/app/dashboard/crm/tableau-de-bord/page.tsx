@@ -17,7 +17,7 @@ export default function CRMTableauDeBord() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-20 min-h-screen bg-gray-50"
+      className="pt-20 min-h-screen"
     >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}

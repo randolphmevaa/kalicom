@@ -16,7 +16,7 @@ export default function UnderConstruction() {
           Désolé, page en construction
         </h1>
         <p className="text-lg text-gray-600">
-          Nous peaufinons chaque détail pour vous offrir une expérience digne d’Apple. Restez à l’écoute – des fonctionnalités innovantes et une interface minimaliste arrivent très bientôt.
+          Nous peaufinons chaque détail pour vous offrir une belle expérience. Restez à l’écoute – des fonctionnalités innovantes et une interface minimaliste arrivent très bientôt.
         </p>
         <Link href="/">
           <motion.button
