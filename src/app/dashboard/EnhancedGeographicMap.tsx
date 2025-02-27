@@ -34,7 +34,7 @@ const EnhancedGeographicMap = () => {
     // Initialize the Mapbox map
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/dark-v11",
+      style: "mapbox://styles/markave/clzvcc1bi000101ph7ooq99e5",
       center: [2.3522, 48.8566], // [longitude, latitude]
       zoom: 1.5,
       bearing: 0,

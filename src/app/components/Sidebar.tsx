@@ -65,7 +65,7 @@ const sections: Record<string, MenuSection> = {
       { name: 'Tableau de bord', href: '/dashboard', icon: <FiHome size={20} className="text-white" /> },
       { name: 'Mes lignes', href: '/dashboard/pbx/mes-lignes', icon: <FiPhoneOutgoing size={20} className="text-white" /> },
       { name: 'Mes numéros', href: '/dashboard/pbx/mes-numeros', icon: <FiSmartphone size={20} className="text-white" /> },
-      { name: 'Application', href: '/dashboard/pbx/application', icon: <FiMail size={20} className="text-white" /> },
+      { name: 'Applications', href: '/dashboard/pbx/application', icon: <FiMail size={20} className="text-white" /> },
       { name: 'Journal d’appels & Enregistrements', href: '/dashboard/pbx/journal-appels', icon: <FiPhoneCall size={20} className="text-white" /> },
       { name: 'Statistiques', href: '/dashboard/pbx/statistique', icon: <FiBarChart size={20} className="text-white" /> },
       { name: 'Parc téléphonique', href: '/dashboard/pbx/parc-telephone', icon: <FiMonitor size={20} className="text-white" /> },
