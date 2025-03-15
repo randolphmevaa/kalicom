@@ -7,7 +7,6 @@ import {
   FiFilter, 
   FiPlus, 
   FiMoreVertical, 
-  // FiUser,
   FiMail,
   FiPhone,
   FiMapPin,
@@ -17,8 +16,6 @@ import {
   FiTrash2,
   FiEdit,
   FiEye,
-  // FiCheckCircle,
-  // FiXCircle
 } from 'react-icons/fi';
 
 export default function Clients() {
@@ -30,9 +27,7 @@ export default function Clients() {
   const [selectedSource, setSelectedSource] = useState('Tous');
   
   // State for selected clients (for bulk actions)
-  // const [selectedClients, setSelectedClients] = useState([]);
   const [selectedClients, setSelectedClients] = useState<number[]>([]);
-
   const [selectAll, setSelectAll] = useState(false);
 
   // Sample client data
@@ -46,6 +41,7 @@ export default function Clients() {
       entreprise: 'Acme Corp',
       ville: 'Paris',
       pays: 'France',
+      adresse: '123 Avenue des Champs-Élysées, 75008',
       statut: 'Actif',
       source: 'Site Web',
       tags: ['VIP', 'Fidèle'],
@@ -61,6 +57,7 @@ export default function Clients() {
       entreprise: 'Nexus Tech',
       ville: 'Lyon',
       pays: 'France',
+      adresse: '45 Rue de la République, 69002',
       statut: 'Actif',
       source: 'Référence',
       tags: ['Nouveau'],
@@ -76,6 +73,7 @@ export default function Clients() {
       entreprise: 'Zenith SA',
       ville: 'Marseille',
       pays: 'France',
+      adresse: '187 Quai du Port, 13002',
       statut: 'Inactif',
       source: 'Salon',
       tags: ['Prospect'],
@@ -91,6 +89,7 @@ export default function Clients() {
       entreprise: 'Global Industries',
       ville: 'Bordeaux',
       pays: 'France',
+      adresse: '28 Cours du Chapeau Rouge, 33000',
       statut: 'Actif',
       source: 'Publicité',
       tags: ['VIP', 'International'],
@@ -106,6 +105,7 @@ export default function Clients() {
       entreprise: 'Tech Innovate',
       ville: 'Toulouse',
       pays: 'France',
+      adresse: '12 Place du Capitole, 31000',
       statut: 'En attente',
       source: 'Email',
       tags: ['Prospect'],
@@ -121,6 +121,7 @@ export default function Clients() {
       entreprise: 'Eco Solutions',
       ville: 'Nantes',
       pays: 'France',
+      adresse: '4 Rue Crébillon, 44000',
       statut: 'Actif',
       source: 'Partenaire',
       tags: ['Fidèle'],
@@ -136,6 +137,7 @@ export default function Clients() {
       entreprise: 'Design Studio',
       ville: 'Lille',
       pays: 'France',
+      adresse: '76 Rue de Paris, 59800',
       statut: 'Inactif',
       source: 'Site Web',
       tags: ['Ancien'],
@@ -151,6 +153,7 @@ export default function Clients() {
       entreprise: 'Media Group',
       ville: 'Strasbourg',
       pays: 'France',
+      adresse: '23 Place Kléber, 67000',
       statut: 'Actif',
       source: 'Réseau social',
       tags: ['Nouveau', 'International'],
@@ -166,6 +169,7 @@ export default function Clients() {
       entreprise: 'Finance Conseil',
       ville: 'Nice',
       pays: 'France',
+      adresse: '15 Promenade des Anglais, 06000',
       statut: 'En attente',
       source: 'Conférence',
       tags: ['Prospect', 'VIP'],
@@ -181,6 +185,7 @@ export default function Clients() {
       entreprise: 'Santé Plus',
       ville: 'Montpellier',
       pays: 'France',
+      adresse: '8 Rue Foch, 34000',
       statut: 'Actif',
       source: 'Recommandation',
       tags: ['Fidèle'],
@@ -267,6 +272,7 @@ export default function Clients() {
               initial={{ y: -20 }}
               animate={{ y: 0 }}
               className="text-3xl font-bold text-indigo-700 drop-shadow-md"
+              style={{ color: "#1B0353" }}
             >
               Clients
             </motion.h1>
@@ -297,8 +303,8 @@ export default function Clients() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center space-x-2 w-full md:w-auto">
-              <button className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <button className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition shadow-sm">
                 <FiPlus />
                 <span>Ajouter un client</span>
               </button>
@@ -313,10 +319,31 @@ export default function Clients() {
                 <FiRefreshCw />
                 <span className="hidden md:inline">Actualiser</span>
               </button>
-              <button className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition">
-                <FiDownload />
-                <span className="hidden md:inline">Exporter</span>
-              </button>
+              
+              {/* Export Dropdown */}
+              <div className="relative group">
+                <button className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition">
+                  <FiDownload />
+                  <span className="hidden md:inline">Exporter</span>
+                </button>
+                <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg overflow-hidden z-10 hidden group-hover:block">
+                  <div className="py-1">
+                    <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <svg className="mr-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13 7H7v2h6V7zm0 4H7v2h6v-2z" />
+                        <path fillRule="evenodd" d="M3 3a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V3zm2 0v14h10V3H5z" clipRule="evenodd" />
+                      </svg>
+                      Exporter en PDF
+                    </button>
+                    <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <svg className="mr-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5 4a1 1 0 011-1h8a1 1 0 011 1v4h1a2 2 0 012 2v5a2 2 0 01-2 2H4a2 2 0 01-2-2v-5a2 2 0 012-2h1V4zm2 0v4h6V4H7zm9 6H4v5h12v-5z" clipRule="evenodd" />
+                      </svg>
+                      Exporter en CSV
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -391,24 +418,24 @@ export default function Clients() {
           )}
         </div>
 
-        {/* Clients Table */}
+        {/* Clients Table/Cards Container */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Bulk Actions (visible when clients are selected) */}
           {selectedClients.length > 0 && (
-            <div className="p-4 bg-indigo-50 border-b flex justify-between items-center">
-              <div className="text-indigo-800">
-                <span className="font-medium">{selectedClients.length}</span> client(s) sélectionné(s)
+            <div className="p-4 bg-indigo-50 border-b flex flex-col sm:flex-row justify-between gap-3 items-center">
+              <div className="text-indigo-800 font-medium">
+                <span className="font-bold">{selectedClients.length}</span> client(s) sélectionné(s)
               </div>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition flex items-center space-x-1">
+              <div className="flex flex-wrap gap-2">
+                <button className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-1 shadow-sm">
                   <FiMail />
-                  <span>Envoyer un email</span>
+                  <span>Email</span>
                 </button>
-                <button className="px-3 py-1.5 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 transition flex items-center space-x-1">
+                <button className="px-3 py-1.5 text-xs bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-1 shadow-sm">
                   <FiTag />
-                  <span>Assigner un tag</span>
+                  <span>Assigner tag</span>
                 </button>
-                <button className="px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center space-x-1">
+                <button className="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-1 shadow-sm">
                   <FiTrash2 />
                   <span>Supprimer</span>
                 </button>
@@ -416,12 +443,12 @@ export default function Clients() {
             </div>
           )}
           
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          {/* Desktop Table View (hidden on mobile) */}
+          <div className="hidden md:block w-full">
+            <table className="w-full divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-4 py-3 text-left">
+                  <th scope="col" className="px-2 py-3 text-left w-10">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
@@ -431,119 +458,230 @@ export default function Clients() {
                       />
                     </div>
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                     Nom & Contact
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
                     Entreprise
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                     Localisation
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                    Code Postal
+                  </th>
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Statut
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                     Tags
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Dernier Contact
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Valeur
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    Valeur Due
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                          checked={selectedClients.includes(client.id)}
-                          onChange={() => handleSelectClient(client.id)}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-medium">
-                          {client.prenom.charAt(0)}{client.nom.charAt(0)}
+                {filteredClients.map((client, index) => {
+                  // Extract ZIP code from address - assuming it's at the end
+                  const zipCodeMatch = client.adresse.match(/\d{5}$/);
+                  const zipCode = zipCodeMatch ? zipCodeMatch[0] : "";
+                  
+                  // Format address without ZIP code
+                  const addressWithoutZip = client.adresse.replace(/, \d{5}$/, '');
+                  
+                  return (
+                    <tr key={client.id} className={`hover:bg-indigo-50 transition duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                      <td className="px-2 py-4">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            checked={selectedClients.includes(client.id)}
+                            onChange={() => handleSelectClient(client.id)}
+                          />
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {client.prenom} {client.nom}
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium shadow-sm">
+                            {client.prenom.charAt(0)}{client.nom.charAt(0)}
                           </div>
-                          <div className="flex flex-col text-xs text-gray-500">
-                            <div className="flex items-center space-x-1">
-                              <FiMail className="text-gray-400" size={12} />
-                              <span>{client.email}</span>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {client.prenom} {client.nom}
                             </div>
-                            <div className="flex items-center space-x-1">
-                              <FiPhone className="text-gray-400" size={12} />
-                              <span>{client.telephone}</span>
+                            <div className="flex flex-col text-xs text-gray-500">
+                              <div className="flex items-center space-x-1 truncate">
+                                <FiMail className="text-gray-400 flex-shrink-0" size={12} />
+                                <span className="truncate">{client.email}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 truncate">
+                                <FiPhone className="text-gray-400 flex-shrink-0" size={12} />
+                                <span className="truncate">{client.telephone}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="text-sm font-medium text-gray-900 truncate">{client.entreprise}</div>
+                        <div className="text-xs text-gray-500 truncate">Source: {client.source}</div>
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="flex items-center text-sm text-gray-900 truncate">
+                          <FiMapPin className="mr-1 text-gray-400 flex-shrink-0" size={14} />
+                          <span className="truncate">{client.ville}, {client.pays}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">{addressWithoutZip}</div>
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="text-sm font-medium text-gray-900">{zipCode}</div>
+                      </td>
+                      <td className="px-2 py-4">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(client.statut)}`}>
+                          {client.statut}
+                        </span>
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {client.tags.map((tag, tagIndex) => (
+                            <span key={tagIndex} className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-800 rounded-full truncate">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-2 py-4 text-sm text-gray-900">
+                        {client.dernierContact}
+                      </td>
+                      <td className="px-2 py-4 text-sm font-medium text-gray-900">
+                        {client.valeurTotale}
+                      </td>
+                      <td className="px-2 py-4 text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-1">
+                          <button className="p-1.5 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition duration-150" title="Voir">
+                            <FiEye size={16} />
+                          </button>
+                          <button className="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-100 rounded-full transition duration-150" title="Modifier">
+                            <FiEdit size={16} />
+                          </button>
+                          <button className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full transition duration-150" title="Supprimer">
+                            <FiTrash2 size={16} />
+                          </button>
+                          <div className="relative">
+                            <button className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition duration-150" title="Plus d'options">
+                              <FiMoreVertical size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Mobile Card View (shown only on mobile) */}
+          <div className="md:hidden">
+            {filteredClients.map((client) => {
+              // Extract ZIP code from address
+              const zipCodeMatch = client.adresse.match(/\d{5}$/);
+              const zipCode = zipCodeMatch ? zipCodeMatch[0] : "";
+              
+              // Format address without ZIP code
+              const addressWithoutZip = client.adresse.replace(/, \d{5}$/, '');
+              
+              return (
+                <div key={client.id} className="border-b border-gray-200 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-3"
+                        checked={selectedClients.includes(client.id)}
+                        onChange={() => handleSelectClient(client.id)}
+                      />
+                      <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg font-medium shadow-sm">
+                        {client.prenom.charAt(0)}{client.nom.charAt(0)}
                       </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{client.entreprise}</div>
-                      <div className="text-xs text-gray-500">Source: {client.source}</div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <FiMapPin className="mr-1 text-gray-400" size={14} />
-                        {client.ville}, {client.pays}
+                      <div className="ml-3">
+                        <h3 className="text-base font-medium text-gray-900">{client.prenom} {client.nom}</h3>
+                        <p className="text-sm text-gray-600 mt-0.5">{client.entreprise}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    </div>
+                    
+                    <div>
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(client.statut)}`}>
                         {client.statut}
                       </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {client.tags.map((tag, tagIndex) => (
-                          <span key={tagIndex} className="px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded-full">
-                            {tag}
-                          </span>
-                        ))}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 grid grid-cols-1 gap-2 ml-8">
+                    <div className="flex items-center text-sm">
+                      <FiMail className="text-gray-400 flex-shrink-0 mr-2" size={14} />
+                      <span className="text-gray-600 truncate">{client.email}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <FiPhone className="text-gray-400 flex-shrink-0 mr-2" size={14} />
+                      <span className="text-gray-600">{client.telephone}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <FiMapPin className="text-gray-400 flex-shrink-0 mr-2" size={14} />
+                      <span className="text-gray-600">{client.ville}, {client.pays}</span>
+                    </div>
+                    <div className="flex items-center text-sm ml-6">
+                      <span className="text-gray-600">{addressWithoutZip}</span>
+                    </div>
+                    <div className="flex items-center text-sm ml-6">
+                      <span className="text-gray-600 font-medium">Code postal: {zipCode}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 ml-8">
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {client.tags.map((tag, tagIndex) => (
+                        <span key={tagIndex} className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-800 rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="text-sm">
+                        <span className="text-gray-500">Valeur due:</span> <span className="font-medium">{client.valeurTotale}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {client.dernierContact}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {client.valeurTotale}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <button className="p-1 text-indigo-600 hover:text-indigo-900" title="Voir">
-                          <FiEye size={18} />
-                        </button>
-                        <button className="p-1 text-blue-600 hover:text-blue-900" title="Modifier">
-                          <FiEdit size={18} />
-                        </button>
-                        <button className="p-1 text-red-600 hover:text-red-900" title="Supprimer">
-                          <FiTrash2 size={18} />
-                        </button>
-                        <div className="relative">
-                          <button className="p-1 text-gray-600 hover:text-gray-900" title="Plus d'options">
-                            <FiMoreVertical size={18} />
-                          </button>
-                        </div>
+                      <div className="text-sm">
+                        <span className="text-gray-500">Dernier contact:</span> <span>{client.dernierContact}</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 flex justify-end space-x-2">
+                    <button className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition duration-150" title="Voir">
+                      <FiEye size={18} />
+                    </button>
+                    <button className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-100 rounded-full transition duration-150" title="Modifier">
+                      <FiEdit size={18} />
+                    </button>
+                    <button className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full transition duration-150" title="Supprimer">
+                      <FiTrash2 size={18} />
+                    </button>
+                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition duration-150" title="Plus d'options">
+                      <FiMoreVertical size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           
           {/* Empty state */}
@@ -567,17 +705,17 @@ export default function Clients() {
           )}
 
           {/* Pagination */}
-          <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6" aria-label="Pagination">
-            <div className="hidden sm:block">
+          <nav className="bg-white px-4 py-3 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 sm:px-6" aria-label="Pagination">
+            <div className="mb-3 sm:mb-0">
               <p className="text-sm text-gray-700">
                 Affichage de <span className="font-medium">1</span> à <span className="font-medium">{filteredClients.length}</span> sur <span className="font-medium">{clients.length}</span> clients
               </p>
             </div>
-            <div className="flex-1 flex justify-between sm:justify-end">
-              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            <div className="flex justify-between gap-3">
+              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
                 Précédent
               </button>
-              <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
                 Suivant
               </button>
             </div>

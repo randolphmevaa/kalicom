@@ -119,7 +119,7 @@ const sections: Record<string, MenuSection> = {
     title: 'Paramètre societe',
     icon: <FiTool size={20} className="text-white" />,
     items: [
-      { name: 'Coordonners', href: '/dashboard/parametre-societe/coordonners', icon: <FiMapPin size={20} className="text-white" /> },
+      { name: 'Coordonnées', href: '/dashboard/parametre-societe/coordonners', icon: <FiMapPin size={20} className="text-white" /> },
       { 
         name: 'Identification', 
         href: '/dashboard/parametre-societe/identification',

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiUpload,  FiUser, FiFolder, FiTag, FiFile, FiPhone, FiToggleRight } from 'react-icons/fi';
+import { FiUpload, FiUser, FiFolder, FiTag, FiFile, FiPhone, FiToggleRight, FiDownload, FiFileText } from 'react-icons/fi';
 
 export default function ImporterProspects() {
   const [activeTab, setActiveTab] = useState('importer');
@@ -9,7 +9,7 @@ export default function ImporterProspects() {
   const [applyPrefix, setApplyPrefix] = useState(false);
   const [importToDialer, setImportToDialer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-
+  const [exportLoading, setExportLoading] = useState<string | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files && e.target.files.length > 0) {
@@ -17,7 +17,6 @@ export default function ImporterProspects() {
     }
   };
   
-
   const resetForm = () => {
     setCurrentStep(1);
     setApplyPrefix(false);
@@ -31,6 +30,19 @@ export default function ImporterProspects() {
 
   const prevStep = () => {
     setCurrentStep(1);
+  };
+
+  // Export functionality
+  const handleExport = (format: 'csv' | 'pdf') => {
+    setExportLoading(format);
+    
+    // Simulate export process
+    setTimeout(() => {
+      setExportLoading(null);
+      
+      // In a real application, this would trigger the actual download
+      alert(`Exporté en format ${format.toUpperCase()} avec succès!`);
+    }, 1500);
   };
 
   // Sample history data
@@ -55,6 +67,7 @@ export default function ImporterProspects() {
               initial={{ y: -20 }}
               animate={{ y: 0 }}
               className="text-3xl font-bold text-indigo-700 drop-shadow-md"
+              style={{ color: "#1B0353" }}
             >
               Importer des Prospects
             </motion.h1>
@@ -274,6 +287,34 @@ export default function ImporterProspects() {
           {/* History Tab Content */}
           {activeTab === 'historique' && (
             <div className="p-6">
+              {/* Export Buttons */}
+              <div className="flex justify-end mb-4 space-x-3">
+                <button
+                  onClick={() => handleExport('csv')}
+                  disabled={exportLoading === 'csv'}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center space-x-2"
+                >
+                  {exportLoading === 'csv' ? (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-white"></span>
+                  ) : (
+                    <FiDownload className="text-white" />
+                  )}
+                  <span>Exporter en CSV</span>
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  disabled={exportLoading === 'pdf'}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center space-x-2"
+                >
+                  {exportLoading === 'pdf' ? (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-white"></span>
+                  ) : (
+                    <FiFileText className="text-white" />
+                  )}
+                  <span>Exporter en PDF</span>
+                </button>
+              </div>
+              
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-white rounded-lg">
                   <thead>

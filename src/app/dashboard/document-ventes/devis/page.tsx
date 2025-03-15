@@ -11,7 +11,13 @@ import {
   FiTrash2,
   FiEye,
   FiCheck,
-  FiX
+  FiX,
+  // FiFileInvoice,
+  FiDownload,
+  FiChevronDown,
+  FiRefreshCw,
+  FiAlertCircle,
+  // FiArrowRight
 } from 'react-icons/fi';
 
 // Define possible tabs
@@ -81,6 +87,7 @@ export default function Devis() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('devis');
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
   
   // Sample data for all tabs
   const devisData: Devis[] = [
@@ -377,6 +384,27 @@ export default function Devis() {
     }
   };
 
+  // Helper functions for the new features
+  const exportToCSV = () => {
+    // Logic to export data to CSV would go here
+    alert('Exporting to CSV...');
+  };
+
+  const exportToPDF = () => {
+    // Logic to export data to PDF would go here
+    alert('Exporting to PDF...');
+  };
+
+  const exportToExcel = () => {
+    // Logic to export data to Excel would go here
+    alert('Exporting to Excel...');
+  };
+
+  const transformToInvoice = (id: number) => {
+    // Logic to transform a quote to invoice would go here
+    alert(`Transforming quote #${id} to invoice...`);
+  };
+
   // Filter data based on search term and active tab
   const getFilteredData = (): Devis[] | Devise[] | Taxe[] | Societe[] | Produit[] => {
     switch(activeTab) {
@@ -437,78 +465,179 @@ export default function Devis() {
 
   const filteredDevis = activeTab === 'devis' ? (getFilteredData() as Devis[]) : [];
 
+  // Custom button and text color styles based on the requested color
+  const primaryBgColor = 'bg-[#1B0353]';
+  const primaryTextColor = 'text-[#1B0353]';
+  const primaryBorderColor = 'border-[#1B0353]';
+  const primaryHoverBgColor = 'hover:bg-[#2D0B75]';
+  // const primaryHoverTextColor = 'hover:text-[#2D0B75]';
+  // const primaryLightBgColor = 'bg-[#1B0353]/10';
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-20 min-h-screen"
+      className="pt-20 min-h-screen bg-gray-50"
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 md:px-8">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl"
+        >
           <div>
             <motion.h1
-              initial={{ y: -20 }}
+              initial={{ y: -10 }}
               animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
+              className="text-3xl font-bold drop-shadow-md flex items-center gap-2"
+              style={{ color: "#1B0353" }}
             >
+              <FiFileText className="inline-block" />
               Devis
             </motion.h1>
             <p className="text-sm text-gray-500 mt-1">
               Gérez vos devis et configurez les paramètres associés
             </p>
           </div>
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <FiFileText className="w-6 h-6 text-indigo-600" />
+          <div className="p-3 bg-[#1B0353]/10 rounded-lg">
+            <FiFileText className="w-7 h-7" style={{ color: "#1B0353" }} />
+          </div>
+        </motion.div>
+
+        {/* Main Action Buttons */}
+        <div className="flex flex-wrap justify-between items-center gap-3 sm:flex-row">
+          <motion.button 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.2 }}
+            className={`flex items-center gap-2 px-5 py-3 ${primaryBgColor} text-white rounded-lg shadow-md transition-all ${primaryHoverBgColor}`}
+          >
+            <FiPlus className="w-5 h-5" />
+            <span>Ajouter un devis</span>
+          </motion.button>
+          
+          <div className="flex gap-2">
+            {/* Transformer en facture button - separate outside the table for visibility */}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => transformToInvoice(0)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-all"
+            >
+              <FiPlus className="w-5 h-5" />
+              <span>Transformer en facture</span>
+            </motion.button>
+            
+            {/* Export dropdown menu */}
+            <div className="relative">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-all"
+              >
+                <FiDownload className="w-5 h-5" />
+                <span>Exporter</span>
+                <FiChevronDown className={`w-4 h-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+              </motion.button>
+              
+              {showExportMenu && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg overflow-hidden z-10 border border-gray-200"
+                >
+                  <button 
+                    onClick={exportToCSV}
+                    className="flex items-center gap-2 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FiFileText className="w-4 h-4 text-gray-500" />
+                    <span>Exporter en CSV</span>
+                  </button>
+                  <button 
+                    onClick={exportToPDF}
+                    className="flex items-center gap-2 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FiFileText className="w-4 h-4 text-gray-500" />
+                    <span>Exporter en PDF</span>
+                  </button>
+                  <button 
+                    onClick={exportToExcel}
+                    className="flex items-center gap-2 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FiFileText className="w-4 h-4 text-gray-500" />
+                    <span>Exporter en Excel</span>
+                  </button>
+                </motion.div>
+              )}
+            </div>
+            
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-center p-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-all"
+            >
+              <FiRefreshCw className="w-5 h-5" />
+            </motion.button>
           </div>
         </div>
 
-        {/* Main Action Button */}
-        <div className="flex justify-end">
-          <button className="flex items-center space-x-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-            <FiPlus />
-            <span>Ajouter un devis</span>
-          </button>
-        </div>
-
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="bg-white rounded-2xl shadow-lg overflow-hidden"
+        >
           <div className="flex overflow-x-auto border-b">
             <button
-              className={`px-4 py-3 text-center font-medium transition whitespace-nowrap ${
-                activeTab === 'devis' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              className={`px-6 py-4 text-center font-medium transition whitespace-nowrap ${
+                activeTab === 'devis' ? `${primaryTextColor} border-b-2 ${primaryBorderColor}` : 'text-gray-500 hover:text-gray-700'
               }`}
               onClick={() => setActiveTab('devis')}
             >
               Devis
             </button>
             <button
-              className={`px-4 py-3 text-center font-medium transition whitespace-nowrap ${
-                activeTab === 'devises' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              className={`px-6 py-4 text-center font-medium transition whitespace-nowrap ${
+                activeTab === 'devises' ? `${primaryTextColor} border-b-2 ${primaryBorderColor}` : 'text-gray-500 hover:text-gray-700'
               }`}
               onClick={() => setActiveTab('devises')}
             >
               Devises
             </button>
             <button
-              className={`px-4 py-3 text-center font-medium transition whitespace-nowrap ${
-                activeTab === 'taxes' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              className={`px-6 py-4 text-center font-medium transition whitespace-nowrap ${
+                activeTab === 'taxes' ? `${primaryTextColor} border-b-2 ${primaryBorderColor}` : 'text-gray-500 hover:text-gray-700'
               }`}
               onClick={() => setActiveTab('taxes')}
             >
               Taxes
             </button>
             <button
-              className={`px-4 py-3 text-center font-medium transition whitespace-nowrap ${
-                activeTab === 'societes' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              className={`px-6 py-4 text-center font-medium transition whitespace-nowrap ${
+                activeTab === 'societes' ? `${primaryTextColor} border-b-2 ${primaryBorderColor}` : 'text-gray-500 hover:text-gray-700'
               }`}
               onClick={() => setActiveTab('societes')}
             >
               Sociétés
             </button>
             <button
-              className={`px-4 py-3 text-center font-medium transition whitespace-nowrap ${
-                activeTab === 'produits' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              className={`px-6 py-4 text-center font-medium transition whitespace-nowrap ${
+                activeTab === 'produits' ? `${primaryTextColor} border-b-2 ${primaryBorderColor}` : 'text-gray-500 hover:text-gray-700'
               }`}
               onClick={() => setActiveTab('produits')}
             >
@@ -520,31 +649,37 @@ export default function Devis() {
           <div className="p-6">
             {/* Tab-specific add button and search bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
-              <div className="w-full md:w-72 relative">
+              <div className="w-full md:w-80 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiSearch className="text-gray-400" />
                 </div>
                 <input
                   type="text"
                   placeholder="Rechercher..."
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1B0353] focus:border-transparent shadow-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
-              <div className="flex items-center space-x-2 w-full md:w-auto">
-                <button className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-                  <FiPlus />
-                  <span>{getAddButtonText()}</span>
-                </button>
-                <button 
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
+              <div className="flex items-center space-x-3 w-full md:w-auto">
+                <motion.button 
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`flex items-center gap-2 px-4 py-2.5 ${primaryBgColor} text-white rounded-lg shadow-md ${primaryHoverBgColor} transition-all`}
                 >
-                  <FiFilter />
+                  <FiPlus className="w-5 h-5" />
+                  <span>{getAddButtonText()}</span>
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-all"
+                >
+                  <FiFilter className="w-5 h-5" />
                   <span>{showFilters ? 'Masquer filtres' : 'Afficher filtres'}</span>
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -553,15 +688,17 @@ export default function Devis() {
               <motion.div 
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
-                className="mb-6 p-4 border border-gray-200 rounded-lg overflow-hidden"
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 p-5 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 shadow-sm"
               >
                 <div className="flex flex-wrap gap-4">
                   {/* Tab-specific filters would go here */}
                   <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Filtrer par
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Filtrer par statut
                     </label>
-                    <select className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+                    <select className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-[#1B0353] focus:${primaryBorderColor} bg-white shadow-sm`}>
                       <option>Tous</option>
                       {activeTab === 'devis' && (
                         <>
@@ -584,61 +721,100 @@ export default function Devis() {
                       )}
                     </select>
                   </div>
+                  
+                  {activeTab === 'devis' && (
+                    <>
+                      <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Date de création
+                        </label>
+                        <select className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-[#1B0353] focus:${primaryBorderColor} bg-white shadow-sm`}>
+                          <option>Tous</option>
+                          <option>Aujourd&apos;hui</option>
+                          <option>Cette semaine</option>
+                          <option>Ce mois</option>
+                          <option>Ce trimestre</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Créé par
+                        </label>
+                        <select className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-[#1B0353] focus:${primaryBorderColor} bg-white shadow-sm`}>
+                          <option>Tous</option>
+                          <option>Jean Martin</option>
+                          <option>Sophie Leclerc</option>
+                          <option>Thomas Bernard</option>
+                          <option>Marie Dupont</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
-                <div className="flex justify-end space-x-2 mt-4">
-                  <button 
+                <div className="flex justify-end space-x-3 mt-5">
+                  <motion.button 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={resetFilters}
-                    className="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition shadow-sm"
                   >
                     Réinitialiser
-                  </button>
-                  <button 
-                    className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                  </motion.button>
+                  <motion.button 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`px-4 py-2 ${primaryBgColor} text-white rounded-lg ${primaryHoverBgColor} transition shadow-md`}
                   >
-                    Appliquer le filtre
-                  </button>
+                    Appliquer les filtres
+                  </motion.button>
                 </div>
               </motion.div>
             )}
 
             {/* Devis Tab Content */}
             {activeTab === 'devis' && (
-              <div className="overflow-x-auto">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
+              >
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Créé par
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Sujet
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Prospect
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Prix
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Statut
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Créé le
                       </th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredDevis.map((devis) => (
-                      <tr key={devis.id} className="hover:bg-gray-50 transition">
+                      <tr key={devis.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                           {devis.creePar}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-indigo-600">
+                          <div className="text-sm font-medium" style={{ color: "#1B0353" }}>
                             {devis.sujet}
                           </div>
                         </td>
@@ -649,7 +825,7 @@ export default function Devis() {
                           {devis.prix}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(devis.statut)}`}>
+                          <span className={`px-2.5 py-1.5 text-xs font-medium rounded-full ${getStatusBadgeColor(devis.statut)}`}>
                             {devis.statut}
                           </span>
                         </td>
@@ -657,17 +833,25 @@ export default function Devis() {
                           {devis.creeLe}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button className="p-1 text-indigo-600 hover:text-indigo-900" title="Voir">
+                          <div className="flex justify-end space-x-1">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100" style={{ color: "#1B0353" }} title="Voir">
                               <FiEye size={18} />
                             </button>
-                            <button className="p-1 text-blue-600 hover:text-blue-900" title="Modifier">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100" style={{ color: "#1B0353" }} title="Modifier">
                               <FiEdit size={18} />
                             </button>
-                            <button className="p-1 text-red-600 hover:text-red-900" title="Supprimer">
+                            {/* Transformer en facture button within the table */}
+                            <button 
+                              onClick={() => transformToInvoice(devis.id)}
+                              className="p-1.5 rounded-md hover:bg-green-100 text-green-600 hover:text-green-800" 
+                              title="Transformer en facture"
+                            >
+                              <FiPlus size={18} />
+                            </button>
+                            <button className="p-1.5 rounded-md hover:bg-red-100 text-red-600 hover:text-red-800" title="Supprimer">
                               <FiTrash2 size={18} />
                             </button>
-                            <button className="p-1 text-gray-600 hover:text-gray-900" title="Plus d'options">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900" title="Plus d'options">
                               <FiMoreVertical size={18} />
                             </button>
                           </div>
@@ -676,32 +860,54 @@ export default function Devis() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                
+                {filteredDevis.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <FiAlertCircle className="w-12 h-12 text-gray-400 mb-3" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">Aucun devis trouvé</h3>
+                    <p className="text-gray-500 max-w-md">
+                      Aucun devis ne correspond à vos critères de recherche. Veuillez modifier vos filtres ou créer un nouveau devis.
+                    </p>
+                    <button className={`mt-5 flex items-center gap-2 px-4 py-2 ${primaryBgColor} text-white rounded-lg ${primaryHoverBgColor} transition`}>
+                      <FiPlus size={16} />
+                      <span>Créer un devis</span>
+                    </button>
+                  </div>
+                )}
+              </motion.div>
             )}
 
             {/* Devises Tab Content */}
             {activeTab === 'devises' && (
-              <div className="overflow-x-auto">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
+              >
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Nom
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Code
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Symbole
                       </th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredDevis.map((devise) => (
-                      <tr key={devise.id} className="hover:bg-gray-50 transition">
+                    {devisesData.filter(devise => 
+                      devise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      devise.code.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((devise) => (
+                      <tr key={devise.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {devise.nom}
                         </td>
@@ -712,11 +918,11 @@ export default function Devis() {
                           {devise.symbole}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button className="p-1 text-blue-600 hover:text-blue-900" title="Modifier">
+                          <div className="flex justify-end space-x-1">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100" style={{ color: "#1B0353" }} title="Modifier">
                               <FiEdit size={18} />
                             </button>
-                            <button className="p-1 text-red-600 hover:text-red-900" title="Supprimer">
+                            <button className="p-1.5 rounded-md hover:bg-red-100 text-red-600 hover:text-red-800" title="Supprimer">
                               <FiTrash2 size={18} />
                             </button>
                           </div>
@@ -725,29 +931,36 @@ export default function Devis() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </motion.div>
             )}
 
             {/* Taxes Tab Content */}
             {activeTab === 'taxes' && (
-              <div className="overflow-x-auto">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
+              >
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Nom
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Pourcentage
                       </th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredDevis.map((taxe) => (
-                      <tr key={taxe.id} className="hover:bg-gray-50 transition">
+                    {taxesData.filter(taxe => 
+                      taxe.nom.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((taxe) => (
+                      <tr key={taxe.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {taxe.nom}
                         </td>
@@ -755,11 +968,11 @@ export default function Devis() {
                           {taxe.pourcentage}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button className="p-1 text-blue-600 hover:text-blue-900" title="Modifier">
+                          <div className="flex justify-end space-x-1">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100" style={{ color: "#1B0353" }} title="Modifier">
                               <FiEdit size={18} />
                             </button>
-                            <button className="p-1 text-red-600 hover:text-red-900" title="Supprimer">
+                            <button className="p-1.5 rounded-md hover:bg-red-100 text-red-600 hover:text-red-800" title="Supprimer">
                               <FiTrash2 size={18} />
                             </button>
                           </div>
@@ -768,47 +981,56 @@ export default function Devis() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </motion.div>
             )}
 
             {/* Sociétés Tab Content */}
             {activeTab === 'societes' && (
-              <div className="overflow-x-auto">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
+              >
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Nom
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Adresse
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Ville
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Code postal
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Pays
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Numéro de Tél.
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Email
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actif
                       </th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredDevis.map((societe) => (
-                      <tr key={societe.id} className="hover:bg-gray-50 transition">
+                    {societesData.filter(societe => 
+                      societe.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      societe.ville.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      societe.pays.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((societe) => (
+                      <tr key={societe.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {societe.nom}
                         </td>
@@ -832,17 +1054,21 @@ export default function Devis() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm">
                           {societe.actif ? (
-                            <FiCheck className="inline text-green-600" title="Actif" />
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <FiCheck className="inline mr-1" /> Actif
+                            </span>
                           ) : (
-                            <FiX className="inline text-red-600" title="Inactif" />
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <FiX className="inline mr-1" /> Inactif
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button className="p-1 text-blue-600 hover:text-blue-900" title="Modifier">
+                          <div className="flex justify-end space-x-1">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100" style={{ color: "#1B0353" }} title="Modifier">
                               <FiEdit size={18} />
                             </button>
-                            <button className="p-1 text-red-600 hover:text-red-900" title="Supprimer">
+                            <button className="p-1.5 rounded-md hover:bg-red-100 text-red-600 hover:text-red-800" title="Supprimer">
                               <FiTrash2 size={18} />
                             </button>
                           </div>
@@ -851,41 +1077,50 @@ export default function Devis() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </motion.div>
             )}
 
             {/* Produits Tab Content */}
             {activeTab === 'produits' && (
-              <div className="overflow-x-auto">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
+              >
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Nom
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Code
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Description
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actif
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Société
                       </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Prix
                       </th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredDevis.map((produit) => (
-                      <tr key={produit.id} className="hover:bg-gray-50 transition">
+                    {produitsData.filter(produit => 
+                      produit.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      produit.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      produit.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((produit) => (
+                      <tr key={produit.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {produit.nom}
                         </td>
@@ -897,9 +1132,13 @@ export default function Devis() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm">
                           {produit.actif ? (
-                            <FiCheck className="inline text-green-600" title="Actif" />
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <FiCheck className="inline mr-1" /> Actif
+                            </span>
                           ) : (
-                            <FiX className="inline text-red-600" title="Inactif" />
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <FiX className="inline mr-1" /> Inactif
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -909,11 +1148,11 @@ export default function Devis() {
                           {produit.prix}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button className="p-1 text-blue-600 hover:text-blue-900" title="Modifier">
+                          <div className="flex justify-end space-x-1">
+                            <button className="p-1.5 rounded-md hover:bg-gray-100" style={{ color: "#1B0353" }} title="Modifier">
                               <FiEdit size={18} />
                             </button>
-                            <button className="p-1 text-red-600 hover:text-red-900" title="Supprimer">
+                            <button className="p-1.5 rounded-md hover:bg-red-100 text-red-600 hover:text-red-800" title="Supprimer">
                               <FiTrash2 size={18} />
                             </button>
                           </div>
@@ -922,10 +1161,28 @@ export default function Devis() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </motion.div>
             )}
+            
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-6 px-1">
+              <div className="flex items-center text-sm text-gray-500">
+                <span>Affichage de 1 à 5 sur 5 entrées</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                  Précédent
+                </button>
+                <button className={`px-3 py-2 border ${primaryBorderColor} rounded-md text-sm font-medium ${primaryTextColor} bg-white`}>
+                  1
+                </button>
+                <button className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                  Suivant
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );

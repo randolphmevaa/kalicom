@@ -13,6 +13,8 @@ import {
   FiMoreVertical,
   FiTag,
   FiUser,
+  FiDownload,
+  FiFileText,
 } from "react-icons/fi";
 
 /** -----------------------------
@@ -36,6 +38,7 @@ interface Prospect {
   assignedTo: string;
   createdAt: string;
   updatedAt: string;
+  lastContactDate: string;
 }
 
 interface TeamMember {
@@ -82,6 +85,7 @@ const prospectsData: Prospect[] = [
     assignedTo: "Emma Laurent",
     createdAt: "2023-09-15",
     updatedAt: "2023-10-01",
+    lastContactDate: "2023-10-12",
   },
   {
     id: "LD-12346",
@@ -100,6 +104,7 @@ const prospectsData: Prospect[] = [
     assignedTo: "Lucas Martin",
     createdAt: "2023-09-18",
     updatedAt: "2023-09-25",
+    lastContactDate: "2023-10-05",
   },
   {
     id: "LD-12347",
@@ -118,6 +123,7 @@ const prospectsData: Prospect[] = [
     assignedTo: "Julie Dubois",
     createdAt: "2023-09-20",
     updatedAt: "2023-10-05",
+    lastContactDate: "2023-10-18",
   },
   {
     id: "LD-12348",
@@ -136,6 +142,7 @@ const prospectsData: Prospect[] = [
     assignedTo: "Emma Laurent",
     createdAt: "2023-09-22",
     updatedAt: "2023-09-30",
+    lastContactDate: "2023-10-02",
   },
   {
     id: "LD-12349",
@@ -154,6 +161,7 @@ const prospectsData: Prospect[] = [
     assignedTo: "Lucas Martin",
     createdAt: "2023-09-25",
     updatedAt: "2023-10-02",
+    lastContactDate: "2023-10-10",
   },
 ];
 
@@ -172,18 +180,20 @@ const filterModels: FilterModel[] = [
   { id: 4, name: "Prospects du mois en cours" },
 ];
 
+// Translated field options to French
 const fieldOptions: FieldOption[] = [
-  { id: "firstName", label: "First name", checked: true },
-  { id: "lastName", label: "Last name", checked: true },
-  { id: "phoneNumber", label: "Phone number", checked: true },
-  { id: "companyName", label: "Company name", checked: true },
-  { id: "zipCode", label: "Zip code", checked: true },
-  { id: "address", label: "Address", checked: true },
+  { id: "firstName", label: "Prénom", checked: true },
+  { id: "lastName", label: "Nom", checked: true },
+  { id: "phoneNumber", label: "Numéro de téléphone", checked: true },
+  { id: "companyName", label: "Nom de l'entreprise", checked: true },
+  { id: "zipCode", label: "Code postal", checked: true },
+  { id: "address", label: "Adresse", checked: true },
   { id: "description", label: "Description", checked: true },
   { id: "email", label: "E-mail", checked: true },
-  { id: "mobilePhoneNumber", label: "Mobile phone number", checked: true },
-  { id: "city", label: "City", checked: false },
-  { id: "country", label: "Country", checked: false },
+  { id: "mobilePhoneNumber", label: "Numéro de téléphone mobile", checked: true },
+  { id: "city", label: "Ville", checked: false },
+  { id: "country", label: "Pays", checked: false },
+  { id: "lastContactDate", label: "Dernier contact", checked: true },
 ];
 
 const propertyOptions: PropertyOption[] = [
@@ -205,6 +215,9 @@ export default function ProspectPage() {
   const [selectedFilterModel, setSelectedFilterModel] = useState<string | null>(
     null
   );
+  
+  // State for export functionality
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Booleans for toggling dropdowns
   const [showFieldsDropdown, setShowFieldsDropdown] = useState<boolean>(false);
@@ -216,11 +229,10 @@ export default function ProspectPage() {
   const [selectedFields, setSelectedFields] = useState<FieldOption[]>(
     fieldOptions
   );
-  const [selectedProperties, setSelectedProperties] = useState<PropertyOption[]>(
-    propertyOptions
-  );
+  const [selectedProperties, setSelectedProperties] =
+    useState<PropertyOption[]>(propertyOptions);
 
-  // “Select all” logic
+  // "Select all" logic
   const [selectAll, setSelectAll] = useState<boolean>(false);
 
   // Selected row IDs are strings
@@ -259,7 +271,7 @@ export default function ProspectPage() {
     setSelectedFilterModel(null);
   };
 
-  // Toggle a field’s `checked` value
+  // Toggle a field's `checked` value
   const toggleField = (fieldId: string) => {
     const updatedFields = selectedFields.map((field) =>
       field.id === fieldId ? { ...field, checked: !field.checked } : field
@@ -267,7 +279,7 @@ export default function ProspectPage() {
     setSelectedFields(updatedFields);
   };
 
-  // Toggle a property’s `checked` value
+  // Toggle a property's `checked` value
   const toggleProperty = (propertyId: string) => {
     const updatedProperties = selectedProperties.map((property) =>
       property.id === propertyId
@@ -276,26 +288,68 @@ export default function ProspectPage() {
     );
     setSelectedProperties(updatedProperties);
   };
-
-  // Select or deselect all fields/properties
-  // const selectAllFields = () => {
-  //   const allSelected =
-  //     selectedFields.every((field) => field.checked) &&
-  //     selectedProperties.every((property) => property.checked);
-
-  //   // Flip them all: if all are selected, uncheck; otherwise check
-  //   const updatedFields = selectedFields.map((field) => ({
-  //     ...field,
-  //     checked: !allSelected,
-  //   }));
-  //   const updatedProps = selectedProperties.map((prop) => ({
-  //     ...prop,
-  //     checked: !allSelected,
-  //   }));
-
-  //   setSelectedFields(updatedFields);
-  //   setSelectedProperties(updatedProps);
-  // };
+  
+  // Export to CSV
+  const exportToCSV = () => {
+    setIsExporting(true);
+    
+    try {
+      // Create CSV header
+      const headers = ["ID", "Nom", "Prénom", "Téléphone", "Mobile", "Email", "Entreprise", "Adresse", "Code Postal", "Ville", "Tags", "Description", "Dernier Contact"];
+      
+      // Create CSV content
+      const csvContent = [
+        headers.join(","),
+        ...prospectsData.map(prospect => [
+          prospect.id,
+          prospect.lastName,
+          prospect.firstName,
+          prospect.phoneNumber,
+          prospect.mobilePhoneNumber,
+          prospect.email,
+          prospect.companyName,
+          prospect.address,
+          prospect.zipCode,
+          prospect.city,
+          prospect.tags.join(";"),
+          prospect.description.replace(/,/g, " "),
+          prospect.lastContactDate
+        ].join(","))
+      ].join("\n");
+      
+      // Create download link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `prospects_export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error("Erreur lors de l'export CSV:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  
+  // Export to PDF
+  const exportToPDF = () => {
+    setIsExporting(true);
+    
+    try {
+      alert("Fonctionnalité d'export PDF à implémenter avec une bibliothèque comme jsPDF");
+      // En production, utilisez une bibliothèque comme jsPDF pour générer un PDF
+      
+    } catch (error) {
+      console.error("Erreur lors de l'export PDF:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   /** -----------------------------
    *  Rendering
@@ -307,27 +361,43 @@ export default function ProspectPage() {
       animate={{ opacity: 1 }}
       className="pt-20 min-h-screen"
     >
-      <div className="max-w-7xl mx-auto space-y-6 px-4  ">
+      <div className="max-w-7xl mx-auto space-y-6 px-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-6 bg-white rounded-2xl shadow-lg">
+        <div
+          className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-2xl"
+          // style={{ backgroundColor: "#4BB2F6" }} // header background
+        >
           <div>
             <motion.h1
               initial={{ y: -20 }}
               animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
+              className="text-3xl font-bold drop-shadow-md"
+              style={{ color: "#1B0353" }} // using the darkest color for text
             >
               Prospects
             </motion.h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm mt-1" style={{ color: "#004AC8" }}>
               Gérez et suivez tous vos prospects commerciaux
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex space-x-3">
-            <button className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+            <button
+              className="flex items-center px-4 py-2 rounded-lg transition"
+              style={{
+                backgroundColor: "#004AC8",
+                color: "#fff",
+              }}
+            >
               <FiSearch className="mr-2" />
               <span>Recherche Avancée</span>
             </button>
-            <button className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            <button
+              className="flex items-center px-4 py-2 rounded-lg transition"
+              style={{
+                backgroundColor: "#1B0353",
+                color: "#fff",
+              }}
+            >
               <FiPlus className="mr-2" />
               <span>Ajouter un prospect</span>
             </button>
@@ -335,7 +405,7 @@ export default function ProspectPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="rounded-2xl shadow-lg p-6" style={{ backgroundColor: "#fff" }}>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {/* Phone Number */}
             <div className="col-span-1">
@@ -347,7 +417,7 @@ export default function ProspectPage() {
                   type="text"
                   value={phoneSearch}
                   onChange={(e) => setPhoneSearch(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#4BB2F6] focus:border-[#4BB2F6]"
                   placeholder="Ex: 06 12 34 56 78"
                 />
               </div>
@@ -363,7 +433,7 @@ export default function ProspectPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#4BB2F6] focus:border-[#4BB2F6]"
                   placeholder="Rechercher..."
                 />
                 <FiSearch className="absolute top-2.5 right-3 text-gray-400" />
@@ -399,7 +469,7 @@ export default function ProspectPage() {
                   type="date"
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#4BB2F6] focus:border-[#4BB2F6]"
                 />
                 <FiCalendar className="absolute top-2.5 right-3 text-gray-400" />
               </div>
@@ -492,7 +562,10 @@ export default function ProspectPage() {
                 <FiRefreshCw className="mr-2" />
                 <span>Réinitialiser</span>
               </button>
-              <button className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
+              <button
+                className="flex items-center px-4 py-2 text-white rounded-lg transition text-sm"
+                style={{ backgroundColor: "#004AC8" }}
+              >
                 <FiFilter className="mr-2" />
                 <span>Appliquer le filtre</span>
               </button>
@@ -513,7 +586,7 @@ export default function ProspectPage() {
             </button>
             {showFieldsDropdown && (
               <div className="absolute z-10 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                <h4 className="font-medium text-sm mb-2">Afficher les champs :</h4>
+                <h4 className="font-medium text-sm mb-2 text-gray-700">Afficher les champs :</h4>
                 <div className="space-y-2 mb-4">
                   {selectedFields.map((field) => (
                     <div key={field.id} className="flex items-center">
@@ -522,16 +595,16 @@ export default function ProspectPage() {
                         onClick={() => toggleField(field.id)}
                       >
                         {field.checked ? (
-                          <FiCheckSquare className="text-indigo-600" />
+                          <FiCheckSquare style={{ color: "#004AC8" }} />
                         ) : (
                           <FiSquare className="text-gray-400" />
                         )}
                       </button>
-                      <span className="text-sm">{field.label}</span>
+                      <span className="text-sm text-gray-400">{field.label}</span>
                     </div>
                   ))}
                 </div>
-                <h4 className="font-medium text-sm mb-2">
+                <h4 className="font-medium text-sm mb-2 text-gray-700">
                   Afficher les propriétés :
                 </h4>
                 <div className="space-y-2 mb-4">
@@ -542,17 +615,20 @@ export default function ProspectPage() {
                         onClick={() => toggleProperty(property.id)}
                       >
                         {property.checked ? (
-                          <FiCheckSquare className="text-indigo-600" />
+                          <FiCheckSquare style={{ color: "#004AC8" }} />
                         ) : (
                           <FiSquare className="text-gray-400" />
                         )}
                       </button>
-                      <span className="text-sm">{property.label}</span>
+                      <span className="text-sm text-gray-400">{property.label}</span>
                     </div>
                   ))}
                 </div>
                 <div className="border-t pt-3 mt-2">
-                  <button className="text-sm text-indigo-600 hover:text-indigo-800">
+                  <button
+                    className="text-sm hover:underline"
+                    style={{ color: "#004AC8" }}
+                  >
                     Sauvegarder le filtre en tant que modèle
                   </button>
                 </div>
@@ -560,71 +636,105 @@ export default function ProspectPage() {
             )}
           </div>
 
-          <button
-            onClick={handleSelectAll}
-            className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
-          >
-            {selectAll ? (
-              <FiCheckSquare className="mr-2 text-indigo-600" />
-            ) : (
-              <FiSquare className="mr-2 text-gray-400" />
-            )}
-            <span>Tout sélectionner</span>
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={exportToCSV}
+              disabled={isExporting}
+              className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
+            >
+              <FiDownload className="mr-2 text-gray-600" />
+              <span>Exporter CSV</span>
+            </button>
+            <button
+              onClick={exportToPDF}
+              disabled={isExporting}
+              className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
+            >
+              <FiFileText className="mr-2 text-gray-600" />
+              <span>Exporter PDF</span>
+            </button>
+            <button
+              onClick={handleSelectAll}
+              className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
+            >
+              {selectAll ? (
+                <FiCheckSquare style={{ color: "#004AC8" }} className="mr-2" />
+              ) : (
+                <FiSquare className="mr-2 text-gray-400" />
+              )}
+              <span>Tout sélectionner</span>
+            </button>
+          </div>
         </div>
 
         {/* Prospects Table */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="rounded-2xl shadow-lg overflow-hidden" style={{ backgroundColor: "#fff" }}>
           {/* Make the table scrollable on small screens */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
-                <tr className="bg-gray-50">
+                <tr style={{ backgroundColor: "#ededed" }}>
                   <th className="w-10 px-4 py-3 text-left">
                     <button onClick={handleSelectAll} className="focus:outline-none">
                       {selectAll ? (
-                        <FiCheckSquare className="text-indigo-600" />
+                        <FiCheckSquare style={{ color: "#1B0353" }} />
                       ) : (
                         <FiSquare className="text-gray-400" />
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    # Lead ID
+                  {/* Reorganized TABLE HEADERS IN FRENCH */}
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    ID du prospect
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    First name
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Nom complet
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last name
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Téléphone mobile
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phone number
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Entreprise
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Company name
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Adresse
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Zip code
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Code postal / Ville
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Address
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Téléphone
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
                     E-mail
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mobile phone number
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Tags
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
+                    Dernier contact
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#1B0353" }}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200">
                 {prospectsData.map((prospect, index) => (
                   <tr
                     key={prospect.id}
@@ -636,41 +746,56 @@ export default function ProspectPage() {
                         onClick={() => toggleRowSelection(prospect.id)}
                       >
                         {selectedRows.includes(prospect.id) ? (
-                          <FiCheckSquare className="text-indigo-600" />
+                          <FiCheckSquare style={{ color: "#004AC8" }} />
                         ) : (
                           <FiSquare className="text-gray-400" />
                         )}
                       </button>
                     </td>
+                    {/* Reorganized table cells to match the new header order */}
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {prospect.id}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {prospect.firstName}
+                      {prospect.firstName} {prospect.lastName}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {prospect.lastName}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {prospect.phoneNumber}
+                      {prospect.mobilePhoneNumber}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {prospect.companyName}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {prospect.zipCode}
+                      {prospect.address}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {prospect.address}
+                      {prospect.zipCode} {prospect.city}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {prospect.phoneNumber}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm"
+                        style={{ color: "#004AC8" }}>
+                      {prospect.email}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                      <div className="flex flex-wrap gap-1">
+                        {prospect.tags.map((tag, tagIndex) => (
+                          <span 
+                            key={tagIndex} 
+                            className="px-2 py-1 text-xs rounded-full" 
+                            style={{ backgroundColor: "#4BB2F6", color: "#1B0353" }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">
                       {prospect.description}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-600">
-                      {prospect.email}
-                    </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {prospect.mobilePhoneNumber}
+                      {prospect.lastContactDate}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                       <button className="text-gray-500 hover:text-gray-700">
@@ -684,7 +809,7 @@ export default function ProspectPage() {
           </div>
 
           {/* Pagination */}
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 Précédent
@@ -713,7 +838,10 @@ export default function ProspectPage() {
                   <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                     1
                   </button>
-                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600 hover:bg-gray-50">
+                  <button
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium hover:bg-gray-50"
+                    style={{ backgroundColor: "#4BB2F6", color: "#1B0353" }}
+                  >
                     2
                   </button>
                   <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">

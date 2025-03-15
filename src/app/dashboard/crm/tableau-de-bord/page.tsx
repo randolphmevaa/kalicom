@@ -52,7 +52,8 @@ export default function CRMTableauDeBord() {
             <motion.h1
               initial={{ y: -20 }}
               animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
+              className="text-3xl font-bold drop-shadow-md"
+              style={{ color: "#1B0353" }}
             >
               Tableau de Bord CRM
             </motion.h1>
@@ -189,8 +190,8 @@ export default function CRMTableauDeBord() {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium">{seller.name}</span>
-                      <span className="text-xs font-medium">{seller.prospects} prospects</span>
+                      <span className="text-sm font-medium text-gray-700">{seller.name}</span>
+                      <span className="text-xs font-medium text-gray-700">{seller.prospects} prospects</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
@@ -236,7 +237,7 @@ export default function CRMTableauDeBord() {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <span className="text-sm font-medium">{event.type}</span>
+                      <span className="text-sm font-medium text-gray-700">{event.type}</span>
                       <span className="text-xs text-gray-500">{event.time}</span>
                     </div>
                     <p className="text-xs text-gray-700 mt-1">{event.contact}</p>
