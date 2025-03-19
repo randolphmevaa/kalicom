@@ -1,7 +1,8 @@
 // app/components/Header.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   FiPhone,
   FiHome,
@@ -9,11 +10,28 @@ import {
   FiPlusCircle,
   FiSearch,
   FiMail,
-  // FiGlobe,
-  // FiUser,
   FiBell,
+  FiUser,
+  FiSettings,
+  FiHelpCircle,
+  FiLogOut,
+  FiChevronDown
 } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Define proper types for user information
+interface UserData {
+  name?: string;
+  role?: string;
+  company?: string;
+}
+
+interface UserInfo {
+  email?: string;
+  isLoggedIn?: boolean;
+  timestamp?: number;
+  user?: UserData;
+}
 
 type HeaderProps = {
   sidebarWidth: number;
@@ -21,6 +39,72 @@ type HeaderProps = {
 
 export default function Header({ sidebarWidth }: HeaderProps) {
   const [search, setSearch] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfo>({});
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  
+  // Fetch user info from localStorage
+  useEffect(() => {
+    const fetchUserInfo = () => {
+      try {
+        const proInfo = localStorage.getItem('proInfo');
+        if (proInfo) {
+          const userData = JSON.parse(proInfo) as UserInfo;
+          setUserInfo(userData);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+    
+    fetchUserInfo();
+  }, []);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Handle logout
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem('proInfo');
+    
+    // Redirect to login page
+    router.push('/');
+  };
+  
+  // Get user initials
+  const getUserInitials = () => {
+    if (userInfo?.user?.name) {
+      const nameParts = userInfo.user.name.split(' ');
+      if (nameParts.length > 1) {
+        return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+      }
+      return nameParts[0][0].toUpperCase();
+    }
+    return 'JD'; // Default fallback
+  };
+  
+  // Get user display name
+  const getUserName = () => {
+    return userInfo?.user?.name || 'Jean Dupont';
+  };
+  
+  // Get user role
+  const getUserRole = () => {
+    return userInfo?.user?.role || 'Administrateur';
+  };
 
   return (
     <header
@@ -103,14 +187,92 @@ export default function Header({ sidebarWidth }: HeaderProps) {
                 </div>
               </motion.button>
 
-              <div className="flex items-center space-x-2 group cursor-pointer">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-medium">
-                  JD
-                </div>
-                <div className="text-sm text-gray-600 group-hover:text-blue-600">
-                  <div className="font-medium">Jean Dupont</div>
-                  <div className="text-xs">Administrateur</div>
-                </div>
+              {/* User profile with dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <motion.div 
+                  className="flex items-center space-x-2 cursor-pointer py-1 px-0.5"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.03)', borderRadius: '0.5rem' }}
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-medium">
+                    {getUserInitials()}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <div className="font-medium flex items-center">
+                      {getUserName()}
+                      <FiChevronDown className={`ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} size={14} />
+                    </div>
+                    <div className="text-xs">{getUserRole()}</div>
+                  </div>
+                </motion.div>
+                
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50"
+                    >
+                      {/* User info section */}
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-medium">
+                            {getUserInitials()}
+                          </div>
+                          <div className="ml-3">
+                            <div className="font-medium text-gray-800">{getUserName()}</div>
+                            <div className="text-xs text-gray-500">{userInfo?.email || 'jean.dupont@example.com'}</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Menu items */}
+                      <div className="py-2">
+                        <motion.a 
+                          href="#" 
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#004AC8]"
+                          whileHover={{ x: 5 }}
+                        >
+                          <FiUser className="mr-3 text-gray-400" />
+                          Mon profil
+                        </motion.a>
+                        
+                        <motion.a 
+                          href="#" 
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#004AC8]"
+                          whileHover={{ x: 5 }}
+                        >
+                          <FiSettings className="mr-3 text-gray-400" />
+                          Paramètres
+                        </motion.a>
+                        
+                        <motion.a 
+                          href="#" 
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#004AC8]"
+                          whileHover={{ x: 5 }}
+                        >
+                          <FiHelpCircle className="mr-3 text-gray-400" />
+                          Aide et support
+                        </motion.a>
+                      </div>
+                      
+                      {/* Logout section */}
+                      <div className="py-2 border-t border-gray-100">
+                        <motion.button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                          whileHover={{ x: 5 }}
+                        >
+                          <FiLogOut className="mr-3" />
+                          Se déconnecter
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
