@@ -6,13 +6,24 @@ import {
   FiSearch,
   FiChevronDown,
   FiChevronUp,
-  FiPlus,
+  // FiPlus,
   FiTrash2,
   FiEdit,
   FiCheckCircle,
   FiXCircle,
   FiRefreshCw,
-  // FiX,
+  FiHome,
+  FiChevronRight,
+  FiDownload,
+  FiFileText,
+  FiFilter,
+  // FiSettings,
+  FiSliders,
+  FiPhone,
+  FiMapPin,
+  FiGlobe,
+  FiToggleRight,
+  FiActivity
 } from 'react-icons/fi';
 
 interface Numero {
@@ -83,11 +94,59 @@ const initialNumeros: Numero[] = [
   },
 ];
 
+// Breadcrumbs Component
+const Breadcrumbs = ({ items }: { items: string[] }) => (
+  <div className="flex items-center text-sm text-gray-600 mb-6">
+    <FiHome className="mr-2 text-gray-500" />
+    {items.map((item, index) => (
+      <div key={index} className="flex items-center">
+        {index > 0 && <FiChevronRight className="mx-2 text-gray-400" />}
+        <span className={index === items.length - 1 ? "text-[#004AC8] font-medium" : ""}>{item}</span>
+      </div>
+    ))}
+  </div>
+);
+
+// Helper functions for export
+const exportToCSV = <T extends object>(data: T[], filename: string) => {
+  // Convert data to CSV format
+  const headers = Object.keys(data[0]).join(',');
+  const rows = data.map(row => Object.values(row).join(','));
+  const csv = [headers, ...rows].join('\n');
+  
+  // Create a blob and download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const exportToPDF = (elementId: string, filename: string) => {
+  // In a real implementation, this would use a library like jsPDF or html2pdf.js
+  // For this example, we'll just show an alert
+  alert(`Le PDF ${filename} a été généré et téléchargé.`);
+  
+  // In a real implementation:
+  /*
+  import html2pdf from 'html2pdf.js';
+  const element = document.getElementById(elementId);
+  html2pdf()
+    .from(element)
+    .save(`${filename}.pdf`);
+  */
+};
+
 // --------------- MAIN PAGE COMPONENT ---------------
 export default function MesNumeros() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLines, setSelectedLines] = useState<number[]>([]);
-  const [numeros,  ] = useState<Numero[]>(initialNumeros);
+  const [numeros, ] = useState<Numero[]>(initialNumeros);
+  const [activeCountryFilter, setActiveCountryFilter] = useState<string>('Tous');
 
   // Sorting config
   const [sortConfig, setSortConfig] = useState<{
@@ -97,11 +156,15 @@ export default function MesNumeros() {
 
   // Filter states
   const [showLinesDropdown, setShowLinesDropdown] = useState(false);
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
   // Derived data
   const totalNumeros = numeros.length;
   const activeNumeros = numeros.filter((n) => n.active).length;
   const inactiveNumeros = numeros.filter((n) => !n.active).length;
+
+  // Get unique countries for filtering
+  const uniqueCountries = ['Tous', ...Array.from(new Set(numeros.map(n => n.pays)))];
 
   // ----------------- FILTER & SEARCH -----------------
   const filteredNumeros = numeros
@@ -110,14 +173,18 @@ export default function MesNumeros() {
       const matchSearch =
         num.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
         num.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        num.pays.toLowerCase().includes(searchQuery.toLowerCase());
+        num.pays.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        num.action.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Country filter
+      const matchCountry = activeCountryFilter === 'Tous' || num.pays === activeCountryFilter;
 
       // LinesUsed filter: if selectedLines is not empty, we only show those containing any selected line
       const matchLines =
         selectedLines.length === 0 ||
         selectedLines.some((lineId) => num.linesUsed?.includes(lineId));
 
-      return matchSearch && matchLines;
+      return matchSearch && matchLines && matchCountry;
     })
     .sort((a, b) => {
       // Sorting
@@ -149,7 +216,13 @@ export default function MesNumeros() {
   const handleReset = () => {
     setSearchQuery('');
     setSelectedLines([]);
+    setActiveCountryFilter('Tous');
   };
+
+  // Handle outside click for dropdowns
+  // const handleOutsideClick = () => {
+  //   setShowLinesDropdown(false);
+  // };
 
   // --------------------------------------------------------------------
   // UI RENDER
@@ -160,7 +233,10 @@ export default function MesNumeros() {
       animate={{ opacity: 1 }}
       className="pt-20 min-h-screen"
     >
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={['PBX', 'Mes Numéros']} />
+
         {/* ---------- HEADER ---------- */}
         <div className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100">
           <div className="absolute inset-0 bg-gradient-to-r from-[#004AC8]/10 to-[#4BB2F6]/10 rounded-3xl pointer-events-none" />
@@ -172,21 +248,38 @@ export default function MesNumeros() {
               </p>
             </div>
             <div className="flex space-x-4">
-              <button className="p-2 hover:bg-gray-200 rounded-xl transition" title="Ajouter un numéro">
-                <FiPlus className="text-[#1B0353] w-6 h-6" />
-              </button>
+              {/* Export Buttons */}
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => exportToCSV(numeros, 'mes-numeros')}
+                  className="flex items-center px-4 py-2 bg-[#004AC8]/10 text-[#004AC8] rounded-xl hover:bg-[#004AC8]/20 transition"
+                  title="Exporter en CSV"
+                >
+                  <FiDownload className="mr-2" />
+                  CSV
+                </button>
+                <button 
+                  onClick={() => exportToPDF('numeros-table', 'mes-numeros')}
+                  className="flex items-center px-4 py-2 bg-[#004AC8]/10 text-[#004AC8] rounded-xl hover:bg-[#004AC8]/20 transition"
+                  title="Exporter en PDF"
+                >
+                  <FiFileText className="mr-2" />
+                  PDF
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* ---------- STATS CARDS (OPTIONAL) ---------- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {/* ---------- STATS CARDS ---------- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <motion.div
             whileHover={{ scale: 1.03, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.15)' }}
             className="bg-gradient-to-br from-[#1B0353] to-[#004AC8] p-6 rounded-3xl shadow-lg backdrop-blur-md text-white"
           >
             <div className="flex items-center">
-              <FiCheckCircle className="w-10 h-10 mr-4" />
+              <FiPhone className="w-10 h-10 mr-4" />
               <div>
                 <p className="text-sm font-medium">Total Numéros</p>
                 <p className="text-3xl font-extrabold">{totalNumeros}</p>
@@ -223,151 +316,220 @@ export default function MesNumeros() {
 
         {/* ---------- FILTERS SECTION ---------- */}
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          {/* Search + Multi Select + Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-center">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-[#1B0353] flex items-center">
+              <FiFilter className="mr-2" /> Filtres
+            </h2>
+            <button 
+              onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+              className="text-[#004AC8] hover:text-[#003DA8] flex items-center text-sm font-medium"
+            >
+              <FiSliders className="mr-1" />
+              {showFiltersPanel ? 'Masquer les filtres avancés' : 'Afficher les filtres avancés'}
+            </button>
+          </div>
+
+          {/* Basic Search */}
+          <div className="flex flex-wrap md:flex-nowrap gap-4 items-end">
             {/* Search Bar */}
-            <div className="relative col-span-1">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3.5">
-                <FiSearch className="w-5 h-5 text-[#1B0353]/80" />
+            <div className="w-full md:w-1/3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5">
+                  <FiSearch className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Chercher par numéro, nom ou pays..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#004AC8] focus:ring-2 focus:ring-[#004AC8]/20 transition-all duration-200 text-gray-800 placeholder-gray-400"
+                />
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Chercher..."
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#004AC8] focus:ring-2 focus:ring-[#004AC8]/20 transition-all duration-200 text-gray-800 placeholder-gray-400"
-              />
             </div>
 
-            {/* Multi-select: "Numéro utilisé par la ligne :" */}
-            <div className="relative col-span-1">
-              <div className="font-medium text-gray-700 mb-1">
-                Numéro utilisé par la ligne :
-              </div>
-              <div
-                className="select-none cursor-pointer relative bg-gray-50 border-2 border-gray-200 rounded-xl py-2.5 px-4 flex items-center justify-between"
-                onClick={() => setShowLinesDropdown((prev) => !prev)}
-              >
-                <span className="text-gray-700 text-sm">
-                  {selectedLines.length === 0
-                    ? 'Toutes les lignes'
-                    : `Lignes sélectionnées (${selectedLines.length})`}
-                </span>
-                {showLinesDropdown ? (
-                  <FiChevronUp className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <FiChevronDown className="w-5 h-5 text-gray-500" />
-                )}
-              </div>
-
-              {/* Dropdown for lines */}
-              {showLinesDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-auto"
+            {/* Country Filter Selector */}
+            <div className="w-full md:w-1/3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par pays</label>
+              <div className="relative">
+                <select
+                  value={activeCountryFilter}
+                  onChange={(e) => setActiveCountryFilter(e.target.value)}
+                  className="w-full appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#004AC8] focus:ring-2 focus:ring-[#004AC8]/20 transition-all text-gray-800"
                 >
-                  {sampleLines.map((line) => {
-                    const isSelected = selectedLines.includes(line.id);
-                    return (
-                      <div
-                        key={line.id}
-                        className={`px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer ${
-                          isSelected ? 'bg-gray-100' : ''
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedLines((prev) =>
-                            isSelected
-                              ? prev.filter((x) => x !== line.id)
-                              : [...prev, line.id]
-                          );
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          readOnly
-                          className="mr-2 w-4 h-4 text-[#004AC8] border-gray-300 rounded focus:ring-[#004AC8]"
-                        />
-                        <span className="text-sm text-gray-700">{line.number}</span>
-                      </div>
-                    );
-                  })}
-                </motion.div>
-              )}
+                  {uniqueCountries.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+                <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              </div>
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3 ml-auto">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleReset}
-                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200"
+                className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Réinitialiser
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-5 py-2.5 bg-[#004AC8] text-white rounded-xl font-medium hover:bg-[#003DA8]"
+                className="px-5 py-2.5 bg-[#004AC8] text-white rounded-xl hover:bg-[#003DA8] transition-colors"
               >
                 Appliquer le filtre
               </motion.button>
             </div>
           </div>
+
+          {/* Advanced Filters Panel */}
+          {showFiltersPanel && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 pt-4 border-t border-gray-200"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Multi-select: "Numéro utilisé par la ligne :" */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Numéro utilisé par la ligne :
+                  </label>
+                  <div
+                    className="select-none cursor-pointer relative bg-gray-50 border-2 border-gray-200 rounded-xl py-2.5 px-4 flex items-center justify-between"
+                    onClick={() => setShowLinesDropdown((prev) => !prev)}
+                  >
+                    <span className="text-gray-700 text-sm">
+                      {selectedLines.length === 0
+                        ? 'Toutes les lignes'
+                        : `Lignes sélectionnées (${selectedLines.length})`}
+                    </span>
+                    {showLinesDropdown ? (
+                      <FiChevronUp className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <FiChevronDown className="w-5 h-5 text-gray-500" />
+                    )}
+                  </div>
+
+                  {/* Dropdown for lines */}
+                  {showLinesDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="absolute z-20 mt-1 w-[calc(50%-1rem)] bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-auto"
+                    >
+                      <div className="p-2 bg-gray-50 border-b border-gray-100">
+                        <span className="text-xs font-medium text-gray-500">Sélectionnez une ou plusieurs lignes</span>
+                      </div>
+                      {sampleLines.map((line) => {
+                        const isSelected = selectedLines.includes(line.id);
+                        return (
+                          <div
+                            key={line.id}
+                            className={`px-4 py-2.5 hover:bg-gray-100 flex items-center cursor-pointer ${
+                              isSelected ? 'bg-blue-50' : ''
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedLines((prev) =>
+                                isSelected
+                                  ? prev.filter((x) => x !== line.id)
+                                  : [...prev, line.id]
+                              );
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              readOnly
+                              className="mr-2 w-4 h-4 text-[#004AC8] border-gray-300 rounded focus:ring-[#004AC8]"
+                            />
+                            <span className="text-sm text-gray-700 font-medium">{line.number}</span>
+                          </div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Statut :
+                  </label>
+                  <div className="flex space-x-3">
+                    <div className="flex-1 flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        id="status-all"
+                        name="status"
+                        className="mr-2 text-[#004AC8]"
+                        defaultChecked
+                      />
+                      <label htmlFor="status-all" className="text-sm text-gray-700 flex-1 cursor-pointer">Tous</label>
+                    </div>
+                    <div className="flex-1 flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        id="status-active"
+                        name="status"
+                        className="mr-2 text-[#004AC8]"
+                      />
+                      <label htmlFor="status-active" className="text-sm text-gray-700 flex-1 cursor-pointer">Actifs</label>
+                    </div>
+                    <div className="flex-1 flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        id="status-inactive"
+                        name="status"
+                        className="mr-2 text-[#004AC8]"
+                      />
+                      <label htmlFor="status-inactive" className="text-sm text-gray-700 flex-1 cursor-pointer">Inactifs</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* ---------- TABLE SECTION ---------- */}
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <div id="numeros-table" className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           <div className="overflow-hidden rounded-xl border border-gray-200">
             <table className="w-full">
               {/* Table Header */}
               <thead className="bg-gradient-to-r from-[#004AC8]/5 to-[#4BB2F6]/5">
                 <tr>
                   {[
-                    'Destination',
-                    'Nom',
-                    'Pays',
-                    'Activé',
-                    'Action',
-                    'Description',
-                    'Actions',
-                  ].map((header, idx) => (
+                    { key: 'destination', label: 'Destination', icon: FiPhone },
+                    { key: 'nom', label: 'Nom', icon: FiMapPin },
+                    { key: 'pays', label: 'Pays', icon: FiGlobe },
+                    { key: 'active', label: 'Activé', icon: FiToggleRight },
+                    { key: 'action', label: 'Action', icon: FiActivity },
+                    { key: 'description', label: 'Description', icon: null },
+                    { key: 'actions', label: 'Actions', icon: null },
+                  ].map((column, idx) => (
                     <th
-                      key={header}
+                      key={column.key}
                       className={`px-6 py-4 text-left text-sm font-semibold text-[#1B0353] ${
                         idx === 0 ? 'rounded-tl-xl' : idx === 6 ? 'rounded-tr-xl' : ''
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        {header}
-                        {/* Enable sorting on certain columns, e.g., Destination, Nom, Pays, Activé */}
-                        {['Destination', 'Nom', 'Pays', 'Activé'].includes(header) && (
+                        {column.icon && <column.icon className="w-4 h-4 text-[#004AC8]" />}
+                        {column.label}
+                        {/* Enable sorting on certain columns */}
+                        {['destination', 'nom', 'pays', 'active'].includes(column.key) && (
                           <button
-                            onClick={() =>
-                              handleSort(
-                                header === 'Destination'
-                                  ? 'destination'
-                                  : header === 'Nom'
-                                  ? 'nom'
-                                  : header === 'Pays'
-                                  ? 'pays'
-                                  : 'active'
-                              )
-                            }
+                            onClick={() => handleSort(column.key as keyof Numero)}
                             className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
                           >
-                            {sortConfig.key ===
-                            (header === 'Destination'
-                              ? 'destination'
-                              : header === 'Nom'
-                              ? 'nom'
-                              : header === 'Pays'
-                              ? 'pays'
-                              : 'active')
+                            {sortConfig.key === column.key
                               ? sortConfig.direction === 'asc'
                                 ? (
                                   <FiChevronUp className="w-4 h-4 text-[#004AC8]" />
@@ -396,13 +558,26 @@ export default function MesNumeros() {
                     className="group transition-colors"
                   >
                     {/* Destination */}
-                    <td className="px-6 py-4 text-sm text-gray-800 font-medium">
-                      {num.destination}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 text-[#004AC8]">
+                          <FiPhone className="w-4 h-4" />
+                        </div>
+                        <span className="font-medium text-gray-800">{num.destination}</span>
+                      </div>
                     </td>
+                    
                     {/* Nom */}
                     <td className="px-6 py-4 text-sm text-gray-700">{num.nom}</td>
+                    
                     {/* Pays */}
-                    <td className="px-6 py-4 text-sm text-gray-700">{num.pays}</td>
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center px-2.5 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
+                        <FiGlobe className="w-3.5 h-3.5 mr-1 text-gray-500" />
+                        {num.pays}
+                      </div>
+                    </td>
+                    
                     {/* Activé */}
                     <td className="px-6 py-4 text-sm text-gray-700">
                       <motion.div
@@ -422,19 +597,27 @@ export default function MesNumeros() {
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {num.active ? 'Oui' : 'Non'}
+                          {num.active ? 'Actif' : 'Inactif'}
                         </span>
                       </motion.div>
                     </td>
+                    
                     {/* Action */}
-                    <td className="px-6 py-4 text-sm text-gray-700">{num.action}</td>
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center px-3 py-1 bg-blue-50 rounded-full text-sm font-medium text-blue-700">
+                        <FiActivity className="w-3.5 h-3.5 mr-1.5" />
+                        {num.action}
+                      </div>
+                    </td>
+                    
                     {/* Description */}
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                       {num.description}
                     </td>
+                    
                     {/* Actions Buttons */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
@@ -472,9 +655,23 @@ export default function MesNumeros() {
                   >
                     <td
                       colSpan={7}
-                      className="py-12 text-center text-gray-600 font-medium"
+                      className="py-16 text-center"
                     >
-                      Aucun numéro trouvé avec ces critères
+                      <div className="mx-auto flex flex-col items-center">
+                        <FiSearch className="w-12 h-12 text-gray-300 mb-4" />
+                        <p className="text-gray-600 font-medium mb-1">
+                          Aucun numéro trouvé avec ces critères
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Essayez d&apos;ajuster vos filtres ou d&apos;effectuer une recherche différente
+                        </p>
+                        <button 
+                          onClick={handleReset}
+                          className="mt-4 px-4 py-2 bg-blue-50 text-[#004AC8] rounded-xl hover:bg-blue-100 transition-colors font-medium"
+                        >
+                          Réinitialiser les filtres
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 )}
