@@ -6,62 +6,106 @@ import {
   FiSearch, 
   FiFilter, 
   FiPlus, 
-  FiMoreVertical, 
+  // FiMoreVertical, 
   FiEdit,
   FiTrash2,
   FiEye,
   FiDownload,
-  FiClock,
+  // FiUpload,
   FiCalendar,
   FiRefreshCw,
-  // FiFile,
   FiCheckCircle,
-  FiBarChart2,
   FiArrowUp,
   FiArrowDown,
-  // FiChevronDown,
-  FiChevronRight,
   FiInfo,
   FiAlertCircle,
   FiCheck,
-  FiCornerUpRight,
+  // FiX,
   FiSettings,
   FiBell,
-  // FiUser,
-  FiPieChart,
-  FiTrendingUp,
-  FiMail,
   FiFileText,
   FiGrid,
-  FiList
+  FiList,
+  // FiChevronDown,
+  FiChevronsLeft,
+  FiChevronsRight,
+  FiSliders,
+  FiClock
 } from 'react-icons/fi';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
-/** Example interface for the notification object */
+/** Interface for the notification object */
 interface NotificationState {
   message: string;
-  type: "info" | "success" | "error"; // or extend as needed
+  type: "info" | "success" | "error";
 }
 
+/** Payment data structure */
+interface Reglement {
+  id: string;
+  client: string;
+  nom: string;
+  prenom: string;
+  montant: string;
+  montantNum: number; // For sorting and calculations
+  date: string;
+  moyenPaiement: string;
+  restantAffecter: string;
+  restantAffecterNum: number; // For sorting and calculations
+  notes?: string;
+  reference?: string;
+}
+
+/** Schedule data structure */
+interface Echeance {
+  id: string;
+  dateEcheancier: string;
+  nDocument: string;
+  montant: string;
+  montantNum: number; // For sorting and calculations
+  soldee: boolean;
+  codeTiers: string;
+  client: string;
+  nom: string;
+  prenom: string;
+  moyenPaiement: string;
+  soldeDu: string;
+  soldeDuNum: number; // For sorting and calculations
+  notes?: string;
+  urgence?: 'high' | 'medium' | 'low';
+}
+
+// Define a type for possible sort values
+type SortValueType = string | number | boolean | undefined;
 
 export default function ReglementsEcheancier() {
   // State for active tab, filters, and search
   const [activeTab, setActiveTab] = useState<"reglements" | "echeancier">("reglements");
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("Tous");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("Tous");
+  const [selectedMoyenPaiement, setSelectedMoyenPaiement] = useState<string>("Tous");
   const [selectedClient, setSelectedClient] = useState<string>("Tous");
-
+  const [dateDebut, setDateDebut] = useState<string>("");
+  const [dateFin, setDateFin] = useState<string>("");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("Tous");
+  const [ , setShowAddForm] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("Tous");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [notification, setNotification] = useState<NotificationState | null>(null);
   const [showNotification, setShowNotification] = useState<boolean>(false);
   
-  // State for selected payments (for bulk actions)
-  const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
+  // Sorting state
+  const [sortField, setSortField] = useState<string>("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  
+  // State for selected items (for bulk actions)
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState<boolean>(false);
+  
+  // Modal states
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [bulkDelete, setBulkDelete] = useState<boolean>(false);
 
   // Check for scroll position
   useEffect(() => {
@@ -83,500 +127,654 @@ export default function ReglementsEcheancier() {
     }, 3000);
   };
 
-  // Chart data for mini-charts
+  // New form state
+  // const [newItem, setNewItem] = useState({
+  //   client: "",
+  //   nom: "",
+  //   prenom: "",
+  //   montant: "",
+  //   date: new Date().toISOString().split('T')[0],
+  //   moyenPaiement: "Virement",
+  //   notes: ""
+  // });
+
+  // Primary colors from the provided colors
+  const primaryColor = "#1B0353";
+  const secondaryColor = "#004AC8";
+  const accentColor = "#4BB2F6";
+  
+  // Color gradient strings
+  const primaryGradient = `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`;
+  const secondaryGradient = `linear-gradient(to right, ${secondaryColor}, ${accentColor})`;
 
   // Sample payment data
-  const paymentsData = [
+  const reglementsData: Reglement[] = [
     {
-      id: 'PAY-2025-001',
+      id: 'REG-23001',
+      client: 'Entreprise ABC',
+      nom: 'Dubois',
+      prenom: 'Jean',
+      montant: '5 280,00 €',
+      montantNum: 5280,
       date: '05/03/2025',
-      client: 'Acme Corp',
-      montant: '15 600,00 €',
-      statut: 'Validé',
-      facture: 'FACT-2025-001',
-      methode: 'Virement bancaire',
-      creePar: 'Jean Martin',
-      notes: 'Paiement reçu pour facture complète',
-      logo: '🏢',
-      color: '#4F46E5'
+      moyenPaiement: 'Virement',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Paiement pour facture FAC-2025-042',
+      reference: 'VIR-20250305-1'
     },
     {
-      id: 'PAY-2025-002',
-      date: '01/03/2025',
-      client: 'Nexus Tech',
-      montant: '2 990,00 €',
-      statut: 'En attente',
-      facture: 'FACT-2025-002',
-      methode: 'Chèque',
-      creePar: 'Sophie Leclerc',
-      notes: 'Chèque en cours de traitement',
-      logo: '💻',
-      color: '#0EA5E9'
+      id: 'REG-23002',
+      client: 'SAS Martin & Co',
+      nom: 'Martin',
+      prenom: 'Sophie',
+      montant: '1 350,75 €',
+      montantNum: 1350.75,
+      date: '04/03/2025',
+      moyenPaiement: 'Carte bancaire',
+      restantAffecter: '250,75 €',
+      restantAffecterNum: 250.75,
+      notes: 'Paiement partiel',
+      reference: 'CB-20250304-1'
     },
     {
-      id: 'PAY-2025-003',
+      id: 'REG-23003',
+      client: 'Boutique Le Petit',
+      nom: 'Petit',
+      prenom: 'Marie',
+      montant: '2 840,00 €',
+      montantNum: 2840,
       date: '28/02/2025',
-      client: 'Zenith SA',
-      montant: '4 990,00 €',
-      statut: 'Validé',
-      facture: 'FACT-2025-003',
-      methode: 'Carte bancaire',
-      creePar: 'Thomas Bernard',
-      notes: 'Paiement par carte bancaire réussi',
-      logo: '🌐',
-      color: '#8B5CF6'
+      moyenPaiement: 'Chèque',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Chèque n°4572196',
+      reference: 'CHQ-20250228-1'
     },
     {
-      id: 'PAY-2025-004',
-      date: '25/02/2025',
-      client: 'Global Industries',
-      montant: '3 500,00 €',
-      statut: 'Validé',
-      facture: 'FACT-2025-004',
-      methode: 'Virement bancaire',
-      creePar: 'Marie Dupont',
-      notes: 'Virement reçu le 24/02/2025',
-      logo: '🏭',
-      color: '#EC4899'
-    },
-    {
-      id: 'PAY-2025-005',
-      date: '20/02/2025',
-      client: 'Tech Innovate',
-      montant: '6 375,00 €',
-      statut: 'Validé',
-      facture: 'FACT-2025-005',
-      methode: 'Virement bancaire',
-      creePar: 'Jean Martin',
-      notes: 'Premier versement de 50% reçu',
-      logo: '🚀',
-      color: '#F59E0B'
-    },
-    {
-      id: 'PAY-2025-006',
-      date: '15/02/2025',
-      client: 'Tech Innovate',
-      montant: '6 375,00 €',
-      statut: 'Planifié',
-      facture: 'FACT-2025-005',
-      methode: 'Virement bancaire',
-      creePar: 'Jean Martin',
-      notes: 'Second versement planifié pour le 15/03/2025',
-      logo: '🚀',
-      color: '#F59E0B'
-    },
-    {
-      id: 'PAY-2025-007',
-      date: '10/02/2025',
-      client: 'Solutions Pro',
-      montant: '8 400,00 €',
-      statut: 'Validé',
-      facture: 'FACT-2025-006',
-      methode: 'Virement bancaire',
-      creePar: 'Sophie Leclerc',
-      notes: 'Paiement complet reçu',
-      logo: '⚙️',
-      color: '#10B981'
-    },
-    {
-      id: 'PAY-2025-008',
-      date: '05/02/2025',
-      client: 'Data Services',
-      montant: '5 300,00 €',
-      statut: 'Validé',
-      facture: 'FACT-2025-008',
-      methode: 'Prélèvement',
-      creePar: 'Thomas Bernard',
-      notes: 'Prélèvement automatique effectué',
-      logo: '📊',
-      color: '#6366F1'
-    },
-    {
-      id: 'PAY-2025-009',
-      date: '01/02/2025',
-      client: 'ConsultCorp',
-      montant: '1 200,00 €',
-      statut: 'Rejeté',
-      facture: 'FACT-2025-009',
-      methode: 'Chèque',
-      creePar: 'Marie Dupont',
-      notes: 'Chèque rejeté pour provision insuffisante',
-      logo: '📝',
-      color: '#EF4444'
-    }
-  ];
-
-  // Sample schedule entries data
-  const scheduleData = [
-    {
-      id: 'ECH-2025-001',
-      date: '15/03/2025',
-      client: 'Tech Innovate',
-      montant: '6 375,00 €',
-      type: 'Versement',
-      facture: 'FACT-2025-005',
-      statut: 'Planifié',
-      creePar: 'Jean Martin',
-      notes: 'Second versement planifié',
-      logo: '🚀',
-      color: '#F59E0B',
-      daysLeft: 5
-    },
-    {
-      id: 'ECH-2025-002',
-      date: '20/03/2025',
-      client: 'Nexus Tech',
-      montant: '3 500,00 €',
-      type: 'Paiement mensuel',
-      facture: 'FACT-2025-010',
-      statut: 'Planifié',
-      creePar: 'Sophie Leclerc',
-      notes: 'Paiement mensuel contrat maintenance',
-      logo: '💻',
-      color: '#0EA5E9',
-      daysLeft: 10
-    },
-    {
-      id: 'ECH-2025-003',
-      date: '25/03/2025',
-      client: 'Global Industries',
-      montant: '8 900,00 €',
-      type: 'Paiement unique',
-      facture: 'FACT-2025-011',
-      statut: 'À venir',
-      creePar: 'Thomas Bernard',
-      notes: 'Échéance de paiement à 30 jours',
-      logo: '🏭',
-      color: '#EC4899',
-      daysLeft: 15
-    },
-    {
-      id: 'ECH-2025-004',
-      date: '01/04/2025',
-      client: 'Acme Corp',
-      montant: '12 500,00 €',
-      type: 'Paiement trimestriel',
-      facture: 'FACT-2025-012',
-      statut: 'À venir',
-      creePar: 'Marie Dupont',
-      notes: 'Paiement trimestriel Q2 2025',
-      logo: '🏢',
-      color: '#4F46E5',
-      daysLeft: 22
-    },
-    {
-      id: 'ECH-2025-005',
-      date: '05/04/2025',
-      client: 'Zenith SA',
-      montant: '4 250,00 €',
-      type: 'Paiement mensuel',
-      facture: 'FACT-2025-013',
-      statut: 'À venir',
-      creePar: 'Jean Martin',
-      notes: 'Paiement mensuel contrat SaaS',
-      logo: '🌐',
-      color: '#8B5CF6',
-      daysLeft: 26
-    },
-    {
-      id: 'ECH-2025-006',
-      date: '10/04/2025',
-      client: 'Data Services',
-      montant: '5 300,00 €',
-      type: 'Prélèvement automatique',
-      facture: 'FACT-2025-014',
-      statut: 'Planifié',
-      creePar: 'Sophie Leclerc',
-      notes: 'Prélèvement mensuel récurrent',
-      logo: '📊',
-      color: '#6366F1',
-      daysLeft: 31
-    },
-    {
-      id: 'ECH-2025-007',
-      date: '15/04/2025',
-      client: 'Solutions Pro',
+      id: 'REG-23004',
+      client: 'Technologie Plus',
+      nom: 'Leroy',
+      prenom: 'Thomas',
       montant: '7 600,00 €',
-      type: 'Versement',
-      facture: 'FACT-2025-015',
-      statut: 'À venir',
-      creePar: 'Thomas Bernard',
-      notes: 'Premier versement projet web',
-      logo: '⚙️',
-      color: '#10B981',
-      daysLeft: 36
-    }
+      montantNum: 7600,
+      date: '25/02/2025',
+      moyenPaiement: 'Virement',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Paiement pour factures FAC-2025-038 et FAC-2025-039',
+      reference: 'VIR-20250225-1'
+    },
+    {
+      id: 'REG-23005',
+      client: 'Agence Immobilière Centre',
+      nom: 'Bernard',
+      prenom: 'Claire',
+      montant: '950,50 €',
+      montantNum: 950.5,
+      date: '22/02/2025',
+      moyenPaiement: 'Espèces',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Reçu n°ESP-202502-1',
+      reference: 'ESP-20250222-1'
+    },
+    {
+      id: 'REG-23006',
+      client: 'Cabinet Medical Santé',
+      nom: 'Durand',
+      prenom: 'Pierre',
+      montant: '3 200,00 €',
+      montantNum: 3200,
+      date: '20/02/2025',
+      moyenPaiement: 'Virement',
+      restantAffecter: '1 200,00 €',
+      restantAffecterNum: 1200,
+      notes: 'Paiement partiel facture FAC-2025-035',
+      reference: 'VIR-20250220-1'
+    },
+    {
+      id: 'REG-23007',
+      client: 'Restaurant Le Gourmet',
+      nom: 'Moreau',
+      prenom: 'Julie',
+      montant: '4 750,25 €',
+      montantNum: 4750.25,
+      date: '15/02/2025',
+      moyenPaiement: 'Chèque',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Chèque n°6578214',
+      reference: 'CHQ-20250215-1'
+    },
+    {
+      id: 'REG-23008',
+      client: 'Auto École Permis',
+      nom: 'Lefebvre',
+      prenom: 'Marc',
+      montant: '1 820,00 €',
+      montantNum: 1820,
+      date: '12/02/2025',
+      moyenPaiement: 'Carte bancaire',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Paiement complet',
+      reference: 'CB-20250212-1'
+    },
+    {
+      id: 'REG-23009',
+      client: 'Boulangerie Tradition',
+      nom: 'Dupont',
+      prenom: 'Lucie',
+      montant: '925,40 €',
+      montantNum: 925.4,
+      date: '10/02/2025',
+      moyenPaiement: 'Virement',
+      restantAffecter: '0,00 €',
+      restantAffecterNum: 0,
+      notes: 'Paiement facture FAC-2025-030',
+      reference: 'VIR-20250210-1'
+    },
+    {
+      id: 'REG-23010',
+      client: 'Institut Beauté Zen',
+      nom: 'Richard',
+      prenom: 'Émilie',
+      montant: '2 150,00 €',
+      montantNum: 2150,
+      date: '05/02/2025',
+      moyenPaiement: 'Virement',
+      restantAffecter: '150,00 €',
+      restantAffecterNum: 150,
+      notes: 'Paiement partiel factures multiples',
+      reference: 'VIR-20250205-1'
+    },
   ];
 
-  // Filter options
-  const statusOptions = ['Tous', 'Validé', 'En attente', 'Planifié', 'Rejeté', 'À venir'];
-  const periodOptions = ['Tous', 'Ce mois', 'Mois dernier', 'Ce trimestre', 'Cette année'];
-  const clientOptions = [
-    'Tous', 
-    'Acme Corp', 
-    'Nexus Tech', 
-    'Zenith SA', 
-    'Global Industries', 
-    'Tech Innovate', 
-    'Solutions Pro', 
-    'Data Services', 
-    'ConsultCorp'
+  // Sample schedule data
+  const echeancesData: Echeance[] = [
+    {
+      id: 'ECH-23001',
+      dateEcheancier: '20/03/2025',
+      nDocument: 'FAC-2025-048',
+      montant: '4 580,00 €',
+      montantNum: 4580,
+      soldee: false,
+      codeTiers: 'CLI0042',
+      client: 'Entreprise ABC',
+      nom: 'Dubois',
+      prenom: 'Jean',
+      moyenPaiement: 'Virement',
+      soldeDu: '4 580,00 €',
+      soldeDuNum: 4580,
+      urgence: 'medium',
+      notes: 'Première échéance du contrat annuel'
+    },
+    {
+      id: 'ECH-23002',
+      dateEcheancier: '15/03/2025',
+      nDocument: 'FAC-2025-045',
+      montant: '1 250,00 €',
+      montantNum: 1250,
+      soldee: true,
+      codeTiers: 'CLI0036',
+      client: 'SAS Martin & Co',
+      nom: 'Martin',
+      prenom: 'Sophie',
+      moyenPaiement: 'Carte bancaire',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Échéance soldée le 04/03/2025'
+    },
+    {
+      id: 'ECH-23003',
+      dateEcheancier: '10/03/2025',
+      nDocument: 'FAC-2025-044',
+      montant: '3 750,00 €',
+      montantNum: 3750,
+      soldee: false,
+      codeTiers: 'CLI0028',
+      client: 'Boutique Le Petit',
+      nom: 'Petit',
+      prenom: 'Marie',
+      moyenPaiement: 'Chèque',
+      soldeDu: '910,00 €',
+      soldeDuNum: 910,
+      urgence: 'high',
+      notes: 'Relance effectuée le 11/03/2025'
+    },
+    {
+      id: 'ECH-23004',
+      dateEcheancier: '05/03/2025',
+      nDocument: 'FAC-2025-042',
+      montant: '5 280,00 €',
+      montantNum: 5280,
+      soldee: true,
+      codeTiers: 'CLI0042',
+      client: 'Entreprise ABC',
+      nom: 'Dubois',
+      prenom: 'Jean',
+      moyenPaiement: 'Virement',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Paiement reçu à la date prévue'
+    },
+    {
+      id: 'ECH-23005',
+      dateEcheancier: '28/02/2025',
+      nDocument: 'FAC-2025-041',
+      montant: '2 840,00 €',
+      montantNum: 2840,
+      soldee: true,
+      codeTiers: 'CLI0028',
+      client: 'Boutique Le Petit',
+      nom: 'Petit',
+      prenom: 'Marie',
+      moyenPaiement: 'Chèque',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Chèque reçu et encaissé'
+    },
+    {
+      id: 'ECH-23006',
+      dateEcheancier: '25/02/2025',
+      nDocument: 'FAC-2025-039',
+      montant: '4 200,00 €',
+      montantNum: 4200,
+      soldee: true,
+      codeTiers: 'CLI0054',
+      client: 'Technologie Plus',
+      nom: 'Leroy',
+      prenom: 'Thomas',
+      moyenPaiement: 'Virement',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Paiement inclus dans le virement global du 25/02/2025'
+    },
+    {
+      id: 'ECH-23007',
+      dateEcheancier: '25/02/2025',
+      nDocument: 'FAC-2025-038',
+      montant: '3 400,00 €',
+      montantNum: 3400,
+      soldee: true,
+      codeTiers: 'CLI0054',
+      client: 'Technologie Plus',
+      nom: 'Leroy',
+      prenom: 'Thomas',
+      moyenPaiement: 'Virement',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Paiement inclus dans le virement global du 25/02/2025'
+    },
+    {
+      id: 'ECH-23008',
+      dateEcheancier: '20/02/2025',
+      nDocument: 'FAC-2025-035',
+      montant: '3 200,00 €',
+      montantNum: 3200,
+      soldee: false,
+      codeTiers: 'CLI0067',
+      client: 'Cabinet Medical Santé',
+      nom: 'Durand',
+      prenom: 'Pierre',
+      moyenPaiement: 'Virement',
+      soldeDu: '2 000,00 €',
+      soldeDuNum: 2000,
+      urgence: 'high',
+      notes: 'Paiement partiel reçu le 20/02/2025, relance prévue'
+    },
+    {
+      id: 'ECH-23009',
+      dateEcheancier: '15/02/2025',
+      nDocument: 'FAC-2025-034',
+      montant: '4 750,25 €',
+      montantNum: 4750.25,
+      soldee: true,
+      codeTiers: 'CLI0073',
+      client: 'Restaurant Le Gourmet',
+      nom: 'Moreau',
+      prenom: 'Julie',
+      moyenPaiement: 'Chèque',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Chèque reçu et encaissé'
+    },
+    {
+      id: 'ECH-23010',
+      dateEcheancier: '10/02/2025',
+      nDocument: 'FAC-2025-030',
+      montant: '925,40 €',
+      montantNum: 925.4,
+      soldee: true,
+      codeTiers: 'CLI0085',
+      client: 'Boulangerie Tradition',
+      nom: 'Dupont',
+      prenom: 'Lucie',
+      moyenPaiement: 'Virement',
+      soldeDu: '0,00 €',
+      soldeDuNum: 0,
+      urgence: 'low',
+      notes: 'Paiement reçu dans les délais'
+    },
   ];
-  const paymentMethodOptions = ['Tous', 'Virement bancaire', 'Chèque', 'Carte bancaire', 'Prélèvement', 'Espèces'];
-  const scheduleTypeOptions = ['Tous', 'Versement', 'Paiement mensuel', 'Paiement trimestriel', 'Paiement unique', 'Prélèvement automatique'];
 
-  // Statistics
-  const paymentStatistics = [
-    { 
-      title: "Total reçu", 
-      value: "53 155,00 €", 
-      icon: <FiArrowDown className="text-green-500" />, 
-      change: "+15% ce mois",
-      trend: "up",
-      chartData: [
-        { value: 40 }, { value: 42 }, { value: 45 }, { value: 47 }, 
-        { value: 50 }, { value: 52 }, { value: 53 }
-      ]
-    },
-    { 
-      title: "En attente", 
-      value: "9 365,00 €", 
-      icon: <FiClock className="text-amber-500" />, 
-      change: "-5% ce mois",
-      trend: "down",
-      chartData: [
-        { value: 12 }, { value: 14 }, { value: 13 }, { value: 11 }, 
-        { value: 10 }, { value: 9.5 }, { value: 9.3 }
-      ]
-    },
-    { 
-      title: "Taux de recouvrement", 
-      value: "92%", 
-      icon: <FiBarChart2 className="text-blue-500" />, 
-      change: "+2% ce mois",
-      trend: "up",
-      chartData: [
-        { value: 88 }, { value: 89 }, { value: 90 }, { value: 90 }, 
-        { value: 91 }, { value: 91.5 }, { value: 92 }
-      ]
-    },
-    { 
-      title: "Délai moyen", 
-      value: "12 jours", 
-      icon: <FiCalendar className="text-purple-500" />, 
-      change: "-3 jours ce mois",
-      trend: "down",
-      chartData: [
-        { value: 16 }, { value: 15 }, { value: 15 }, { value: 14 }, 
-        { value: 13 }, { value: 12.5 }, { value: 12 }
-      ]
-    }
-  ];
-
-  const scheduleStatistics = [
-    { 
-      title: "Montant prévu", 
-      value: "48 425,00 €", 
-      icon: <FiArrowUp className="text-blue-500" />, 
-      change: "+8% ce mois",
-      trend: "up",
-      chartData: [
-        { value: 42 }, { value: 43 }, { value: 44 }, { value: 45 }, 
-        { value: 46 }, { value: 47 }, { value: 48 }
-      ]
-    },
-    { 
-      title: "Échéances planifiées", 
-      value: "3", 
-      icon: <FiClock className="text-amber-500" />, 
-      change: "-1 vs mois dernier",
-      trend: "down",
-      chartData: [
-        { value: 5 }, { value: 5 }, { value: 4 }, { value: 4 }, 
-        { value: 4 }, { value: 3 }, { value: 3 }
-      ]
-    },
-    { 
-      title: "Prochaine échéance", 
-      value: "15/03/2025", 
-      icon: <FiCalendar className="text-indigo-500" />, 
-      change: "Dans 5 jours",
-      trend: "neutral",
-      chartData: [
-        { value: 30 }, { value: 25 }, { value: 20 }, { value: 15 }, 
-        { value: 10 }, { value: 5 }, { value: 0 }
-      ]
-    },
-    { 
-      title: "Taux de ponctualité", 
-      value: "89%", 
-      icon: <FiCheckCircle className="text-green-500" />, 
-      change: "+4% ce mois",
-      trend: "up",
-      chartData: [
-        { value: 84 }, { value: 85 }, { value: 86 }, { value: 87 }, 
-        { value: 88 }, { value: 88.5 }, { value: 89 }
-      ]
-    }
-  ];
+  // Calculate statistics
+  const totalMontantReglements = reglementsData.reduce((sum, item) => sum + item.montantNum, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const totalReglements = reglementsData.length;
+  
+  const totalMontantEcheances = echeancesData.reduce((sum, item) => sum + item.montantNum, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const totalEcheances = echeancesData.length;
+  const totalEcheancesSoldees = echeancesData.filter(item => item.soldee).length;
+  // const totalEcheancesNonSoldees = echeancesData.filter(item => !item.soldee).length;
+  const pourcentageSoldees = Math.round((totalEcheancesSoldees / totalEcheances) * 100);
 
   // Recent activities
   const recentActivities = [
-    { 
-      id: 1, 
-      type: "payment",
-      action: "Paiement validé", 
-      details: "Acme Corp - 15 600,00 €", 
-      time: "Il y a 3 heures",
-      icon: <FiCheck className="text-green-500" />
-    },
-    { 
-      id: 2, 
-      type: "schedule",
-      action: "Échéance modifiée", 
-      details: "Tech Innovate - 6 375,00 €", 
-      time: "Il y a 5 heures",
-      icon: <FiEdit className="text-blue-500" />
-    },
-    { 
-      id: 3, 
-      type: "payment",
-      action: "Paiement en attente", 
-      details: "Nexus Tech - 2 990,00 €", 
-      time: "Il y a 1 jour",
-      icon: <FiClock className="text-amber-500" />
-    },
-    { 
-      id: 4, 
-      type: "schedule",
-      action: "Nouvelle échéance créée", 
-      details: "Global Industries - 8 900,00 €", 
-      time: "Il y a 2 jours",
-      icon: <FiPlus className="text-indigo-500" />
-    },
-    { 
-      id: 5, 
-      type: "payment",
-      action: "Paiement rejeté", 
-      details: "ConsultCorp - 1 200,00 €", 
-      time: "Il y a 3 jours",
-      icon: <FiAlertCircle className="text-red-500" />
-    }
+    { id: 1, type: 'payment', action: 'Règlement ajouté', details: 'Entreprise ABC - 5 280,00 €', time: 'Il y a 2 heures' },
+    { id: 2, type: 'schedule', action: 'Échéance soldée', details: 'SAS Martin & Co - 1 250,00 €', time: 'Il y a 3 heures' },
+    { id: 3, type: 'payment', action: 'Relance envoyée', details: 'Boutique Le Petit - Échéance du 10/03', time: 'Il y a 5 heures' },
+    { id: 4, type: 'schedule', action: 'Nouvelle échéance', details: 'Entreprise ABC - 4 580,00 €', time: 'Hier' },
+    { id: 5, type: 'payment', action: 'Paiement partiel', details: 'Cabinet Medical Santé - 3 200,00 €', time: 'Il y a 2 jours' }
   ];
+
+  // Filter options
+  const moyenPaiementOptions = ['Tous', 'Virement', 'Carte bancaire', 'Chèque', 'Espèces', 'Prélèvement'];
+  const periodOptions = ['Tous', 'Aujourd\'hui', 'Cette semaine', 'Ce mois', 'Ce trimestre', 'Cette année'];
+  const clientOptions = ['Tous', 'Entreprise ABC', 'SAS Martin & Co', 'Boutique Le Petit', 'Technologie Plus', 'Agence Immobilière Centre', 'Cabinet Medical Santé', 'Restaurant Le Gourmet', 'Auto École Permis', 'Boulangerie Tradition', 'Institut Beauté Zen'];
 
   // Handler for toggling all checkboxes
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
     if (!selectAll) {
       if (activeTab === 'reglements') {
-        setSelectedPayments(filteredPayments.map(payment => payment.id));
+        setSelectedItems(filteredReglements.map(item => item.id));
       } else {
-        setSelectedPayments(filteredScheduleEntries.map(entry => entry.id));
+        setSelectedItems(filteredEcheances.map(item => item.id));
       }
     } else {
-      setSelectedPayments([]);
+      setSelectedItems([]);
     }
   };
 
-  // Make sure to type itemId: string
+  // Handler for individual item selection
   const handleSelectItem = (itemId: string) => {
-    if (selectedPayments.includes(itemId)) {
-      setSelectedPayments(selectedPayments.filter((id) => id !== itemId));
+    if (selectedItems.includes(itemId)) {
+      setSelectedItems(selectedItems.filter((id) => id !== itemId));
       setSelectAll(false);
     } else {
-      setSelectedPayments([...selectedPayments, itemId]);
+      setSelectedItems([...selectedItems, itemId]);
     }
   };
 
-  // Filter payments based on search and filter criteria
-  const filteredPayments = paymentsData.filter(payment => {
+  // Handle sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Handler for delete confirmation
+  const confirmDelete = (id: string | null = null) => {
+    if (id) {
+      setItemToDelete(id);
+      setBulkDelete(false);
+    } else {
+      setBulkDelete(true);
+    }
+    setShowDeleteModal(true);
+  };
+
+  // Handler for actual deletion
+  const handleDelete = () => {
+    if (bulkDelete) {
+      // Here you would delete all selected items
+      displayNotification(`${selectedItems.length} élément(s) supprimé(s) avec succès`, 'success');
+    } else if (itemToDelete) {
+      // Here you would delete the specific item
+      displayNotification(`Élément ${itemToDelete} supprimé avec succès`, 'success');
+    }
+    
+    // Reset states
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+    setBulkDelete(false);
+    setSelectedItems([]);
+    setSelectAll(false);
+  };
+
+  // Filter reglements based on search and filter criteria
+  const filteredReglements = reglementsData.filter(reglement => {
     const matchesSearch = 
       searchTerm === '' || 
-      payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.facture.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.montant.toLowerCase().includes(searchTerm.toLowerCase());
+      reglement.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reglement.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reglement.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reglement.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reglement.montant.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = selectedStatus === 'Tous' || payment.statut === selectedStatus;
-    const matchesClient = selectedClient === 'Tous' || payment.client === selectedClient;
-    const matchesPaymentMethod = selectedPaymentMethod === 'Tous' || payment.methode === selectedPaymentMethod;
+    const matchesMoyenPaiement = selectedMoyenPaiement === 'Tous' || reglement.moyenPaiement === selectedMoyenPaiement;
+    const matchesClient = selectedClient === 'Tous' || reglement.client === selectedClient;
     
-    // For period filter we would need actual date logic; simplified here
-    const matchesPeriod = selectedPeriod === 'Tous' || true;
+    // Date filtering
+    let matchesDate = true;
+    if (dateDebut && dateFin) {
+      const reglementDate = new Date(reglement.date.split('/').reverse().join('-'));
+      const startDate = new Date(dateDebut);
+      const endDate = new Date(dateFin);
+      matchesDate = reglementDate >= startDate && reglementDate <= endDate;
+    }
     
-    return matchesSearch && matchesStatus && matchesClient && matchesPaymentMethod && matchesPeriod;
+    return matchesSearch && matchesMoyenPaiement && matchesClient && matchesDate;
   });
 
-  // Filter schedule entries based on search and filter criteria
-  const filteredScheduleEntries = scheduleData.filter(entry => {
+  // Apply sorting to reglements
+  const sortedReglements = [...filteredReglements].sort((a, b) => {
+    let aValue: SortValueType = '';
+    let bValue: SortValueType = '';
+    
+    // Determine which values to compare based on sortField
+    switch(sortField) {
+      case 'montant':
+        aValue = a.montantNum;
+        bValue = b.montantNum;
+        break;
+      case 'restantAffecter':
+        aValue = a.restantAffecterNum;
+        bValue = b.restantAffecterNum;
+        break;
+      case 'date':
+        aValue = new Date(a.date.split('/').reverse().join('-')).getTime();
+        bValue = new Date(b.date.split('/').reverse().join('-')).getTime();
+        break;
+      default:
+        // Type assertion to avoid undefined error
+        if (sortField in a && sortField in b) {
+          aValue = a[sortField as keyof Reglement];
+          bValue = b[sortField as keyof Reglement];
+        }
+        break;
+    }
+    
+    // Compare values with null checks
+    if (sortDirection === 'asc') {
+      if (aValue === undefined) return 1;
+      if (bValue === undefined) return -1;
+      return aValue > bValue ? 1 : -1;
+    } else {
+      if (aValue === undefined) return -1;
+      if (bValue === undefined) return 1;
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
+  // Filter echeances based on search and filter criteria
+  const filteredEcheances = echeancesData.filter(echeance => {
     const matchesSearch = 
       searchTerm === '' || 
-      entry.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.facture.toLowerCase().includes(searchTerm.toLowerCase());
+      echeance.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      echeance.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      echeance.nDocument.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      echeance.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      echeance.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      echeance.codeTiers.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = selectedStatus === 'Tous' || entry.statut === selectedStatus;
+    const matchesMoyenPaiement = selectedMoyenPaiement === 'Tous' || echeance.moyenPaiement === selectedMoyenPaiement;
+    const matchesClient = selectedClient === 'Tous' || echeance.client === selectedClient;
     
-    // For the "Echeancier" tab, we used `selectedPaymentMethod` to store the 'type' filter
-    const matchesType = selectedPaymentMethod === 'Tous' || entry.type === selectedPaymentMethod;
-
-    // For period filter we would need actual date logic; simplified here
-    const matchesPeriod = selectedPeriod === 'Tous' || true;
+    // Date filtering
+    let matchesDate = true;
+    if (dateDebut && dateFin) {
+      const echeanceDate = new Date(echeance.dateEcheancier.split('/').reverse().join('-'));
+      const startDate = new Date(dateDebut);
+      const endDate = new Date(dateFin);
+      matchesDate = echeanceDate >= startDate && echeanceDate <= endDate;
+    }
     
-    return matchesSearch && matchesStatus && matchesType && matchesPeriod;
+    return matchesSearch && matchesMoyenPaiement && matchesClient && matchesDate;
   });
+
+  // Apply sorting to echeances
+const sortedEcheances = [...filteredEcheances].sort((a, b) => {
+  let aValue: SortValueType = '';
+  let bValue: SortValueType = '';
+  
+  // Determine which values to compare based on sortField
+  switch(sortField) {
+    case 'montant':
+      aValue = a.montantNum;
+      bValue = b.montantNum;
+      break;
+    case 'soldeDu':
+      aValue = a.soldeDuNum;
+      bValue = b.soldeDuNum;
+      break;
+    case 'dateEcheancier':
+      aValue = new Date(a.dateEcheancier.split('/').reverse().join('-')).getTime();
+      bValue = new Date(b.dateEcheancier.split('/').reverse().join('-')).getTime();
+      break;
+    case 'soldee':
+      aValue = a.soldee ? 1 : 0;
+      bValue = b.soldee ? 1 : 0;
+      break;
+    default:
+      // Type assertion to avoid undefined error
+      if (sortField in a && sortField in b) {
+        aValue = a[sortField as keyof Echeance];
+        bValue = b[sortField as keyof Echeance];
+      }
+      break;
+  }
+  
+  // Compare values with null checks
+  if (sortDirection === 'asc') {
+    if (aValue === undefined) return 1;
+    if (bValue === undefined) return -1;
+    return aValue > bValue ? 1 : -1;
+  } else {
+    if (aValue === undefined) return -1;
+    if (bValue === undefined) return 1;
+    return aValue < bValue ? 1 : -1;
+  }
+});
 
   // Reset filters
   const resetFilters = () => {
-    setSelectedStatus('Tous');
-    setSelectedPeriod('Tous');
+    setSelectedMoyenPaiement('Tous');
     setSelectedClient('Tous');
-    setSelectedPaymentMethod('Tous');
+    setDateDebut('');
+    setDateFin('');
+    setSelectedPeriod('Tous');
     setSearchTerm('');
     displayNotification('Filtres réinitialisés', 'success');
   };
 
-   // Provide a type for "status"
-   const getStatusBadgeColor = (status: string): string => {
-    switch (status) {
-      case "Validé":
-        return "bg-green-100 text-green-800 border border-green-200";
-      case "En attente":
-        return "bg-amber-100 text-amber-800 border border-amber-200";
-      case "Planifié":
-        return "bg-blue-100 text-blue-800 border border-blue-200";
-      case "Rejeté":
-        return "bg-red-100 text-red-800 border border-red-200";
-      case "À venir":
-        return "bg-purple-100 text-purple-800 border border-purple-200";
+  // Apply period filter
+  const applyPeriodFilter = (period: string) => {
+    const today = new Date();
+    const start = new Date();
+    const end = new Date();
+    
+    switch(period) {
+      case 'Aujourd\'hui':
+        setDateDebut(today.toISOString().split('T')[0]);
+        setDateFin(today.toISOString().split('T')[0]);
+        break;
+      case 'Cette semaine':
+        start.setDate(today.getDate() - today.getDay());
+        end.setDate(today.getDate() + (6 - today.getDay()));
+        setDateDebut(start.toISOString().split('T')[0]);
+        setDateFin(end.toISOString().split('T')[0]);
+        break;
+      case 'Ce mois':
+        start.setDate(1);
+        end.setMonth(today.getMonth() + 1);
+        end.setDate(0);
+        setDateDebut(start.toISOString().split('T')[0]);
+        setDateFin(end.toISOString().split('T')[0]);
+        break;
+      case 'Ce trimestre':
+        start.setMonth(Math.floor(today.getMonth() / 3) * 3);
+        start.setDate(1);
+        end.setMonth(Math.floor(today.getMonth() / 3) * 3 + 3);
+        end.setDate(0);
+        setDateDebut(start.toISOString().split('T')[0]);
+        setDateFin(end.toISOString().split('T')[0]);
+        break;
+      case 'Cette année':
+        start.setMonth(0);
+        start.setDate(1);
+        end.setMonth(11);
+        end.setDate(31);
+        setDateDebut(start.toISOString().split('T')[0]);
+        setDateFin(end.toISOString().split('T')[0]);
+        break;
       default:
-        return "bg-gray-100 text-gray-800 border border-gray-200";
+        setDateDebut('');
+        setDateFin('');
+        break;
     }
   };
 
-  // Provide a type for "trend"
-  const getTrendIndicator = (trend: string) => {
-    switch (trend) {
-      case "up":
-        return <FiArrowUp className="text-green-500" />;
-      case "down":
-        return <FiArrowDown className="text-red-500" />;
-      default:
-        return <span className="text-gray-400">-</span>;
-    }
-  };
+  // Chart data for monthly statistics
+  const monthlyStatsReglements = [
+    { name: 'Jan', amount: 12500 },
+    { name: 'Fév', amount: 17800 },
+    { name: 'Mar', amount: 15400 },
+    { name: 'Avr', amount: 21000 },
+    { name: 'Mai', amount: 18300 },
+    { name: 'Juin', amount: 24700 },
+    { name: 'Juil', amount: 22100 },
+    { name: 'Août', amount: 19500 },
+    { name: 'Sep', amount: 26800 },
+    { name: 'Oct', amount: 25200 },
+    { name: 'Nov', amount: 29800 },
+    { name: 'Déc', amount: 30900 }
+  ];
 
-  // Simulate data loading and validation
-  // Provide a type for "action"
-  const handleDataAction = (action: string) => {
-    // Show loading notification
-    displayNotification(`Action en cours: ${action}...`, "info");
-
-    // Simulate loading
-    setTimeout(() => {
-      displayNotification(`${action} effectuée avec succès!`, "success");
-    }, 1000);
-  };
+  const monthlyStatsEcheances = [
+    { name: 'Jan', prevues: 14200, soldees: 12800 },
+    { name: 'Fév', prevues: 18900, soldees: 16300 },
+    { name: 'Mar', prevues: 16800, soldees: 15400 },
+    { name: 'Avr', prevues: 22400, soldees: 20100 },
+    { name: 'Mai', prevues: 19700, soldees: 17500 },
+    { name: 'Juin', prevues: 26300, soldees: 23800 },
+    { name: 'Juil', prevues: 23500, soldees: 21200 },
+    { name: 'Août', prevues: 20800, soldees: 18700 },
+    { name: 'Sep', prevues: 28500, soldees: 25400 },
+    { name: 'Oct', prevues: 27100, soldees: 24300 },
+    { name: 'Nov', prevues: 31600, soldees: 28200 },
+    { name: 'Déc', prevues: 33200, soldees: 29800 }
+  ];
 
   return (
     <motion.div
@@ -587,29 +785,29 @@ export default function ReglementsEcheancier() {
       {/* Sticky top bar */}
       <div className={`fixed top-0 left-0 right-0 z-10 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="font-bold text-indigo-700 text-lg flex items-center">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
+          <div className="font-bold text-lg flex items-center">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 shadow-lg" style={{ background: primaryGradient }}>
               <FiDollarSign className="text-white text-xl" />
             </div>
-            {isScrolled && <span>Reglements & Echeancier</span>}
+            {isScrolled && <span style={{ color: primaryColor }}>Règlements & Échéancier</span>}
           </div>
           
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-full text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition relative">
-              <FiBell />
+            <button className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition relative">
+              <FiBell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <button className="p-2 rounded-full text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition">
-              <FiSettings />
+            <button className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition">
+              <FiSettings size={20} />
             </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white font-medium shadow">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium shadow-md" style={{ background: secondaryGradient }}>
               JD
             </div>
           </div>
         </div>
       </div>
 
-      <div className="pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+      <div className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-12">
         {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -617,52 +815,44 @@ export default function ReglementsEcheancier() {
           transition={{ delay: 0.1 }}
           className="p-6 bg-white rounded-2xl shadow-xl overflow-hidden relative"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-full opacity-70"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-full opacity-70"></div>
           <div className="relative">
             <div className="flex items-center mb-2">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700">
-                Reglements & Echeancier
+              <h1 className="text-3xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: primaryGradient }}>
+                Règlements & Échéancier
               </h1>
-
             </div>
             <p className="text-gray-600 max-w-2xl">
-              Gérez efficacement vos règlements clients et votre échéancier de paiements. Suivez vos encaissements et planifiez vos revenus futurs.
+              Gérez efficacement vos règlements clients et votre échéancier de paiements. Suivez l&apos;état de vos encaissements et planifiez vos revenus futurs.
             </p>
             
             <div className="flex flex-wrap gap-4 mt-4">
               <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
-                onClick={() => handleDataAction('Synchronisation')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center px-4 py-2.5 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                style={{ background: primaryGradient }}
+                onClick={() => displayNotification('Synchronisation des données en cours...', 'info')}
               >
                 <FiRefreshCw className="mr-2" />
                 <span>Synchroniser les données</span>
               </motion.button>
               
               <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+                onClick={() => displayNotification('Rapports financiers générés avec succès', 'success')}
               >
-                <FiPieChart className="mr-2 text-indigo-600" />
-                <span>Tableau de bord analytique</span>
-              </motion.button>
-              
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
-              >
-                <FiFileText className="mr-2 text-indigo-600" />
-                <span>Rapports financiers</span>
+                <FiFileText className="mr-2" style={{ color: secondaryColor }} />
+                <span>Exporter les rapports</span>
               </motion.button>
             </div>
           </div>
         </motion.div>
 
         {/* Main Content with Tabs */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Left Sidebar - Recent Activity */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -674,7 +864,7 @@ export default function ReglementsEcheancier() {
             <div className="bg-white rounded-2xl shadow-md p-6 overflow-hidden">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-gray-800">Activité récente</h3>
-                <button className="text-xs text-indigo-600 hover:text-indigo-800 transition">
+                <button className="text-xs hover:underline transition" style={{ color: secondaryColor }}>
                   Voir tout
                 </button>
               </div>
@@ -685,7 +875,11 @@ export default function ReglementsEcheancier() {
                     className="p-3 rounded-xl hover:bg-gray-50 transition-all flex items-start"
                   >
                     <div className="p-2 rounded-full bg-gray-100 mr-3">
-                      {activity.icon}
+                      {activity.type === 'payment' ? (
+                        <FiDollarSign size={16} style={{ color: secondaryColor }} />
+                      ) : (
+                        <FiCalendar size={16} style={{ color: primaryColor }} />
+                      )}
                     </div>
                     <div>
                       <div className="text-sm font-medium">{activity.action}</div>
@@ -697,22 +891,41 @@ export default function ReglementsEcheancier() {
               </div>
             </div>
             
-            {/* Quick Actions */}
+            {/* Chart */}
             <div className="bg-white rounded-2xl shadow-md p-6">
-              <h3 className="font-bold text-gray-800 mb-4">Actions rapides</h3>
-              <div className="space-y-2">
-                <button className="w-full p-3 rounded-lg bg-indigo-50 text-indigo-700 font-medium text-sm hover:bg-indigo-100 transition text-left flex items-center">
-                  <FiCornerUpRight className="mr-3" />
-                  Envoyer rappel de paiement
-                </button>
-                <button className="w-full p-3 rounded-lg bg-green-50 text-green-700 font-medium text-sm hover:bg-green-100 transition text-left flex items-center">
-                  <FiMail className="mr-3" />
-                  Email confirmation de règlement
-                </button>
-                <button className="w-full p-3 rounded-lg bg-amber-50 text-amber-700 font-medium text-sm hover:bg-amber-100 transition text-left flex items-center">
-                  <FiTrendingUp className="mr-3" />
-                  Prévisions de trésorerie
-                </button>
+              <h3 className="font-bold text-gray-800 mb-4">Evolution sur 12 mois</h3>
+              <div className="h-60">
+                {activeTab === 'reglements' ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyStatsReglements}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" fontSize={10} tickMargin={5} />
+                      <YAxis fontSize={10} tickFormatter={(value) => `${value / 1000}k€`} />
+                      <Tooltip 
+                        formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
+                        labelFormatter={(label) => `Mois: ${label}`}
+                      />
+                      <Bar dataKey="amount" fill={accentColor} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyStatsEcheances}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" fontSize={10} tickMargin={5} />
+                      <YAxis fontSize={10} tickFormatter={(value) => `${value / 1000}k€`} />
+                      <Tooltip 
+                        formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
+                        labelFormatter={(label) => `Mois: ${label}`}
+                      />
+                      <Bar dataKey="prevues" name="Échéances prévues" fill={secondaryColor} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="soldees" name="Échéances soldées" fill={accentColor} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              <div className="mt-4 text-xs text-center text-gray-500">
+                Évolution des {activeTab === 'reglements' ? 'règlements' : 'échéances'} sur les 12 derniers mois
               </div>
             </div>
           </motion.div>
@@ -722,7 +935,7 @@ export default function ReglementsEcheancier() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-6"
+            className="lg:col-span-4 space-y-6"
           >
             {/* Tabs */}
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -730,90 +943,154 @@ export default function ReglementsEcheancier() {
                 <button
                   className={`flex-1 py-4 px-6 text-center font-medium transition flex items-center justify-center ${
                     activeTab === 'reglements' 
-                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50 bg-opacity-50' 
+                    ? 'border-b-2 bg-opacity-50' 
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                   onClick={() => {
                     setActiveTab('reglements');
-                    setSelectedPayments([]);
+                    setSelectedItems([]);
                     setSelectAll(false);
                   }}
+                  style={activeTab === 'reglements' ? { borderColor: primaryColor, backgroundColor: `${primaryColor}10`, color: primaryColor } : {}}
                 >
-                  <FiDollarSign className={`mr-2 ${activeTab === 'reglements' ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  Reglements
+                  <FiDollarSign className={`mr-2 ${activeTab === 'reglements' ? '' : 'text-gray-400'}`} style={activeTab === 'reglements' ? { color: primaryColor } : {}} />
+                  Règlements
                 </button>
                 <button
                   className={`flex-1 py-4 px-6 text-center font-medium transition flex items-center justify-center ${
                     activeTab === 'echeancier' 
-                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50 bg-opacity-50' 
+                    ? 'border-b-2 bg-opacity-50' 
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                   onClick={() => {
                     setActiveTab('echeancier');
-                    setSelectedPayments([]);
+                    setSelectedItems([]);
                     setSelectAll(false);
                   }}
+                  style={activeTab === 'echeancier' ? { borderColor: primaryColor, backgroundColor: `${primaryColor}10`, color: primaryColor } : {}}
                 >
-                  <FiCalendar className={`mr-2 ${activeTab === 'echeancier' ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  Echeancier
+                  <FiCalendar className={`mr-2 ${activeTab === 'echeancier' ? '' : 'text-gray-400'}`} style={activeTab === 'echeancier' ? { color: primaryColor } : {}} />
+                  Échéancier
                 </button>
               </div>
 
               {/* Statistics Cards */}
               <div className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                  {(activeTab === 'reglements' ? paymentStatistics : scheduleStatistics).map((stat, index) => (
+                {activeTab === 'reglements' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6">
                     <motion.div 
-                      key={index}
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 * index }}
-                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col hover:shadow-md transition-shadow"
+                      transition={{ delay: 0.1 }}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                       whileHover={{ y: -2, transition: { duration: 0.2 } }}
                     >
                       <div className="flex items-center mb-2">
-                        <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
-                          {stat.icon}
+                        <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${primaryColor}15` }}>
+                          <FiFileText size={20} style={{ color: primaryColor }} />
                         </div>
-                        <span className="text-sm font-medium text-gray-500">{stat.title}</span>
+                        <span className="text-sm font-medium text-gray-500">Nombre total de règlements</span>
                       </div>
                       <div className="flex items-end justify-between">
-                        <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                        <div className={`text-xs px-1.5 py-0.5 rounded-full flex items-center space-x-1 ${
-                          stat.trend === 'up' 
-                            ? 'text-green-700 bg-green-50' 
-                            : stat.trend === 'down' 
-                              ? 'text-amber-700 bg-amber-50' 
-                              : 'text-gray-500 bg-gray-50'
-                        }`}>
-                          {getTrendIndicator(stat.trend)}
-                          <span>{stat.change}</span>
+                        <div className="text-3xl font-bold text-gray-900">{totalReglements}</div>
+                        <div className="text-xs px-1.5 py-0.5 rounded-full flex items-center space-x-1 text-green-700 bg-green-50">
+                          <FiArrowUp size={12} />
+                          <span>+12% ce mois</span>
                         </div>
                       </div>
-                      
-                      {/* Mini chart */}
-                      <div className="mt-4 h-10">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={stat.chartData}>
-                            <Line 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke={
-                                stat.trend === 'up' 
-                                  ? '#10B981' 
-                                  : stat.trend === 'down' 
-                                    ? '#F59E0B' 
-                                    : '#6366F1'
-                              } 
-                              strokeWidth={2} 
-                              dot={false} 
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
+                    </motion.div>
+                    
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                    >
+                      <div className="flex items-center mb-2">
+                        <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${secondaryColor}15` }}>
+                          <FiDollarSign size={20} style={{ color: secondaryColor }} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-500">Montant total</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div className="text-3xl font-bold text-gray-900">{totalMontantReglements}</div>
+                        <div className="text-xs px-1.5 py-0.5 rounded-full flex items-center space-x-1 text-green-700 bg-green-50">
+                          <FiArrowUp size={12} />
+                          <span>+8.5% ce mois</span>
+                        </div>
                       </div>
                     </motion.div>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                    >
+                      <div className="flex items-center mb-2">
+                        <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${primaryColor}15` }}>
+                          <FiFileText size={20} style={{ color: primaryColor }} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-500">Nombre total d&apos;échéances</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div className="text-3xl font-bold text-gray-900">{totalEcheances}</div>
+                        <div className="text-xs px-1.5 py-0.5 rounded-full flex items-center space-x-1 text-amber-700 bg-amber-50">
+                          <FiArrowDown size={12} />
+                          <span>-5% ce mois</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                    >
+                      <div className="flex items-center mb-2">
+                        <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${secondaryColor}15` }}>
+                          <FiDollarSign size={20} style={{ color: secondaryColor }} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-500">Montant total</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div className="text-3xl font-bold text-gray-900">{totalMontantEcheances}</div>
+                        <div className="text-xs px-1.5 py-0.5 rounded-full flex items-center space-x-1 text-green-700 bg-green-50">
+                          <FiArrowUp size={12} />
+                          <span>+7.2% ce mois</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                    >
+                      <div className="flex items-center mb-2">
+                        <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${accentColor}15` }}>
+                          <FiCheckCircle size={20} style={{ color: accentColor }} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-500">Taux de recouvrement</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div className="text-3xl font-bold text-gray-900">{pourcentageSoldees}%</div>
+                        <div className="text-xs px-1.5 py-0.5 rounded-full flex items-center space-x-1 text-green-700 bg-green-50">
+                          <FiArrowUp size={12} />
+                          <span>+3% ce mois</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
               </div>
 
               {/* Actions & Search Bar */}
@@ -827,7 +1104,8 @@ export default function ReglementsEcheancier() {
                     <input
                       type="text"
                       placeholder={`Rechercher ${activeTab === 'reglements' ? 'un règlement' : 'une échéance'}...`}
-                      className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                      // style={{ focusRing: primaryColor }}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -836,11 +1114,13 @@ export default function ReglementsEcheancier() {
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                     <motion.button 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg shadow-sm hover:shadow-md transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center space-x-1 px-3 py-2 text-white rounded-lg shadow-sm hover:shadow-md transition-all"
+                      style={{ background: primaryGradient }}
+                      onClick={() => setShowAddForm(true)}
                     >
-                      <FiPlus />
+                      <FiPlus size={18} />
                       <span>{activeTab === 'reglements' ? 'Ajouter un règlement' : 'Ajouter une échéance'}</span>
                     </motion.button>
                     
@@ -848,38 +1128,40 @@ export default function ReglementsEcheancier() {
                       onClick={() => setShowFilters(!showFilters)}
                       className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                     >
-                      <FiFilter />
-                      <span>{showFilters ? 'Masquer filtres' : 'Afficher filtres'}</span>
+                      <FiFilter size={18} />
+                      <span>{showFilters ? 'Masquer filtres' : 'Filtres'}</span>
                     </button>
                     
                     <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                       <button 
                         onClick={() => setViewMode('table')}
-                        className={`p-2 ${viewMode === 'table' ? 'bg-indigo-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                        className={`p-2 ${viewMode === 'table' ? 'text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                        style={{ backgroundColor: viewMode === 'table' ? primaryColor : '' }}
                       >
-                        <FiList />
+                        <FiList size={18} />
                       </button>
                       <button 
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 ${viewMode === 'grid' ? 'bg-indigo-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                        className={`p-2 ${viewMode === 'grid' ? 'text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                        style={{ backgroundColor: viewMode === 'grid' ? primaryColor : '' }}
                       >
-                        <FiGrid />
+                        <FiGrid size={18} />
                       </button>
                     </div>
                     
                     <button 
                       className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                      onClick={() => handleDataAction('Actualisation')}
+                      onClick={() => displayNotification('Données actualisées', 'success')}
                     >
-                      <FiRefreshCw />
+                      <FiRefreshCw size={18} />
                       <span className="hidden md:inline">Actualiser</span>
                     </button>
                     
                     <button 
                       className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                      onClick={() => handleDataAction('Export')}
+                      onClick={() => displayNotification('Export en cours...', 'info')}
                     >
-                      <FiDownload />
+                      <FiDownload size={18} />
                       <span className="hidden md:inline">Exporter</span>
                     </button>
                   </div>
@@ -895,17 +1177,18 @@ export default function ReglementsEcheancier() {
                       transition={{ duration: 0.3 }}
                       className="mt-4 p-6 border border-gray-200 rounded-lg overflow-hidden bg-gray-50"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Statut
+                            {activeTab === 'reglements' ? 'Moyen de paiement' : 'Moyen de paiement'}
                           </label>
                           <select 
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                            value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                            // style={{ focusRing: primaryColor }}
+                            value={selectedMoyenPaiement}
+                            onChange={(e) => setSelectedMoyenPaiement(e.target.value)}
                           >
-                            {statusOptions.map((option, index) => (
+                            {moyenPaiementOptions.map((option, index) => (
                               <option key={index} value={option}>{option}</option>
                             ))}
                           </select>
@@ -913,12 +1196,32 @@ export default function ReglementsEcheancier() {
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Période
+                            Client
                           </label>
                           <select 
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                            className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                            // style={{ focusRing: primaryColor }}
+                            value={selectedClient}
+                            onChange={(e) => setSelectedClient(e.target.value)}
+                          >
+                            {clientOptions.map((option, index) => (
+                              <option key={index} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Période prédéfinie
+                          </label>
+                          <select 
+                            className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                            // style={{ focusRing: primaryColor }}
                             value={selectedPeriod}
-                            onChange={(e) => setSelectedPeriod(e.target.value)}
+                            onChange={(e) => {
+                              setSelectedPeriod(e.target.value);
+                              applyPeriodFilter(e.target.value);
+                            }}
                           >
                             {periodOptions.map((option, index) => (
                               <option key={index} value={option}>{option}</option>
@@ -926,86 +1229,48 @@ export default function ReglementsEcheancier() {
                           </select>
                         </div>
                         
-                        {activeTab === 'reglements' ? (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Client
-                              </label>
-                              <select 
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                                value={selectedClient}
-                                onChange={(e) => setSelectedClient(e.target.value)}
-                              >
-                                {clientOptions.map((option, index) => (
-                                  <option key={index} value={option}>{option}</option>
-                                ))}
-                              </select>
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Méthode de paiement
-                              </label>
-                              <select 
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                                value={selectedPaymentMethod}
-                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                              >
-                                {paymentMethodOptions.map((option, index) => (
-                                  <option key={index} value={option}>{option}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Type d&apos;échéance
-                              </label>
-                              <select 
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                                value={selectedPaymentMethod}
-                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                              >
-                                {scheduleTypeOptions.map((option, index) => (
-                                  <option key={index} value={option}>{option}</option>
-                                ))}
-                              </select>
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Client
-                              </label>
-                              <select 
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                                value={selectedClient}
-                                onChange={(e) => setSelectedClient(e.target.value)}
-                              >
-                                {clientOptions.map((option, index) => (
-                                  <option key={index} value={option}>{option}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </>
-                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Date début
+                            </label>
+                            <input 
+                              type="date" 
+                              className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                              // style={{ focusRing: primaryColor }}
+                              value={dateDebut}
+                              onChange={(e) => setDateDebut(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Date fin
+                            </label>
+                            <input 
+                              type="date" 
+                              className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                              // style={{ focusRing: primaryColor }}
+                              value={dateFin}
+                              onChange={(e) => setDateFin(e.target.value)}
+                            />
+                          </div>
+                        </div>
                       </div>
                       
                       <div className="flex justify-end space-x-2 mt-4">
                         <motion.button 
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={resetFilters}
                           className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
                         >
                           Réinitialiser
                         </motion.button>
                         <motion.button 
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="px-3 py-1.5 text-white rounded-lg transition"
+                          style={{ backgroundColor: primaryColor }}
                           onClick={() => {
                             setShowFilters(false);
                             displayNotification('Filtres appliqués', 'success');
@@ -1021,54 +1286,56 @@ export default function ReglementsEcheancier() {
 
               {/* Bulk Actions (visible when items are selected) */}
               <AnimatePresence>
-                {selectedPayments.length > 0 && (
+                {selectedItems.length > 0 && (
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     className="px-6 pb-6"
                   >
-                    <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
-                      <div className="text-indigo-800 flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
-                          <FiCheck className="text-indigo-600" />
+                    <div className="p-4 rounded-xl border flex justify-between items-center"
+                      style={{ backgroundColor: `${primaryColor}05`, borderColor: `${primaryColor}25` }}>
+                      <div className="flex items-center" style={{ color: primaryColor }}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3" 
+                          style={{ backgroundColor: `${primaryColor}15` }}>
+                          <FiCheck size={16} style={{ color: primaryColor }} />
                         </div>
-                        <span className="font-medium">{selectedPayments.length}</span>{' '}
+                        <span className="font-medium">{selectedItems.length}</span>{' '}
                         {activeTab === 'reglements' ? 'règlement(s)' : 'échéance(s)'} sélectionné(s)
                       </div>
                       <div className="flex space-x-2">
-                        {activeTab === 'reglements' && (
+                        {activeTab === 'echeancier' && (
                           <motion.button 
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
-                            onClick={() => handleDataAction('Validation')}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-3 py-1.5 text-sm text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
+                            style={{ backgroundColor: '#10B981' }}
+                            onClick={() => {
+                              displayNotification(`${selectedItems.length} échéance(s) marquée(s) comme soldée(s)`, 'success');
+                              setSelectedItems([]);
+                            }}
                           >
-                            <FiCheckCircle />
-                            <span>Valider</span>
+                            <FiCheckCircle size={16} />
+                            <span>Marquer comme soldée</span>
                           </motion.button>
                         )}
                         <motion.button 
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 text-sm bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
-                          onClick={() => handleDataAction('Export')}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="px-3 py-1.5 text-sm text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
+                          style={{ backgroundColor: secondaryColor }}
+                          onClick={() => displayNotification(`${selectedItems.length} élément(s) exporté(s)`, 'success')}
                         >
-                          <FiDownload />
+                          <FiDownload size={16} />
                           <span>Exporter</span>
                         </motion.button>
                         <motion.button 
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 text-sm bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
-                          onClick={() => {
-                            // Add confirmation logic here
-                            handleDataAction('Suppression');
-                            setSelectedPayments([]);
-                            setSelectAll(false);
-                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
+                          onClick={() => confirmDelete()}
                         >
-                          <FiTrash2 />
+                          <FiTrash2 size={16} />
                           <span>Supprimer</span>
                         </motion.button>
                       </div>
@@ -1079,568 +1346,576 @@ export default function ReglementsEcheancier() {
 
               {/* Content based on active tab */}
               <div className="px-6 pb-6">
-                {/* Payments Tab */}
+                {/* Reglements Tab */}
                 {activeTab === 'reglements' && (
-                  <>
-                    {viewMode === 'table' ? (
-                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th scope="col" className="px-4 py-3 text-left">
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                      checked={selectAll}
-                                      onChange={handleSelectAll}
-                                    />
-                                  </div>
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  N° règlement
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Date
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Client
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Montant
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Méthode
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Statut
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Facture
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Notes
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Actions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                              {filteredPayments.length > 0 ? (
-                                filteredPayments.map((payment) => (
-                                  <motion.tr 
-                                    key={payment.id}
-                                    whileHover={{ backgroundColor: '#F9FAFB' }}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    layout
-                                  >
-                                    <td className="px-4 py-3 whitespace-nowrap">
-                                      <input 
-                                        type="checkbox" 
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                        checked={selectedPayments.includes(payment.id)}
-                                        onChange={() => handleSelectItem(payment.id)}
-                                      />
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                      {payment.id}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                      {payment.date}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                      <div className="flex items-center">
-                                        <span className="w-6 h-6 mr-2 flex items-center justify-center rounded-md" style={{ backgroundColor: `${payment.color}20` }}>
-                                          {payment.logo}
-                                        </span>
-                                        {payment.client}
-                                      </div>
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                      {payment.montant}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                      {payment.methode}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                      <span 
-                                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(payment.statut)}`}
-                                      >
-                                        {payment.statut}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-indigo-600 hover:text-indigo-800">
-                                      {payment.facture}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                      {payment.notes}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                      <div className="flex items-center justify-end space-x-2">
-                                        <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
-                                          <FiEye />
-                                        </button>
-                                        <button className="p-1 text-gray-400 hover:text-indigo-600 transition-colors">
-                                          <FiEdit />
-                                        </button>
-                                        <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                                          <FiTrash2 />
-                                        </button>
-                                        <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                                          <FiMoreVertical />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </motion.tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
-                                    <div className="flex flex-col items-center">
-                                      <FiInfo className="w-10 h-10 text-gray-300 mb-2" />
-                                      <p>Aucun règlement ne correspond à vos critères</p>
-                                      <button 
-                                        className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                                        onClick={resetFilters}
-                                      >
-                                        Réinitialiser les filtres
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredPayments.length > 0 ? (
-                          filteredPayments.map((payment) => (
-                            <motion.div
-                              key={payment.id}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              whileHover={{ y: -4, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
-                              className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left">
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                                  // style={{ color: primaryColor, focusRing: primaryColor }}
+                                  checked={selectAll}
+                                  onChange={handleSelectAll}
+                                />
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('client')}
                             >
-                              <div className="p-5">
-                                <div className="flex justify-between items-start mb-4">
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-3"
-                                      checked={selectedPayments.includes(payment.id)}
-                                      onChange={() => handleSelectItem(payment.id)}
-                                    />
-                                    <span 
-                                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(payment.statut)}`}
-                                    >
-                                      {payment.statut}
-                                    </span>
-                                  </div>
-                                  <div className="text-lg font-bold text-gray-900">
-                                    {payment.montant}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center mb-3">
-                                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style={{ backgroundColor: `${payment.color}20` }}>
-                                    <span className="text-xl">{payment.logo}</span>
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-gray-900">{payment.client}</div>
-                                    <div className="text-sm text-gray-500">{payment.date}</div>
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                                  <div>
-                                    <div className="text-gray-500">N° règlement</div>
-                                    <div className="font-medium">{payment.id}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-500">Facture</div>
-                                    <div className="font-medium text-indigo-600">{payment.facture}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-500">Méthode</div>
-                                    <div className="font-medium">{payment.methode}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-500">Créé par</div>
-                                    <div className="font-medium">{payment.creePar}</div>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-sm text-gray-600 border-t pt-3">
-                                  <div className="font-medium text-gray-500 mb-1">Notes :</div>
-                                  {payment.notes}
-                                </div>
+                              <div className="flex items-center">
+                                <span>Client</span>
+                                {sortField === 'client' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
                               </div>
-                              
-                              <div className="flex divide-x border-t">
-                                <button className="flex-1 p-2 text-sm text-gray-600 hover:bg-gray-50 transition flex items-center justify-center">
-                                  <FiEye className="mr-1" /> Voir
-                                </button>
-                                <button className="flex-1 p-2 text-sm text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center">
-                                  <FiEdit className="mr-1" /> Modifier
-                                </button>
-                                <button className="flex-1 p-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center justify-center">
-                                  <FiTrash2 className="mr-1" /> Supprimer
-                                </button>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('nom')}
+                            >
+                              <div className="flex items-center">
+                                <span>Nom</span>
+                                {sortField === 'nom' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
                               </div>
-                            </motion.div>
-                          ))
-                        ) : (
-                          <div className="col-span-full flex items-center justify-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
-                            <div className="text-center">
-                              <FiInfo className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                              <p className="text-gray-500">Aucun règlement ne correspond à vos critères</p>
-                              <button 
-                                className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                                onClick={resetFilters}
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('prenom')}
+                            >
+                              <div className="flex items-center">
+                                <span>Prénom</span>
+                                {sortField === 'prenom' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('montant')}
+                            >
+                              <div className="flex items-center">
+                                <span>Montant</span>
+                                {sortField === 'montant' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('date')}
+                            >
+                              <div className="flex items-center">
+                                <span>Date</span>
+                                {sortField === 'date' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('moyenPaiement')}
+                            >
+                              <div className="flex items-center">
+                                <span>Moyen de paiement</span>
+                                {sortField === 'moyenPaiement' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('restantAffecter')}
+                            >
+                              <div className="flex items-center">
+                                <span>Restant à affecter</span>
+                                {sortField === 'restantAffecter' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {sortedReglements.length > 0 ? (
+                            sortedReglements.map((reglement) => (
+                              <motion.tr 
+                                key={reglement.id}
+                                whileHover={{ backgroundColor: '#F9FAFB' }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                layout
                               >
-                                Réinitialiser les filtres
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <input 
+                                    type="checkbox" 
+                                    className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                                    // style={{ color: primaryColor, focusRing: primaryColor }}
+                                    checked={selectedItems.includes(reglement.id)}
+                                    onChange={() => handleSelectItem(reglement.id)}
+                                  />
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">{reglement.client}</div>
+                                  <div className="text-xs text-gray-500">{reglement.id}</div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {reglement.nom}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {reglement.prenom}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {reglement.montant}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {reglement.date}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {reglement.moyenPaiement}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  <span className={reglement.restantAffecterNum > 0 ? 'text-amber-600 font-medium' : ''}>
+                                    {reglement.restantAffecter}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                                  <div className="flex items-center justify-end space-x-2">
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                      onClick={() => displayNotification(`Détails du règlement ${reglement.id}`, 'info')}
+                                    >
+                                      <FiEye size={18} />
+                                    </button>
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                      onClick={() => displayNotification(`Modification du règlement ${reglement.id}`, 'info')}
+                                    >
+                                      <FiEdit size={18} />
+                                    </button>
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                      onClick={() => displayNotification(`Rapprochement du règlement ${reglement.id}`, 'info')}
+                                    >
+                                      <FiSliders size={18} />
+                                    </button>
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                      onClick={() => confirmDelete(reglement.id)}
+                                    >
+                                      <FiTrash2 size={18} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </motion.tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                                <div className="flex flex-col items-center">
+                                  <FiInfo className="w-10 h-10 text-gray-300 mb-2" />
+                                  <p>Aucun règlement ne correspond à vos critères</p>
+                                  <button 
+                                    className="mt-2 hover:underline font-medium"
+                                    style={{ color: primaryColor }}
+                                    onClick={resetFilters}
+                                  >
+                                    Réinitialiser les filtres
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 )}
 
-                {/* Schedule Tab */}
+                {/* Echeancier Tab */}
                 {activeTab === 'echeancier' && (
-                  <>
-                    {viewMode === 'table' ? (
-                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th scope="col" className="px-4 py-3 text-left">
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                      checked={selectAll}
-                                      onChange={handleSelectAll}
-                                    />
-                                  </div>
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  N° échéance
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Date
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Client
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Montant
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Type
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Délai
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Statut
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Facture
-                                </th>
-                                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Actions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                              {filteredScheduleEntries.length > 0 ? (
-                                filteredScheduleEntries.map((entry) => (
-                                  <motion.tr 
-                                    key={entry.id}
-                                    whileHover={{ backgroundColor: '#F9FAFB' }}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    layout
-                                  >
-                                    <td className="px-4 py-3 whitespace-nowrap">
-                                      <input 
-                                        type="checkbox" 
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                        checked={selectedPayments.includes(entry.id)}
-                                        onChange={() => handleSelectItem(entry.id)}
-                                      />
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                      {entry.id}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                      {entry.date}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                      <div className="flex items-center">
-                                        <span className="w-6 h-6 mr-2 flex items-center justify-center rounded-md" style={{ backgroundColor: `${entry.color}20` }}>
-                                          {entry.logo}
-                                        </span>
-                                        {entry.client}
-                                      </div>
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                      {entry.montant}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                      {entry.type}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                        entry.daysLeft <= 7 
-                                          ? 'bg-red-100 text-red-800 border border-red-200' 
-                                          : entry.daysLeft <= 14
-                                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                            : 'bg-green-100 text-green-800 border border-green-200'
-                                      }`}>
-                                        {entry.daysLeft} jours
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                      <span 
-                                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(entry.statut)}`}
-                                      >
-                                        {entry.statut}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-indigo-600 hover:text-indigo-800">
-                                      {entry.facture}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                      <div className="flex items-center justify-end space-x-2">
-                                        <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
-                                          <FiEye />
-                                        </button>
-                                        <button className="p-1 text-gray-400 hover:text-indigo-600 transition-colors">
-                                          <FiEdit />
-                                        </button>
-                                        <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                                          <FiTrash2 />
-                                        </button>
-                                        <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                                          <FiMoreVertical />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </motion.tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
-                                    <div className="flex flex-col items-center">
-                                      <FiInfo className="w-10 h-10 text-gray-300 mb-2" />
-                                      <p>Aucune échéance ne correspond à vos critères</p>
-                                      <button 
-                                        className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                                        onClick={resetFilters}
-                                      >
-                                        Réinitialiser les filtres
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredScheduleEntries.length > 0 ? (
-                          filteredScheduleEntries.map((entry) => (
-                            <motion.div
-                              key={entry.id}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              whileHover={{ y: -4, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
-                              className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left">
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                                  // style={{ color: primaryColor, focusRing: primaryColor }}
+                                  checked={selectAll}
+                                  onChange={handleSelectAll}
+                                />
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('dateEcheancier')}
                             >
-                              <div className="p-5">
-                                <div className="flex justify-between items-start mb-4">
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-3"
-                                      checked={selectedPayments.includes(entry.id)}
-                                      onChange={() => handleSelectItem(entry.id)}
-                                    />
-                                    <span 
-                                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(entry.statut)}`}
-                                    >
-                                      {entry.statut}
+                              <div className="flex items-center">
+                                <span>Date d&apos;échéancier</span>
+                                {sortField === 'dateEcheancier' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('nDocument')}
+                            >
+                              <div className="flex items-center">
+                                <span>N° document</span>
+                                {sortField === 'nDocument' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('montant')}
+                            >
+                              <div className="flex items-center">
+                                <span>Montant</span>
+                                {sortField === 'montant' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('soldee')}
+                            >
+                              <div className="flex items-center">
+                                <span>Soldée</span>
+                                {sortField === 'soldee' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('codeTiers')}
+                            >
+                              <div className="flex items-center">
+                                <span>Code tiers</span>
+                                {sortField === 'codeTiers' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('client')}
+                            >
+                              <div className="flex items-center">
+                                <span>Client / Nom / Prénom</span>
+                                {sortField === 'client' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('moyenPaiement')}
+                            >
+                              <div className="flex items-center">
+                                <span>Moyen de paiement</span>
+                                {sortField === 'moyenPaiement' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th 
+                              scope="col" 
+                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSort('soldeDu')}
+                            >
+                              <div className="flex items-center">
+                                <span>Solde dû</span>
+                                {sortField === 'soldeDu' && (
+                                  <span className="ml-1">
+                                    {sortDirection === 'asc' ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {sortedEcheances.length > 0 ? (
+                            sortedEcheances.map((echeance) => (
+                              <motion.tr 
+                                key={echeance.id}
+                                whileHover={{ backgroundColor: '#F9FAFB' }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                layout
+                                className={echeance.urgence === 'high' ? 'bg-red-50' : ''}
+                              >
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <input 
+                                    type="checkbox" 
+                                    className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
+                                    // style={{ color: primaryColor, focusRing: primaryColor }}
+                                    checked={selectedItems.includes(echeance.id)}
+                                    onChange={() => handleSelectItem(echeance.id)}
+                                  />
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {echeance.dateEcheancier}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="text-sm font-medium" style={{ color: secondaryColor }}>{echeance.nDocument}</div>
+                                  <div className="text-xs text-gray-500">{echeance.id}</div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {echeance.montant}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                  {echeance.soldee ? (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                      <FiCheck size={12} className="mr-1" /> Oui
                                     </span>
-                                  </div>
-                                  <div className="text-lg font-bold text-gray-900">
-                                    {entry.montant}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center mb-3">
-                                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style={{ backgroundColor: `${entry.color}20` }}>
-                                    <span className="text-xl">{entry.logo}</span>
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-gray-900">{entry.client}</div>
-                                    <div className="text-sm text-gray-500">{entry.date}</div>
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                                  <div>
-                                    <div className="text-gray-500">N° échéance</div>
-                                    <div className="font-medium">{entry.id}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-500">Facture</div>
-                                    <div className="font-medium text-indigo-600">{entry.facture}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-500">Type</div>
-                                    <div className="font-medium">{entry.type}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-500">Délai</div>
-                                    <div className={`font-medium ${
-                                      entry.daysLeft <= 7 
-                                        ? 'text-red-600' 
-                                        : entry.daysLeft <= 14
-                                          ? 'text-amber-600'
-                                          : 'text-green-600'
-                                    }`}>{entry.daysLeft} jours</div>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-sm text-gray-600 border-t pt-3">
-                                  <div className="font-medium text-gray-500 mb-1">Notes :</div>
-                                  {entry.notes}
-                                </div>
-                              </div>
-                              
-                              <div className="flex divide-x border-t">
-                                <button className="flex-1 p-2 text-sm text-gray-600 hover:bg-gray-50 transition flex items-center justify-center">
-                                  <FiEye className="mr-1" /> Voir
+                                  ) : (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                      <FiClock size={12} className="mr-1" /> Non
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {echeance.codeTiers}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">{echeance.client}</div>
+                                  <div className="text-xs text-gray-500">{echeance.nom} {echeance.prenom}</div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {echeance.moyenPaiement}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                  <span className={echeance.soldeDuNum > 0 ? 'text-red-600' : 'text-green-600'}>
+                                    {echeance.soldeDu}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                                  <div className="flex items-center justify-end space-x-2">
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                      onClick={() => displayNotification(`Détails de l'échéance ${echeance.id}`, 'info')}
+                                    >
+                                      <FiEye size={18} />
                                 </button>
-                                <button className="flex-1 p-2 text-sm text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center">
-                                  <FiEdit className="mr-1" /> Modifier
+                                <button 
+                                  className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                  onClick={() => displayNotification(`Modification de l'échéance ${echeance.id}`, 'info')}
+                                >
+                                  <FiEdit size={18} />
                                 </button>
-                                <button className="flex-1 p-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center justify-center">
-                                  <FiTrash2 className="mr-1" /> Supprimer
+                                {!echeance.soldee && (
+                                  <button 
+                                    className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                                    onClick={() => {
+                                      displayNotification(`Échéance ${echeance.id} marquée comme soldée`, 'success');
+                                    }}
+                                  >
+                                    <FiCheckCircle size={18} />
+                                  </button>
+                                )}
+                                <button 
+                                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                  onClick={() => confirmDelete(echeance.id)}
+                                >
+                                  <FiTrash2 size={18} />
                                 </button>
                               </div>
-                            </motion.div>
-                          ))
-                        ) : (
-                          <div className="col-span-full flex items-center justify-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
-                            <div className="text-center">
-                              <FiInfo className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                              <p className="text-gray-500">Aucune échéance ne correspond à vos critères</p>
+                            </td>
+                          </motion.tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                            <div className="flex flex-col items-center">
+                              <FiInfo className="w-10 h-10 text-gray-300 mb-2" />
+                              <p>Aucune échéance ne correspond à vos critères</p>
                               <button 
-                                className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                                className="mt-2 hover:underline font-medium"
+                                style={{ color: primaryColor }}
                                 onClick={resetFilters}
                               >
                                 Réinitialiser les filtres
                               </button>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              
-              {/* Pagination */}
-              <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
-                <div className="flex-1 flex justify-between sm:hidden">
-                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Précédent
-                  </button>
-                  <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Suivant
-                  </button>
-                </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Affichage de <span className="font-medium">1</span> à <span className="font-medium">
-                        {activeTab === 'reglements' ? filteredPayments.length : filteredScheduleEntries.length}
-                      </span> sur <span className="font-medium">
-                        {activeTab === 'reglements' ? paymentsData.length : scheduleData.length}
-                      </span> résultats
-                    </p>
-                  </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                      <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span className="sr-only">Précédent</span>
-                        <FiChevronRight className="h-5 w-5 transform rotate-180" />
-                      </button>
-                      <button className="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600">
-                        1
-                      </button>
-                      <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span className="sr-only">Suivant</span>
-                        <FiChevronRight className="h-5 w-5" />
-                      </button>
-                    </nav>
-                  </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          <div className="px-6 pb-6 flex items-center justify-between border-t border-gray-200">
+            <div className="text-sm text-gray-700">
+              Affichage de <span className="font-medium">1</span> à <span className="font-medium">
+                {activeTab === 'reglements' ? filteredReglements.length : filteredEcheances.length}
+              </span> sur <span className="font-medium">
+                {activeTab === 'reglements' ? reglementsData.length : echeancesData.length}
+              </span> résultats
             </div>
-          </motion.div>
+            <div className="flex space-x-2">
+              <button className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>
+                <FiChevronsLeft size={16} />
+              </button>
+              <button className="px-3 py-2 border text-white rounded-md text-sm font-medium" style={{ backgroundColor: primaryColor }}>
+                1
+              </button>
+              <button className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>
+                <FiChevronsRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
+    </div>
+  </div>
 
-      {/* Notification */}
-      <AnimatePresence>
-        {showNotification && (
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            className="fixed bottom-5 right-5 p-4 rounded-lg shadow-lg z-50"
-            style={{
-              background: notification?.type === 'success' 
-                ? 'linear-gradient(to right, #10B981, #059669)' 
-                : notification?.type === 'error'
-                  ? 'linear-gradient(to right, #EF4444, #DC2626)'
-                  : 'linear-gradient(to right, #6366F1, #4F46E5)'
-            }}
-          >
-            <div className="flex items-center text-white">
-              {notification?.type === 'success' ? (
-                <FiCheckCircle className="w-5 h-5 mr-2" />
-              ) : notification?.type === 'error' ? (
-                <FiAlertCircle className="w-5 h-5 mr-2" />
-              ) : (
-                <FiInfo className="w-5 h-5 mr-2" />
-              )}
-              <span>{notification?.message}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+  {/* Delete Confirmation Modal */}
+  <AnimatePresence>
+    {showDeleteModal && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl"
+        >
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Confirmation de suppression</h3>
+          <p className="text-gray-600 mb-6">
+            {bulkDelete 
+              ? `Êtes-vous sûr de vouloir supprimer les ${selectedItems.length} élément(s) sélectionné(s) ?` 
+              : `Êtes-vous sûr de vouloir supprimer cet élément "${itemToDelete}" ?`
+            }
+            <br />
+            Cette action est irréversible.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Annuler
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              onClick={handleDelete}
+            >
+              Supprimer
+            </motion.button>
+          </div>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+
+  {/* Notification */}
+  <AnimatePresence>
+    {showNotification && (
+      <motion.div
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 50, opacity: 0 }}
+        className="fixed bottom-5 right-5 p-4 rounded-lg shadow-lg z-50"
+        style={{
+          background: notification?.type === 'success' 
+            ? 'linear-gradient(to right, #10B981, #059669)' 
+            : notification?.type === 'error'
+              ? 'linear-gradient(to right, #EF4444, #DC2626)'
+              : 'linear-gradient(to right, #6366F1, #4F46E5)'
+        }}
+      >
+        <div className="flex items-center text-white">
+          {notification?.type === 'success' ? (
+            <FiCheckCircle className="w-5 h-5 mr-2" />
+          ) : notification?.type === 'error' ? (
+            <FiAlertCircle className="w-5 h-5 mr-2" />
+          ) : (
+            <FiInfo className="w-5 h-5 mr-2" />
+          )}
+          <span>{notification?.message}</span>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</motion.div>
+);
 }
-
-

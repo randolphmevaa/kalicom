@@ -3,388 +3,337 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiPercent, 
-  // FiEdit, 
-  FiPlus,
-  // FiTrash2,
-  FiCheckCircle,
+  FiEdit,
+  FiSave,
   FiX,
-  FiAlertTriangle,
+  FiPlus,
+  FiTrash2,
   FiInfo,
-  FiGlobe,
-  // FiSettings,
-  FiRefreshCw,
-  FiHelpCircle,
-  // FiChevronDown,
-  // FiChevronUp,
-  // FiArrowRight,
-  // FiArrowLeft,
-  FiFilter,
+  // FiEye,
   FiSearch,
-  FiDollarSign,
-  FiClock,
-  FiCalendar,
-  FiTag,
-  // FiCheckSquare,
-  FiFileText,
-  // FiBarChart2,
-  // FiSave,
-  // FiList,
-  // FiActivity,
-  // FiPieChart,
-  // FiFlag
+  FiFilter,
+  FiCheck,
+  FiChevronDown,
+  FiSettings,
+  FiAlertCircle,
+  // FiDollarSign
 } from 'react-icons/fi';
 
+// Define types for tax data
+interface TaxType {
+  id: string;
+  name: string;
+  rate: number;
+  description: string;
+  type: 'percentage' | 'fixed';
+  category: 'standard' | 'reduced' | 'special' | 'custom';
+  isActive: boolean;
+  appliesTo: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function Taxes() {
-  // State for active tab
-  const [activeTab, setActiveTab] = useState('tva');
-  const [activeTaxId, setActiveTaxId] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [ , setEditMode] = useState(false);
-  const [showHelp, setShowHelp] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('Tous');
-  const [selectedType, setSelectedType] = useState('Tous');
-  const [selectedStatus, setSelectedStatus] = useState('Tous');
+  // State for edit mode
+  const [editMode, setEditMode] = useState<boolean>(false);
   
-  // Sample TVA data
-  const [tvaData, setTvaData] = useState([
+  // State for managing tax editing
+  const [editingTax, setEditingTax] = useState<TaxType | null>(null);
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+  const [showFilterOptions, setShowFilterOptions] = useState<boolean>(false);
+  
+  // State for search and filters
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'percentage' | 'fixed'>('all');
+  
+  // Sample tax data
+  const [taxes, setTaxes] = useState<TaxType[]>([
     {
-      id: 'TVA-001',
-      taux: 20,
-      nom: 'TVA Standard',
-      description: 'Taux standard applicable à la majorité des biens et services',
-      codeComptable: '445710',
-      type: 'Collectée',
-      region: 'France',
-      isDefault: true,
+      id: 'tax-1',
+      name: 'TVA Standard',
+      rate: 20,
+      description: 'Taux normal de TVA applicable à la majorité des biens et services',
+      type: 'percentage',
+      category: 'standard',
       isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Taux standard française',
-      historique: [
-        { date: '01/01/2014', action: 'Modification taux', valeur: '20%', ancienneValeur: '19.6%' }
-      ]
+      appliesTo: ['Produits', 'Services'],
+      createdAt: '2024-01-15',
+      updatedAt: '2024-01-15'
     },
     {
-      id: 'TVA-002',
-      taux: 10,
-      nom: 'TVA Intermédiaire',
-      description: 'Taux intermédiaire pour la restauration, transports, etc.',
-      codeComptable: '445711',
-      type: 'Collectée',
-      region: 'France',
-      isDefault: false,
+      id: 'tax-2',
+      name: 'TVA Intermédiaire',
+      rate: 10,
+      description: 'Taux intermédiaire applicable à la restauration, transport, etc.',
+      type: 'percentage',
+      category: 'reduced',
       isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Applicable notamment aux travaux de rénovation, restauration, hôtellerie',
-      historique: [
-        { date: '01/01/2014', action: 'Création', valeur: '10%', ancienneValeur: '-' }
-      ]
+      appliesTo: ['Restauration', 'Transport'],
+      createdAt: '2024-01-15',
+      updatedAt: '2024-01-15'
     },
     {
-      id: 'TVA-003',
-      taux: 5.5,
-      nom: 'TVA Réduite',
-      description: 'Taux réduit pour les produits de première nécessité',
-      codeComptable: '445712',
-      type: 'Collectée',
-      region: 'France',
-      isDefault: false,
+      id: 'tax-3',
+      name: 'TVA Réduite',
+      rate: 5.5,
+      description: 'Taux réduit applicable aux produits de première nécessité',
+      type: 'percentage',
+      category: 'reduced',
       isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Applicable aux produits alimentaires, livres, etc.',
-      historique: [
-        { date: '01/07/2012', action: 'Modification taux', valeur: '5.5%', ancienneValeur: '5.5%' },
-        { date: '01/01/2012', action: 'Modification taux', valeur: '7%', ancienneValeur: '5.5%' },
-        { date: '01/07/2009', action: 'Création', valeur: '5.5%', ancienneValeur: '-' }
-      ]
+      appliesTo: ['Alimentation', 'Livres'],
+      createdAt: '2024-01-15',
+      updatedAt: '2024-02-10'
     },
     {
-      id: 'TVA-004',
-      taux: 2.1,
-      nom: 'TVA Super réduite',
-      description: 'Taux super réduit pour certains biens et services spécifiques',
-      codeComptable: '445713',
-      type: 'Collectée',
-      region: 'France',
-      isDefault: false,
+      id: 'tax-4',
+      name: 'TVA Super Réduite',
+      rate: 2.1,
+      description: 'Taux particulier applicable à certains médicaments et presse',
+      type: 'percentage',
+      category: 'special',
       isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Applicable aux médicaments remboursables par la sécurité sociale, certaines publications de presse',
-      historique: [
-        { date: '01/01/1989', action: 'Création', valeur: '2.1%', ancienneValeur: '-' }
-      ]
+      appliesTo: ['Médicaments', 'Presse'],
+      createdAt: '2024-01-15',
+      updatedAt: '2024-01-15'
     },
     {
-      id: 'TVA-005',
-      taux: 0,
-      nom: 'Exonération de TVA',
-      description: 'Pas de TVA applicable',
-      codeComptable: '445714',
-      type: 'Exonération',
-      region: 'France',
-      isDefault: false,
+      id: 'tax-5',
+      name: 'Éco-contribution',
+      rate: 0.5,
+      description: 'Taxe environnementale sur certains produits électroniques',
+      type: 'percentage',
+      category: 'custom',
       isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Pour les opérations exonérées de TVA (export, livraisons intracommunautaires, etc.)',
-      historique: []
+      appliesTo: ['Électronique'],
+      createdAt: '2024-02-01',
+      updatedAt: '2024-02-01'
     },
     {
-      id: 'TVA-006',
-      taux: 21,
-      nom: 'TVA Standard Belgique',
-      description: 'Taux standard applicable en Belgique',
-      codeComptable: '445720',
-      type: 'Collectée',
-      region: 'Belgique',
-      isDefault: false,
-      isActive: true,
-      dateCreation: '01/06/2021',
-      dateMaj: '01/01/2025',
-      notes: 'Pour les ventes en Belgique',
-      historique: [
-        { date: '01/01/2021', action: 'Création', valeur: '21%', ancienneValeur: '-' }
-      ]
-    },
-    {
-      id: 'TVA-007',
-      taux: 19,
-      nom: 'TVA Standard Allemagne',
-      description: 'Taux standard applicable en Allemagne',
-      codeComptable: '445721',
-      type: 'Collectée',
-      region: 'Allemagne',
-      isDefault: false,
-      isActive: true,
-      dateCreation: '01/06/2021',
-      dateMaj: '01/01/2025',
-      notes: 'Pour les ventes en Allemagne',
-      historique: [
-        { date: '01/01/2021', action: 'Création', valeur: '19%', ancienneValeur: '-' }
-      ]
-    }
-  ]);
-
-  // Sample other taxes data
-  const [otherTaxesData, setOtherTaxesData] = useState([
-    {
-      id: 'TAX-001',
-      taux: 0.10,
-      nom: 'Contribution à la formation professionnelle',
-      description: 'Contribution pour la formation professionnelle',
-      codeComptable: '6313',
-      type: 'Taxe sur revenus',
-      region: 'France',
-      isDefault: false,
-      isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Pour les indépendants et micro-entrepreneurs',
-      periodicite: 'Annuelle',
-      dateEcheance: '15/01',
-      baseCalcul: "Chiffre d'affaires"
-    },
-    {
-      id: 'TAX-002',
-      taux: 2.2,
-      nom: "Taxe d'apprentissage",
-      description: 'Taxe pour financer les formations en alternance',
-      codeComptable: '6314',
-      type: 'Taxe sur salaires',
-      region: 'France',
-      isDefault: false,
-      isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: "Pour les entreprises soumises à l'impôt sur les sociétés",
-      periodicite: 'Annuelle',
-      dateEcheance: '01/03',
-      baseCalcul: 'Masse salariale'
-    },
-    {
-      id: 'TAX-003',
-      taux: 0.3,
-      nom: 'Contribution économique territoriale',
-      description: 'Ancienne taxe professionnelle',
-      codeComptable: '6315',
-      type: 'Taxe locale',
-      region: 'France',
-      isDefault: false,
-      isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Composée de la CFE et de la CVAE',
-      periodicite: 'Annuelle',
-      dateEcheance: '15/12',
-      baseCalcul: 'Valeur ajoutée'
-    },
-    {
-      id: 'TAX-004',
-      taux: 1.5,
-      nom: 'Taxe sur les surfaces commerciales',
-      description: 'Taxe sur les commerces de détail',
-      codeComptable: '6316',
-      type: 'Taxe locale',
-      region: 'France',
-      isDefault: false,
-      isActive: true,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Pour les surfaces de vente > 400m²',
-      periodicite: 'Annuelle',
-      dateEcheance: '15/06',
-      baseCalcul: 'Surface commerciale'
-    },
-    {
-      id: 'TAX-005',
-      taux: 5.5,
-      nom: 'Contribution sociale de solidarité',
-      description: 'Financement de la sécurité sociale',
-      codeComptable: '6317',
-      type: 'Cotisation sociale',
-      region: 'France',
-      isDefault: false,
+      id: 'tax-6',
+      name: 'Taxe de séjour',
+      rate: 1.5,
+      description: 'Taxe fixe par nuitée dans les établissements touristiques',
+      type: 'fixed',
+      category: 'custom',
       isActive: false,
-      dateCreation: '01/01/2020',
-      dateMaj: '01/01/2025',
-      notes: 'Pour les sociétés dont le CA > 19M€',
-      periodicite: 'Annuelle',
-      dateEcheance: '15/05',
-      baseCalcul: "Chiffre d'affaires"
+      appliesTo: ['Hôtellerie'],
+      createdAt: '2024-02-15',
+      updatedAt: '2024-02-15'
     }
   ]);
-
-  // Settings data
-  const [settingsData, setSettingsData] = useState({
-    tvaDefaultCountry: 'France',
-    defaultTvaRate: 20,
-    automaticVatCalculation: true,
-    showTaxesOnDocuments: true,
-    roundingMethod: 'Standard',
-    displayTaxDetailsOnInvoices: true,
-    taxReportingPeriod: 'Mensuelle',
-    vatNumberRequired: true,
-    autoUpdateRates: true
-  });
-
-  // Statistics
-  const tvaStatistics = [
-    { title: "Taux actifs", value: tvaData.filter(item => item.isActive).length, icon: <FiCheckCircle className="text-green-500" /> },
-    { title: "Taux standard", value: "20%", icon: <FiPercent className="text-blue-500" /> },
-    { title: "Pays configurés", value: Array.from(new Set(tvaData.map(item => item.region))).length, icon: <FiGlobe className="text-indigo-500" /> },
-    { title: "Mise à jour", value: "01/01/2025", icon: <FiRefreshCw className="text-amber-500" /> }
-  ];
-
-  const otherTaxesStatistics = [
-    { title: "Taxes actives", value: otherTaxesData.filter(item => item.isActive).length, icon: <FiCheckCircle className="text-green-500" /> },
-    { title: "Types de taxes", value: Array.from(new Set(otherTaxesData.map(item => item.type))).length, icon: <FiTag className="text-blue-500" /> },
-    { title: "Prochaine échéance", value: "15/01/2025", icon: <FiCalendar className="text-indigo-500" /> },
-    { title: "Taxes périodiques", value: otherTaxesData.filter(item => item.periodicite).length, icon: <FiClock className="text-amber-500" /> }
-  ];
-
-  const reportsStatistics = [
-    { title: "Déclarations en attente", value: "1", icon: <FiAlertTriangle className="text-amber-500" /> },
-    { title: "Dernière déclaration", value: "T4 2024", icon: <FiFileText className="text-blue-500" /> },
-    { title: "Périodicité", value: "Trimestrielle", icon: <FiCalendar className="text-indigo-500" /> },
-    { title: "TVA due - T1 2025", value: "14,250 €", icon: <FiDollarSign className="text-green-500" /> }
-  ];
-
-  // Filter options
-  const regionOptions = ['Tous', 'France', 'Belgique', 'Allemagne', 'Espagne', 'Italie', 'Royaume-Uni', 'Autre'];
-  const typeOptions = ['Tous', 'Collectée', 'Déductible', 'Exonération', 'Taxe sur revenus', 'Taxe sur salaires', 'Taxe locale', 'Cotisation sociale'];
-  const statusOptions = ['Tous', 'Actif', 'Inactif'];
-
-  // Toggle help box
-  const toggleHelp = () => {
-    setShowHelp(!showHelp);
-  };
-
-  // Toggle filters
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  // Set active tax
-  const setActiveTaxHandler = (id: string) => {
-    if (activeTaxId === id) {
-      setActiveTaxId(null);
-    } else {
-      setActiveTaxId(id);
-      setEditMode(false);
+  
+  // Toggle edit mode
+  const toggleEditMode = (): void => {
+    setEditMode(!editMode);
+    // Reset editing state when exiting edit mode
+    if (editMode) {
+      setEditingTax(null);
+      setShowAddForm(false);
     }
   };
   
-
-  // Toggle active status
-  const toggleActive = (id: string) => {
-    if (activeTab === 'tva') {
-      setTvaData(
-        tvaData.map(item => 
-          item.id === id ? { ...item, isActive: !item.isActive } : item
-        )
-      );
-    } else if (activeTab === 'autres') {
-      setOtherTaxesData(
-        otherTaxesData.map(item => 
-          item.id === id ? { ...item, isActive: !item.isActive } : item
-        )
-      );
+  // Filter taxes based on search and filters
+  const filteredTaxes = taxes.filter(tax => {
+    // Search filter
+    const matchesSearch = searchQuery === '' || 
+      tax.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tax.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Active status filter
+    const matchesActive = 
+      activeFilter === 'all' || 
+      (activeFilter === 'active' && tax.isActive) || 
+      (activeFilter === 'inactive' && !tax.isActive);
+    
+    // Type filter
+    const matchesType = 
+      typeFilter === 'all' || 
+      typeFilter === tax.type;
+    
+    return matchesSearch && matchesActive && matchesType;
+  });
+  
+  // Start editing a tax
+  const handleEdit = (tax: TaxType): void => {
+    setEditingTax({...tax});
+    setShowAddForm(false);
+  };
+  
+  // Start adding a new tax
+  const handleAddNew = (): void => {
+    setEditingTax(null);
+    setShowAddForm(true);
+  };
+  
+  // Cancel editing/adding
+  const handleCancelEdit = (): void => {
+    setEditingTax(null);
+    setShowAddForm(false);
+  };
+  
+  // Save edited tax
+  const handleSaveTax = (): void => {
+    if (editingTax) {
+      setTaxes(taxes.map(tax => 
+        tax.id === editingTax.id ? editingTax : tax
+      ));
+      setEditingTax(null);
     }
   };
-
-  // Set as default TVA rate
-  // const setAsDefault = (id) => {
-  //   setTvaData(
-  //     tvaData.map(item => 
-  //       item.id === id ? { ...item, isDefault: true } : { ...item, isDefault: false }
-  //     )
-  //   );
-  // };
-
-  // Get active tax data based on tab
-  const getActiveTaxData = () => {
-    if(activeTab === 'tva') return tvaData;
-    else if(activeTab === 'autres') return otherTaxesData;
-    else return [];
+  
+  // Add new tax
+  const handleAddTax = (newTax: Partial<TaxType>): void => {
+    const now = new Date().toISOString().split('T')[0];
+    
+    const tax: TaxType = {
+      id: `tax-${taxes.length + 1}`,
+      name: newTax.name || 'Nouvelle taxe',
+      rate: newTax.rate || 0,
+      description: newTax.description || '',
+      type: newTax.type || 'percentage',
+      category: newTax.category || 'custom',
+      isActive: newTax.isActive || true,
+      appliesTo: newTax.appliesTo || [],
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    setTaxes([...taxes, tax]);
+    setShowAddForm(false);
   };
-
-  // Filter taxes based on search and filter criteria
-  const filteredTaxes = getActiveTaxData().filter(tax => {
-    const matchesSearch = 
-      searchTerm === '' || 
-      tax.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tax.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tax.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tax.notes && tax.notes.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  // Delete tax
+  const handleDeleteTax = (id: string): void => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette taxe?')) {
+      setTaxes(taxes.filter(tax => tax.id !== id));
+    }
+  };
+  
+  // Toggle tax active status
+  const handleToggleActive = (id: string): void => {
+    setTaxes(taxes.map(tax => 
+      tax.id === id ? {...tax, isActive: !tax.isActive} : tax
+    ));
+  };
+  
+  // Handle input changes for editing tax
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
+    if (!editingTax) return;
     
-    const matchesRegion = selectedRegion === 'Tous' || tax.region === selectedRegion;
-    const matchesType = selectedType === 'Tous' || tax.type === selectedType;
-    const matchesStatus = selectedStatus === 'Tous' || 
-      (selectedStatus === 'Actif' && tax.isActive) || 
-      (selectedStatus === 'Inactif' && !tax.isActive);
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     
-    return matchesSearch && matchesRegion && matchesType && matchesStatus;
+    setEditingTax({
+      ...editingTax,
+      [name]: type === 'checkbox' ? checked : 
+              type === 'number' ? parseFloat(value) : value,
+      updatedAt: new Date().toISOString().split('T')[0]
+    });
+  };
+  
+  // New tax form state
+  const [newTax, setNewTax] = useState<Partial<TaxType>>({
+    name: '',
+    rate: 0,
+    description: '',
+    type: 'percentage',
+    category: 'custom',
+    isActive: true,
+    appliesTo: []
   });
-
-  // Reset filters
-  const resetFilters = () => {
-    setSearchTerm('');
-    setSelectedRegion('Tous');
-    setSelectedType('Tous');
-    setSelectedStatus('Tous');
+  
+  // Handle input changes for new tax
+  const handleNewTaxChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setNewTax({
+      ...newTax,
+      [name]: type === 'checkbox' ? checked : 
+              type === 'number' ? parseFloat(value) : value
+    });
+  };
+  
+  // Handle adding new applies to category
+  const handleAddAppliesTo = (category: string): void => {
+    if (editingTax) {
+      if (!editingTax.appliesTo.includes(category)) {
+        setEditingTax({
+          ...editingTax,
+          appliesTo: [...editingTax.appliesTo, category]
+        });
+      }
+    } else {
+      if (newTax.appliesTo && !newTax.appliesTo.includes(category)) {
+        setNewTax({
+          ...newTax,
+          appliesTo: [...(newTax.appliesTo || []), category]
+        });
+      }
+    }
+  };
+  
+  // Handle removing applies to category
+  const handleRemoveAppliesTo = (category: string): void => {
+    if (editingTax) {
+      setEditingTax({
+        ...editingTax,
+        appliesTo: editingTax.appliesTo.filter(c => c !== category)
+      });
+    } else {
+      setNewTax({
+        ...newTax,
+        appliesTo: (newTax.appliesTo || []).filter(c => c !== category)
+      });
+    }
+  };
+  
+  // Get appropriate badge color for tax category
+  const getCategoryBadgeColor = (category: string): string => {
+    switch (category) {
+      case 'standard':
+        return 'bg-blue-100 text-blue-800';
+      case 'reduced':
+        return 'bg-green-100 text-green-800';
+      case 'special':
+        return 'bg-purple-100 text-purple-800';
+      case 'custom':
+        return 'bg-orange-100 text-orange-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
+  // Format tax rate
+  const formatTaxRate = (tax: TaxType): string => {
+    return tax.type === 'percentage' 
+      ? `${tax.rate}%` 
+      : `${tax.rate}€`;
+  };
+  
+  // Input field styling - black text as requested
+  const getInputClass = (): string => {
+    return `w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`;
+  };
+  
+  // Select field styling - black text as requested
+  const getSelectClass = (): string => {
+    return `w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`;
+  };
+  
+  // Textarea field styling - black text as requested
+  const getTextareaClass = (): string => {
+    return `w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black resize-none`;
   };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-20 min-h-screen"
+      className="pt-20 min-h-screen bg-gray-50"
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 pb-16">
         {/* Header */}
         <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
           <div>
@@ -396,357 +345,525 @@ export default function Taxes() {
               Taxes
             </motion.h1>
             <p className="text-sm text-gray-500 mt-1">
-              Gérez vos taux de TVA et autres taxes applicables
+              Gérez les taxes et taux de TVA appliqués à vos produits et services
             </p>
           </div>
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <FiPercent className="w-6 h-6 text-indigo-600" />
+          <div className="flex items-center space-x-3">
+            {!editMode ? (
+              <button 
+                onClick={toggleEditMode}
+                className="p-2 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors duration-200"
+              >
+                <FiEdit className="w-6 h-6 text-indigo-700" />
+              </button>
+            ) : (
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <FiEdit className="w-6 h-6 text-indigo-700" />
+              </div>
+            )}
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <FiPercent className="w-6 h-6 text-indigo-700" />
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="flex border-b">
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'tva' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('tva');
-                setActiveTaxId(null);
-                setEditMode(false);
-              }}
-            >
-              TVA
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'autres' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('autres');
-                setActiveTaxId(null);
-                setEditMode(false);
-              }}
-            >
-              Autres taxes
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'rapports' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('rapports');
-                setActiveTaxId(null);
-                setEditMode(false);
-              }}
-            >
-              Rapports
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'parametres' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('parametres');
-                setActiveTaxId(null);
-                setEditMode(false);
-              }}
-            >
-              Paramètres
-            </button>
-          </div>
-
-          {/* Content for TVA and Autres taxes tabs */}
-          {(activeTab === 'tva' || activeTab === 'autres') && (
-            <>
-              {/* Statistics */}
-              <div className="p-6 border-b">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                  {(activeTab === 'tva' ? tvaStatistics : otherTaxesStatistics).map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col">
-                      <div className="flex items-center mb-2">
-                        <div className="p-2 bg-indigo-50 rounded-lg mr-3">
-                          {stat.icon}
-                        </div>
-                        <span className="text-sm font-medium text-gray-500">{stat.title}</span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    </div>
-                  ))}
-                </div>
+        {/* Edit Mode Banner */}
+        {editMode && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg text-amber-800 flex justify-between items-center"
+          >
+            <div className="flex items-center">
+              <FiInfo className="h-5 w-5 mr-2" />
+              <span>Mode édition activé. Vous pouvez modifier les taxes et taux de TVA.</span>
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Tax Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center mb-2">
+              <div className="p-2 bg-blue-50 rounded-lg mr-3">
+                <FiPercent className="h-5 w-5 text-blue-600" />
               </div>
-
-              {/* Help box for TVA */}
-              {activeTab === 'tva' && showHelp && (
-                <div className="mx-6 mt-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <FiInfo className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">À propos de la TVA</h3>
-                        <div className="mt-2 text-sm text-blue-700">
-                          <p>
-                            La Taxe sur la Valeur Ajoutée (TVA) est un impôt indirect sur la consommation :
-                          </p>
-                          <ul className="list-disc pl-5 mt-1 space-y-1">
-                            <li>En France, il existe 4 taux principaux : 20% (normal), 10% (intermédiaire), 5,5% (réduit) et 2,1% (particulier)</li>
-                            <li>Les taux peuvent varier selon les pays de l&apos;Union Européenne</li>
-                            <li>Certaines activités sont exonérées de TVA (santé, enseignement, etc.)</li>
-                            <li>Vérifiez régulièrement les mises à jour des taux qui peuvent changer</li>
-                          </ul>
-                        </div>
-                      </div>
-                      <div className="ml-auto pl-3">
-                        <button
-                          onClick={toggleHelp}
-                          className="inline-flex rounded-md text-blue-500 hover:bg-blue-100 focus:outline-none"
-                        >
-                          <span className="sr-only">Dismiss</span>
-                          <FiX className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+              <h3 className="text-lg font-medium text-gray-800">TVA Standard</h3>
+            </div>
+            <div className="text-3xl font-bold text-indigo-700">20%</div>
+            <div className="text-sm text-gray-500 mt-1">Taux normal applicable par défaut</div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center mb-2">
+              <div className="p-2 bg-green-50 rounded-lg mr-3">
+                <FiPercent className="h-5 w-5 text-green-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800">TVA Réduite</h3>
+            </div>
+            <div className="text-3xl font-bold text-indigo-700">5.5% - 10%</div>
+            <div className="text-sm text-gray-500 mt-1">Taux réduits pour certains produits</div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center mb-2">
+              <div className="p-2 bg-indigo-50 rounded-lg mr-3">
+                <FiSettings className="h-5 w-5 text-indigo-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800">Taxes actives</h3>
+            </div>
+            <div className="text-3xl font-bold text-indigo-700">
+              {taxes.filter(tax => tax.isActive).length} / {taxes.length}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">Taxes configurées et actives</div>
+          </div>
+        </div>
+        
+        {/* Main Content */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg mr-4">
+                <FiPercent className="w-5 h-5 text-indigo-700" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800">Liste des taxes</h2>
+            </div>
+            <p className="text-gray-500 text-sm mt-2 ml-11">
+              Consultez et gérez toutes les taxes configurées pour votre entreprise
+            </p>
+          </div>
+          
+          {/* Search and Filters */}
+          <div className="p-6 bg-gray-50 border-b border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0">
+              <div className="w-full md:w-64 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400" />
                 </div>
-              )}
-
-              {/* Help box for other taxes */}
-              {activeTab === 'autres' && showHelp && (
-                <div className="mx-6 mt-4">
-                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <FiAlertTriangle className="h-5 w-5 text-amber-600" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-amber-800">Autres taxes et contributions</h3>
-                        <div className="mt-2 text-sm text-amber-700">
-                          <p>
-                            En plus de la TVA, votre entreprise peut être soumise à d&apos;autres taxes :
-                          </p>
-                          <ul className="list-disc pl-5 mt-1 space-y-1">
-                            <li>Contribution à la formation professionnelle (CFP)</li>
-                            <li>Taxe d&apos;apprentissage</li>
-                            <li>Contribution économique territoriale (CET)</li>
-                            <li>Taxes spécifiques à votre secteur d&apos;activité</li>
-                            <li>N&apos;oubliez pas de vérifier les échéances de déclaration et paiement</li>
-                          </ul>
-                        </div>
-                      </div>
-                      <div className="ml-auto pl-3">
-                        <button
-                          onClick={toggleHelp}
-                          className="inline-flex rounded-md text-amber-500 hover:bg-amber-100 focus:outline-none"
-                        >
-                          <span className="sr-only">Dismiss</span>
-                          <FiX className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions & Search Bar */}
-              <div className="px-6 py-4">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-                  {/* Search */}
-                  <div className="w-full md:w-72 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiSearch className="text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder={`Rechercher ${activeTab === 'tva' ? 'un taux de TVA' : 'une taxe'}...`}
-                      className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <button className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-                      <FiPlus />
-                      <span>{activeTab === 'tva' ? 'Ajouter un taux de TVA' : 'Ajouter une taxe'}</span>
-                    </button>
-                    <button 
-                      onClick={toggleFilters}
-                      className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
-                    >
-                      <FiFilter />
-                      <span>{showFilters ? 'Masquer filtres' : 'Afficher filtres'}</span>
-                    </button>
-                    <button 
-                      onClick={toggleHelp}
-                      className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
-                    >
-                      <FiHelpCircle />
-                      <span className="hidden md:inline">{showHelp ? 'Masquer l\'aide' : 'Afficher l\'aide'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Filters */}
-                {showFilters && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="mt-4 p-4 border border-gray-200 rounded-lg overflow-hidden"
+                <input
+                  type="text"
+                  placeholder="Rechercher une taxe..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-indigo-700"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex space-x-2">
+                <div className="relative">
+                  <button
+                    className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-indigo-700"
+                    onClick={() => setShowFilterOptions(!showFilterOptions)}
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Région
-                        </label>
-                        <select 
-                          className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                          value={selectedRegion}
-                          onChange={(e) => setSelectedRegion(e.target.value)}
-                        >
-                          {regionOptions.map((option, index) => (
-                            <option key={index} value={option}>{option}</option>
-                          ))}
-                        </select>
+                    <FiFilter className="w-4 h-4" />
+                    <span>Filtres</span>
+                    <FiChevronDown className="w-4 h-4" />
+                  </button>
+                  
+                  {showFilterOptions && (
+                    <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl z-10 border border-gray-200">
+                      <div className="p-4">
+                        <h3 className="font-medium text-gray-700 mb-2">Statut</h3>
+                        <div className="space-y-2">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="activeFilter"
+                              checked={activeFilter === 'all'}
+                              onChange={() => setActiveFilter('all')}
+                              className="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            />
+                            <span className="text-sm text-gray-700">Toutes</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="activeFilter"
+                              checked={activeFilter === 'active'}
+                              onChange={() => setActiveFilter('active')}
+                              className="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            />
+                            <span className="text-sm text-gray-700">Actives</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="activeFilter"
+                              checked={activeFilter === 'inactive'}
+                              onChange={() => setActiveFilter('inactive')}
+                              className="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            />
+                            <span className="text-sm text-gray-700">Inactives</span>
+                          </label>
+                        </div>
+                        
+                        <h3 className="font-medium text-gray-700 mt-4 mb-2">Type</h3>
+                        <div className="space-y-2">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="typeFilter"
+                              checked={typeFilter === 'all'}
+                              onChange={() => setTypeFilter('all')}
+                              className="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            />
+                            <span className="text-sm text-gray-700">Tous</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="typeFilter"
+                              checked={typeFilter === 'percentage'}
+                              onChange={() => setTypeFilter('percentage')}
+                              className="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            />
+                            <span className="text-sm text-gray-700">Pourcentage</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="typeFilter"
+                              checked={typeFilter === 'fixed'}
+                              onChange={() => setTypeFilter('fixed')}
+                              className="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            />
+                            <span className="text-sm text-gray-700">Montant fixe</span>
+                          </label>
+                        </div>
                       </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Type
-                        </label>
-                        <select 
-                          className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                          value={selectedType}
-                          onChange={(e) => setSelectedType(e.target.value)}
+                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
+                        <button
+                          className="px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800"
+                          onClick={() => {
+                            setActiveFilter('all');
+                            setTypeFilter('all');
+                          }}
                         >
-                          {typeOptions.map((option, index) => (
-                            <option key={index} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Statut
-                        </label>
-                        <select 
-                          className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                          value={selectedStatus}
-                          onChange={(e) => setSelectedStatus(e.target.value)}
+                          Réinitialiser
+                        </button>
+                        <button
+                          className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+                          onClick={() => setShowFilterOptions(false)}
                         >
-                          {statusOptions.map((option, index) => (
-                            <option key={index} value={option}>{option}</option>
-                          ))}
-                        </select>
+                          Fermer
+                        </button>
                       </div>
                     </div>
-                    <div className="mt-4">
-                      <button 
-                        onClick={resetFilters}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
-                      >
-                        Réinitialiser les filtres
-                      </button>
-                    </div>
-                  </motion.div>
+                  )}
+                </div>
+                
+                {editMode && (
+                  <button
+                    className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    onClick={handleAddNew}
+                    disabled={showAddForm}
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    <span>Ajouter une taxe</span>
+                  </button>
                 )}
               </div>
-
-              {/* List of Taxes */}
-              <div className="px-6 py-4">
-                {filteredTaxes.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredTaxes.map((tax) => (
-                      <div key={tax.id} className="p-4 bg-white rounded-lg shadow border flex justify-between items-center">
-                        <div>
-                          <h4 className="text-lg font-semibold">{tax.nom}</h4>
-                          <p className="text-sm text-gray-500">{tax.description}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button 
-                            onClick={() => setActiveTaxHandler(tax.id)}
-                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition"
-                          >
-                            Détails
-                          </button>
-                          <button 
-                            onClick={() => toggleActive(tax.id)}
-                            className={`px-3 py-1 rounded transition ${tax.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                          >
-                            {tax.isActive ? 'Actif' : 'Inactif'}
-                          </button>
-                        </div>
+            </div>
+          </div>
+          
+          {/* Add/Edit Form */}
+          {(editingTax || showAddForm) && editMode && (
+            <div className="p-6 border-b border-gray-200 bg-indigo-50">
+              <h3 className="text-lg font-medium text-gray-800 mb-4">
+                {editingTax ? 'Modifier la taxe' : 'Ajouter une nouvelle taxe'}
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom de la taxe
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editingTax ? editingTax.name : newTax.name}
+                    onChange={editingTax ? handleEditChange : handleNewTaxChange}
+                    className={getInputClass()}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Taux
+                  </label>
+                  <div className="flex">
+                    <input
+                      type="number"
+                      name="rate"
+                      value={editingTax ? editingTax.rate : newTax.rate}
+                      onChange={editingTax ? handleEditChange : handleNewTaxChange}
+                      step="0.01"
+                      min="0"
+                      className={`${getInputClass()} rounded-r-none`}
+                      required
+                    />
+                    <div className="px-4 py-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg flex items-center">
+                      {editingTax ? 
+                        (editingTax.type === 'percentage' ? '%' : '€') : 
+                        (newTax.type === 'percentage' ? '%' : '€')}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type
+                  </label>
+                  <select
+                    name="type"
+                    value={editingTax ? editingTax.type : newTax.type}
+                    onChange={editingTax ? handleEditChange : handleNewTaxChange}
+                    className={getSelectClass()}
+                  >
+                    <option value="percentage">Pourcentage</option>
+                    <option value="fixed">Montant fixe</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Catégorie
+                  </label>
+                  <select
+                    name="category"
+                    value={editingTax ? editingTax.category : newTax.category}
+                    onChange={editingTax ? handleEditChange : handleNewTaxChange}
+                    className={getSelectClass()}
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="reduced">Réduite</option>
+                    <option value="special">Spéciale</option>
+                    <option value="custom">Personnalisée</option>
+                  </select>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={editingTax ? editingTax.description : newTax.description}
+                    onChange={editingTax ? handleEditChange : handleNewTaxChange}
+                    className={getTextareaClass()}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      name="isActive"
+                      checked={editingTax ? editingTax.isActive : newTax.isActive}
+                      onChange={editingTax ? handleEditChange : handleNewTaxChange}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Taxe active</span>
+                  </label>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    S&apos;applique à
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {(editingTax ? editingTax.appliesTo : newTax.appliesTo || []).map(category => (
+                      <div key={category} className="bg-gray-100 px-3 py-1 rounded-full flex items-center text-sm">
+                        <span className="text-gray-800">{category}</span>
+                        <button
+                          type="button"
+                          className="ml-2 text-gray-500 hover:text-red-500"
+                          onClick={() => handleRemoveAppliesTo(category)}
+                        >
+                          <FiX className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-gray-500">Aucun résultat trouvé.</p>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Content for Rapports Tab */}
-          {activeTab === 'rapports' && (
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Rapports</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                {reportsStatistics.map((report, index) => (
-                  <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <div className="p-2 bg-indigo-50 rounded-lg mr-3">
-                        {report.icon}
-                      </div>
-                      <span className="text-sm font-medium text-gray-500">{report.title}</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">{report.value}</div>
+                  <div className="flex space-x-2">
+                    <select
+                      className={`${getSelectClass()} max-w-xs`}
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleAddAppliesTo(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Ajouter une catégorie...</option>
+                      <option value="Produits">Produits</option>
+                      <option value="Services">Services</option>
+                      <option value="Alimentation">Alimentation</option>
+                      <option value="Livres">Livres</option>
+                      <option value="Restauration">Restauration</option>
+                      <option value="Transport">Transport</option>
+                      <option value="Médicaments">Médicaments</option>
+                      <option value="Presse">Presse</option>
+                      <option value="Électronique">Électronique</option>
+                      <option value="Hôtellerie">Hôtellerie</option>
+                    </select>
                   </div>
-                ))}
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
+                >
+                  <FiX className="w-5 h-5" />
+                  <span>Annuler</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={editingTax ? handleSaveTax : () => handleAddTax(newTax)}
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2"
+                >
+                  <FiSave className="w-5 h-5" />
+                  <span>{editingTax ? 'Enregistrer' : 'Ajouter'}</span>
+                </button>
               </div>
             </div>
           )}
-
-          {/* Content for Paramètres Tab */}
-          {activeTab === 'parametres' && (
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Pays par défaut pour la TVA</label>
-                  <input 
-                    type="text"
-                    value={settingsData.tvaDefaultCountry}
-                    onChange={(e) => setSettingsData({...settingsData, tvaDefaultCountry: e.target.value})}
-                    className="mt-1 p-2 border border-gray-300 rounded w-full"
-                  />
+          
+          {/* Tax Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  {editMode && (
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTaxes.length > 0 ? (
+                  filteredTaxes.map(tax => (
+                    <tr key={tax.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap text-indigo-700">
+                        <div className="font-medium">{tax.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {tax.type === 'percentage' ? 'Pourcentage' : 'Montant fixe'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-lg font-bold text-black">{formatTaxRate(tax)}</div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="text-sm text-black max-w-sm truncate">
+                          {tax.description}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          <span className="inline-flex items-center">
+                            <FiInfo className="mr-1 w-3 h-3" />
+                            S&apos;applique à: {tax.appliesTo.join(', ')}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryBadgeColor(tax.category)}`}>
+                          {tax.category === 'standard' && 'Standard'}
+                          {tax.category === 'reduced' && 'Réduite'}
+                          {tax.category === 'special' && 'Spéciale'}
+                          {tax.category === 'custom' && 'Personnalisée'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          tax.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {tax.isActive ? (
+                            <>
+                              <FiCheck className="mr-1 w-3 h-3" />
+                              Actif
+                            </>
+                          ) : (
+                            <>
+                              <FiX className="mr-1 w-3 h-3" />
+                              Inactif
+                            </>
+                          )}
+                        </span>
+                      </td>
+                      {editMode && (
+                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button 
+                              onClick={() => handleToggleActive(tax.id)}
+                              className={`p-1.5 ${tax.isActive ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'} rounded hover:bg-gray-100`}
+                              title={tax.isActive ? 'Désactiver' : 'Activer'}
+                            >
+                              {tax.isActive ? <FiX className="w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
+                            </button>
+                            <button 
+                              onClick={() => handleEdit(tax)}
+                              className="p-1.5 text-blue-600 hover:text-blue-800 rounded hover:bg-gray-100"
+                              title="Modifier"
+                            >
+                              <FiEdit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteTax(tax.id)}
+                              className="p-1.5 text-red-600 hover:text-red-800 rounded hover:bg-gray-100"
+                              title="Supprimer"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={editMode ? 6 : 5} className="px-4 py-8 text-center text-gray-500">
+                      <FiAlertCircle className="w-6 h-6 mx-auto mb-2" />
+                      <div>Aucune taxe trouvée</div>
+                      <div className="text-sm">Essayez de modifier vos filtres ou créez une nouvelle taxe</div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Info Box */}
+          <div className="p-6 border-t border-gray-200">
+            <div className="bg-blue-50 p-4 rounded-xl">
+              <div className="flex items-start">
+                <div className="p-1.5 bg-blue-100 rounded-lg mr-3 mt-0.5">
+                  <FiInfo className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Taux de TVA par défaut</label>
-                  <input 
-                    type="number"
-                    value={settingsData.defaultTvaRate}
-                    onChange={(e) => setSettingsData({...settingsData, defaultTvaRate: parseFloat(e.target.value)})}
-                    className="mt-1 p-2 border border-gray-300 rounded w-full"
-                  />
+                  <h3 className="text-sm font-medium text-blue-800 mb-1">
+                    À propos des taxes
+                  </h3>
+                  <p className="text-xs text-blue-700">
+                    La configuration correcte des taxes est essentielle pour la facturation. En France, 
+                    les taux de TVA standards sont de 20% (taux normal), 10% (taux intermédiaire), 
+                    5,5% (taux réduit) et 2,1% (taux particulier). 
+                    Assurez-vous de configurer les taux appropriés pour vos produits et services 
+                    conformément à la législation en vigueur.
+                  </p>
                 </div>
-                <div>
-                  <label className="flex items-center">
-                    <input 
-                      type="checkbox"
-                      checked={settingsData.automaticVatCalculation}
-                      onChange={(e) => setSettingsData({...settingsData, automaticVatCalculation: e.target.checked})}
-                      className="mr-2"
-                    />
-                    Calcul automatique de la TVA
-                  </label>
-                </div>
-                {/* You can add additional settings here */}
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </motion.div>

@@ -1,511 +1,335 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import {
-  FiCreditCard,
-  FiDollarSign,
-  FiArrowUp,
-  FiArrowDown,
+import { 
+  FiDollarSign, 
+  FiEdit,
+  FiTrash2,
   FiPlus,
-  // FiEdit,
-  // FiTrash2,
-  // FiEye,
+  FiDownload,
+  FiPrinter,
   FiSearch,
-  FiFilter,
-  // FiDownload,
-  // FiUpload,
-  FiRefreshCw,
-  // FiCheck,
-  // FiX,
-  FiCheckCircle,
-  // FiAlertTriangle,
-  // FiInfo,
-  FiCalendar,
-  // FiClock,
-  // FiFileText,
-  // FiLink,
-  // FiLock,
-  // FiUnlock,
-  // FiSettings,
-  FiActivity,
-  FiBarChart2,
-  // FiPieChart,
-  // FiColumns,
-  // FiList,
-  // FiGrid,
-  // FiMoreVertical
+  // FiExternalLink,
+  FiX,
+  // FiSave,
+  FiCheck,
+  FiInfo,
+  FiCreditCard,
+  FiHome,
+  FiUser,
+  FiPhone,
+  FiMail,
+  FiGlobe,
+  // FiMapPin
 } from 'react-icons/fi';
 
-export default function Banque() {
-  // State for active tab
-  const [activeTab, setActiveTab] = useState('comptes');
-  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  // const [viewMode, setViewMode] = useState('liste');
-  const [ , setReconciliationMode] = useState(false);
-  // const [dateRange, setDateRange] = useState('last30');
+// Define types for bank data
+interface BankType {
+  id: string;
+  code: string;
+  name: string;
+  accountNumber: string;
+  isDefault: boolean;
   
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('Tous');
-  const [statusFilter, setStatusFilter] = useState('Tous');
-  const [categoryFilter, setCategoryFilter] = useState('Tous');
-  const [dateRangeFilter, setDateRangeFilter] = useState('Tous');
+  // Address fields
+  addressName: string;
+  address1: string;
+  address2: string;
+  address3: string;
+  address4: string;
+  postalCode: string;
+  city: string;
+  department: string;
+  country: string;
+  website: string;
   
-  // Sample bank accounts data
-  const [accountsData ] = useState([
-    {
-      id: 'BA-001',
-      nom: 'Compte Courant Professionnel',
-      numero: 'FR76 3000 1007 1600 0000 8977 C32',
-      banque: 'Crédit Mutuel',
-      type: 'Courant',
-      devise: 'EUR',
-      solde: 15782.45,
-      soldeInitial: 10000.00,
-      dateOuverture: '15/01/2023',
-      derniereMaj: '05/03/2025',
-      isActive: true,
-      isDefault: true,
-      notes: 'Compte principal de l\'entreprise',
-      rapprochementDate: '29/02/2025',
-      soldeRapproche: 15637.25,
-      categorie: 'Professionnel'
-    },
-    {
-      id: 'BA-002',
-      nom: 'Compte Épargne',
-      numero: 'FR76 3000 1007 1600 0000 8977 D45',
-      banque: 'Crédit Mutuel',
-      type: 'Épargne',
-      devise: 'EUR',
-      solde: 45000.00,
-      soldeInitial: 30000.00,
-      dateOuverture: '15/01/2023',
-      derniereMaj: '01/03/2025',
-      isActive: true,
-      isDefault: false,
-      notes: 'Réserve de trésorerie',
-      rapprochementDate: '31/01/2025',
-      soldeRapproche: 45000.00,
-      categorie: 'Professionnel'
-    },
-    {
-      id: 'BA-003',
-      nom: 'Carte de Crédit Professionnelle',
-      numero: '4242 XXXX XXXX 4242',
-      banque: 'Crédit Mutuel',
-      type: 'Carte',
-      devise: 'EUR',
-      solde: -1432.78,
-      soldeInitial: 0,
-      dateOuverture: '20/01/2023',
-      derniereMaj: '05/03/2025',
-      isActive: true,
-      isDefault: false,
-      notes: 'Carte de crédit d\'entreprise principale',
-      rapprochementDate: '15/02/2025',
-      soldeRapproche: -1287.56,
-      categorie: 'Crédit'
-    },
-    {
-      id: 'BA-004',
-      nom: 'Compte Dollar',
-      numero: 'FR76 3000 1007 1600 0000 8977 E67',
-      banque: 'Crédit Mutuel',
-      type: 'Courant',
-      devise: 'USD',
-      solde: 5240.15,
-      soldeInitial: 5000.00,
-      dateOuverture: '10/05/2023',
-      derniereMaj: '01/03/2025',
-      isActive: true,
-      isDefault: false,
-      notes: 'Pour les transactions en dollars',
-      rapprochementDate: '29/02/2025',
-      soldeRapproche: 5240.15,
-      categorie: 'International'
-    },
-    {
-      id: 'BA-005',
-      nom: 'Prêt Équipement',
-      numero: 'FR76 3000 1007 1600 0000 8977 F89',
-      banque: 'BNP Paribas',
-      type: 'Prêt',
-      devise: 'EUR',
-      solde: -25000.00,
-      soldeInitial: -30000.00,
-      dateOuverture: '15/09/2023',
-      derniereMaj: '01/03/2025',
-      isActive: true,
-      isDefault: false,
-      notes: 'Prêt pour l\'achat d\'équipement informatique',
-      rapprochementDate: '29/02/2025',
-      soldeRapproche: -25000.00,
-      categorie: 'Crédit'
-    },
-    {
-      id: 'BA-006',
-      nom: 'Ancien Compte Courant',
-      numero: 'FR76 1000 1234 1234 1234 1234 123',
-      banque: 'Société Générale',
-      type: 'Courant',
-      devise: 'EUR',
-      solde: 0,
-      soldeInitial: 2500.00,
-      dateOuverture: '01/01/2020',
-      derniereMaj: '10/01/2023',
-      isActive: false,
-      isDefault: false,
-      notes: 'Ancien compte fermé après changement de banque',
-      rapprochementDate: '31/12/2022',
-      soldeRapproche: 0,
-      categorie: 'Professionnel'
-    }
-  ]);
+  // Contact fields
+  contactTitle: string;
+  contactRole: string;
+  contactLastName: string;
+  contactFirstName: string;
+  contactPhone: string;
+  contactMobile: string;
+  contactFax: string;
+  contactService: string;
+  contactEmail: string;
+  
+  // Banking details
+  rib: string;
+  iban: string;
+  bic: string;
+}
 
-  // Sample transactions data
-  const [transactionsData, setTransactionsData] = useState([
-    {
-      id: 'TR-001',
-      date: '05/03/2025',
-      libelle: 'Paiement client Acme Corp',
-      montant: 2500.00,
-      type: 'Crédit',
-      compte: 'BA-001',
-      categorie: 'Ventes',
-      statut: 'Confirmé',
-      reference: 'VIR-ACME-2503',
-      facture: 'FACT-2025-042',
-      notes: 'Paiement facture de février',
-      tiers: 'Acme Corp',
-      rapproche: true,
-      tags: ['Client', 'Virement']
-    },
-    {
-      id: 'TR-002',
-      date: '04/03/2025',
-      libelle: 'Loyer bureau mars',
-      montant: -1200.00,
-      type: 'Débit',
-      compte: 'BA-001',
-      categorie: 'Loyer',
-      statut: 'Confirmé',
-      reference: 'VIR-LOYER-0403',
-      facture: '',
-      notes: 'Loyer mensuel',
-      tiers: 'SCI Immobilier',
-      rapproche: true,
-      tags: ['Fournisseur', 'Fixe']
-    },
-    {
-      id: 'TR-003',
-      date: '02/03/2025',
-      libelle: 'Abonnement logiciel CRM',
-      montant: -89.90,
-      type: 'Débit',
-      compte: 'BA-003',
-      categorie: 'Logiciels',
-      statut: 'Confirmé',
-      reference: 'CB-CRM-0203',
-      facture: '',
-      notes: 'Abonnement mensuel',
-      tiers: 'SaaS CRM',
-      rapproche: true,
-      tags: ['Fournisseur', 'Récurrent']
-    },
-    {
-      id: 'TR-004',
-      date: '28/02/2025',
-      libelle: 'Virement compte épargne',
-      montant: -5000.00,
-      type: 'Débit',
-      compte: 'BA-001',
-      categorie: 'Transfert',
-      statut: 'Confirmé',
-      reference: 'VIR-EPARGNE-2802',
-      facture: '',
-      notes: 'Transfert vers épargne',
-      tiers: 'Interne',
-      rapproche: true,
-      tags: ['Transfert', 'Interne']
-    },
-    {
-      id: 'TR-005',
-      date: '28/02/2025',
-      libelle: 'Virement depuis compte courant',
-      montant: 5000.00,
-      type: 'Crédit',
-      compte: 'BA-002',
-      categorie: 'Transfert',
-      statut: 'Confirmé',
-      reference: 'VIR-EPARGNE-2802',
-      facture: '',
-      notes: 'Transfert depuis courant',
-      tiers: 'Interne',
-      rapproche: true,
-      tags: ['Transfert', 'Interne']
-    },
-    {
-      id: 'TR-006',
-      date: '25/02/2025',
-      libelle: 'Paiement fournisseur matériel',
-      montant: -1850.35,
-      type: 'Débit',
-      compte: 'BA-001',
-      categorie: 'Équipement',
-      statut: 'Confirmé',
-      reference: 'VIR-EQUIP-2502',
-      facture: '',
-      notes: 'Achat nouveaux ordinateurs',
-      tiers: 'TechSupply',
-      rapproche: true,
-      tags: ['Fournisseur', 'Investissement']
-    },
-    {
-      id: 'TR-007',
-      date: '20/02/2025',
-      libelle: 'Paiement client Zenith SA',
-      montant: 4500.00,
-      type: 'Crédit',
-      compte: 'BA-001',
-      categorie: 'Ventes',
-      statut: 'Confirmé',
-      reference: 'VIR-ZENITH-2002',
-      facture: 'FACT-2025-039',
-      notes: 'Paiement facture de janvier',
-      tiers: 'Zenith SA',
-      rapproche: true,
-      tags: ['Client', 'Virement']
-    },
-    {
-      id: 'TR-008',
-      date: '15/02/2025',
-      libelle: 'Remboursement prêt équipement',
-      montant: -500.00,
-      type: 'Débit',
-      compte: 'BA-001',
-      categorie: 'Emprunt',
-      statut: 'Confirmé',
-      reference: 'PRLV-PRET-1502',
-      facture: '',
-      notes: 'Échéance mensuelle',
-      tiers: 'BNP Paribas',
-      rapproche: true,
-      tags: ['Banque', 'Fixe']
-    },
-    {
-      id: 'TR-009',
-      date: '15/02/2025',
-      libelle: 'Remboursement reçu',
-      montant: 500.00,
-      type: 'Crédit',
-      compte: 'BA-005',
-      categorie: 'Emprunt',
-      statut: 'Confirmé',
-      reference: 'PRLV-PRET-1502',
-      facture: '',
-      notes: 'Échéance mensuelle',
-      tiers: 'Interne',
-      rapproche: true,
-      tags: ['Banque', 'Fixe']
-    },
-    {
-      id: 'TR-010',
-      date: '07/03/2025',
-      libelle: 'Paiement client Nexus Tech',
-      montant: 2990.00,
-      type: 'Crédit',
-      compte: 'BA-001',
-      categorie: 'Ventes',
-      statut: 'En attente',
-      reference: 'CHQ-NEXUS-0703',
-      facture: 'FACT-2025-045',
-      notes: 'Paiement par chèque à encaisser',
-      tiers: 'Nexus Tech',
-      rapproche: false,
-      tags: ['Client', 'Chèque']
-    },
-    {
-      id: 'TR-011',
-      date: '01/03/2025',
-      libelle: 'Achat fournitures bureau',
-      montant: -145.30,
-      type: 'Débit',
-      compte: 'BA-003',
-      categorie: 'Fournitures',
-      statut: 'Confirmé',
-      reference: 'CB-FOURN-0103',
-      facture: '',
-      notes: 'Papeterie et consommables',
-      tiers: 'Office Supplies',
-      rapproche: false,
-      tags: ['Fournisseur', 'Variable']
-    },
-    {
-      id: 'TR-012',
-      date: '10/03/2025',
-      libelle: 'Prévision règlement client Global',
-      montant: 3500.00,
-      type: 'Crédit',
-      compte: 'BA-001',
-      categorie: 'Ventes',
-      statut: 'Prévu',
-      reference: '',
-      facture: 'FACT-2025-047',
-      notes: 'Règlement prévu pour le 10/03',
-      tiers: 'Global Industries',
-      rapproche: false,
-      tags: ['Client', 'Prévisionnel']
-    }
-  ]);
-
-  // Statistics
-  const compteStatistics = [
-    { title: "Solde total", value: `${accountsData.filter(a => a.isActive).reduce((sum, a) => a.devise === 'EUR' ? sum + a.solde : sum, 0).toLocaleString('fr-FR')} €`, icon: <FiDollarSign className="text-blue-500" />, change: "+7.5% ce mois" },
-    { title: "Comptes actifs", value: accountsData.filter(a => a.isActive).length, icon: <FiCreditCard className="text-green-500" />, change: "Sur 6 comptes" },
-    { title: "Transactions", value: "56", icon: <FiActivity className="text-indigo-500" />, change: "Derniers 30 jours" },
-    { title: "Prochain rapprochement", value: "31/03/2025", icon: <FiCalendar className="text-amber-500" />, change: "Dans 23 jours" }
-  ];
-
-  const transactionStatistics = [
-    { title: "Entrées du mois", value: "10 250,00 €", icon: <FiArrowDown className="text-green-500" />, change: "+15% vs mois précédent" },
-    { title: "Sorties du mois", value: "8 350,25 €", icon: <FiArrowUp className="text-red-500" />, change: "+5% vs mois précédent" },
-    { title: "Balance", value: "1 899,75 €", icon: <FiBarChart2 className="text-blue-500" />, change: "+10% vs mois précédent" },
-    { title: "À réconcilier", value: "4", icon: <FiCheckCircle className="text-amber-500" />, change: "Transactions" }
-  ];
-
-  // Filter options
-  const typeOptions = ['Tous', 'Courant', 'Épargne', 'Carte', 'Prêt'];
-  const categorieOptions = ['Tous', 'Professionnel', 'International', 'Crédit'];
-  const statutOptions = ['Tous', 'Actif', 'Inactif'];
-  // const deviseOptions = ['EUR', 'USD', 'GBP', 'CHF'];
-
-  const transactionTypeOptions = ['Tous', 'Crédit', 'Débit'];
-  const transactionStatutOptions = ['Tous', 'Confirmé', 'En attente', 'Prévu'];
-  const categoriesTransactionOptions = ['Tous', 'Ventes', 'Loyer', 'Logiciels', 'Transfert', 'Équipement', 'Emprunt', 'Fournitures', 'Taxes', 'Salaires'];
-  // const dateRangeOptions = ['Tous', '7 derniers jours', '30 derniers jours', 'Ce mois', 'Mois précédent', 'Trimestre en cours'];
-
-  // Toggle filters
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  // Set active account
-  const setActiveAccountHandler = (id : string) => {
-    setSelectedAccount(id === selectedAccount ? null : id);
-    setSelectedTransaction(null);
-  };
-
-  // Set active transaction
-  const setActiveTransactionHandler = (id : string) => {
-    setSelectedTransaction(id === selectedTransaction ? null : id);
-  };
-
-  // Toggle reconciliation mode
-  // const toggleReconciliationMode = () => {
-  //   setReconciliationMode(!reconciliationMode);
-  // };
-
-  // Get account by ID
-  // const getAccountById = (id) => {
-  //   return accountsData.find(account => account.id === id);
-  // };
-
-  // Get filtered accounts
-  const getFilteredAccounts = () => {
-    return accountsData.filter(account => {
-      const matchesSearch = 
-        searchTerm === '' || 
-        account.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        account.banque.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        account.numero.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesType = typeFilter === 'Tous' || account.type === typeFilter;
-      const matchesCategory = categoryFilter === 'Tous' || account.categorie === categoryFilter;
-      const matchesStatus = statusFilter === 'Tous' || 
-        (statusFilter === 'Actif' && account.isActive) || 
-        (statusFilter === 'Inactif' && !account.isActive);
-      
-      return matchesSearch && matchesType && matchesCategory && matchesStatus;
-    });
-  };
-
-  // Get filtered transactions
-  const getFilteredTransactions = () => {
-    // First filter by selected account if any
-    const accountFiltered = selectedAccount 
-      ? transactionsData.filter(transaction => transaction.compte === selectedAccount)
-      : transactionsData;
+// Sample banks data
+const initialBanks: BankType[] = [
+  {
+    id: '1',
+    code: 'BNP',
+    name: 'BNP Paribas',
+    accountNumber: '512000',
+    isDefault: true,
     
-    // Then apply other filters
-    return accountFiltered.filter(transaction => {
-      const matchesSearch = 
-        searchTerm === '' || 
-        transaction.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.tiers.toLowerCase().includes(searchTerm.toLowerCase());
+    addressName: 'BNP Paribas - Agence Centrale',
+    address1: '16 Boulevard des Italiens',
+    address2: '',
+    address3: '',
+    address4: '',
+    postalCode: '75009',
+    city: 'Paris',
+    department: 'Paris',
+    country: 'France',
+    website: 'www.bnpparibas.fr',
+    
+    contactTitle: 'M',
+    contactRole: 'Conseiller bancaire',
+    contactLastName: 'Dupont',
+    contactFirstName: 'Jean',
+    contactPhone: '01 42 98 12 34',
+    contactMobile: '06 12 34 56 78',
+    contactFax: '01 42 98 12 35',
+    contactService: 'Entreprises',
+    contactEmail: 'jean.dupont@bnpparibas.fr',
+    
+    rib: '30004 00001 00012345678 36',
+    iban: 'FR76 3000 4000 0100 0123 4567 836',
+    bic: 'BNPAFRPP'
+  },
+  {
+    id: '2',
+    code: 'SG',
+    name: 'Société Générale',
+    accountNumber: '512100',
+    isDefault: false,
+    
+    addressName: 'Société Générale - Agence Entreprises',
+    address1: '29 Boulevard Haussmann',
+    address2: '',
+    address3: '',
+    address4: '',
+    postalCode: '75009',
+    city: 'Paris',
+    department: 'Paris',
+    country: 'France',
+    website: 'www.societegenerale.fr',
+    
+    contactTitle: 'Mme',
+    contactRole: 'Directrice de compte',
+    contactLastName: 'Martin',
+    contactFirstName: 'Sophie',
+    contactPhone: '01 53 43 40 00',
+    contactMobile: '06 23 45 67 89',
+    contactFax: '01 53 43 40 01',
+    contactService: 'Service Entreprises',
+    contactEmail: 'sophie.martin@socgen.fr',
+    
+    rib: '30003 00033 00020123456 72',
+    iban: 'FR76 3000 3000 3300 0201 2345 672',
+    bic: 'SOGEFRPP'
+  },
+  {
+    id: '3',
+    code: 'CA',
+    name: 'Crédit Agricole',
+    accountNumber: '512200',
+    isDefault: false,
+    
+    addressName: 'Crédit Agricole IDF',
+    address1: '26 Quai de la Rapée',
+    address2: '',
+    address3: '',
+    address4: '',
+    postalCode: '75012',
+    city: 'Paris',
+    department: 'Paris',
+    country: 'France',
+    website: 'www.ca-paris.fr',
+    
+    contactTitle: 'M',
+    contactRole: 'Responsable PME',
+    contactLastName: 'Dubois',
+    contactFirstName: 'Pierre',
+    contactPhone: '01 44 73 22 22',
+    contactMobile: '06 34 56 78 90',
+    contactFax: '01 44 73 22 23',
+    contactService: 'Service Professionnels',
+    contactEmail: 'pierre.dubois@ca-paris.fr',
+    
+    rib: '30006 00001 00012345678 41',
+    iban: 'FR76 3000 6000 0100 0123 4567 841',
+    bic: 'AGRIFRPP'
+  }
+];
+
+export default function Banque() {
+  // State for banks data
+  const [banks, setBanks] = useState<BankType[]>(initialBanks);
+  
+  // State for search query
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // State for selected bank
+  const [selectedBank, setSelectedBank] = useState<BankType | null>(null);
+  
+  // State for modal visibility
+  const [showModal, setShowModal] = useState<boolean>(false);
+  
+  // State for modal active tab
+  const [activeTab, setActiveTab] = useState<'address' | 'banking'>('address');
+  
+  // State for tracking whether we're adding a new bank or editing existing
+  const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  
+  // Create a ref for the print content
+  const printContentRef = useRef<HTMLDivElement>(null);
+  
+  // Filter banks based on search query
+  const filteredBanks = banks.filter(bank => 
+    bank.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    bank.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    bank.accountNumber.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  // Handle opening the bank modal for editing
+  const handleEditBank = (bank: BankType) => {
+    setSelectedBank({...bank});
+    setIsAddingNew(false);
+    setShowModal(true);
+    setActiveTab('address');
+  };
+  
+  // Handle adding a new bank
+  const handleAddBank = () => {
+    const newBank: BankType = {
+      id: (banks.length + 1).toString(),
+      code: '',
+      name: '',
+      accountNumber: '',
+      isDefault: false,
       
-      const matchesType = typeFilter === 'Tous' || transaction.type === typeFilter;
-      const matchesStatus = statusFilter === 'Tous' || transaction.statut === statusFilter;
-      const matchesCategory = categoryFilter === 'Tous' || transaction.categorie === categoryFilter;
+      addressName: '',
+      address1: '',
+      address2: '',
+      address3: '',
+      address4: '',
+      postalCode: '',
+      city: '',
+      department: '',
+      country: 'France',
+      website: '',
       
-      // Date filtering - simplified for this example
-      const matchesDate = dateRangeFilter === 'Tous' || true;
+      contactTitle: '',
+      contactRole: '',
+      contactLastName: '',
+      contactFirstName: '',
+      contactPhone: '',
+      contactMobile: '',
+      contactFax: '',
+      contactService: '',
+      contactEmail: '',
       
-      return matchesSearch && matchesType && matchesStatus && matchesCategory && matchesDate;
-    });
+      rib: '',
+      iban: '',
+      bic: ''
+    };
+    
+    setSelectedBank(newBank);
+    setIsAddingNew(true);
+    setShowModal(true);
+    setActiveTab('address');
   };
-
-  // Reset filters
-  const resetFilters = () => {
-    setSearchTerm('');
-    setTypeFilter('Tous');
-    setStatusFilter('Tous');
-    setCategoryFilter('Tous');
-    setDateRangeFilter('Tous');
+  
+  // Handle closing the bank modal
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedBank(null);
   };
-
-  // Mark transaction as reconciled
-  const toggleReconciled = (id : string) => {
-    setTransactionsData(
-      transactionsData.map(transaction => 
-        transaction.id === id ? { ...transaction, rapproche: !transaction.rapproche } : transaction
-      )
-    );
+  
+  // Handle saving bank changes
+  const handleSaveBank = () => {
+    if (!selectedBank) return;
+    
+    if (isAddingNew) {
+      // Add new bank
+      setBanks([...banks, selectedBank]);
+    } else {
+      // Update existing bank
+      setBanks(banks.map(bank => 
+        bank.id === selectedBank.id ? selectedBank : bank
+      ));
+      
+      // If this bank is set as default, ensure other banks are not default
+      if (selectedBank.isDefault) {
+        setBanks(banks.map(bank => 
+          bank.id !== selectedBank.id ? {...bank, isDefault: false} : bank
+        ));
+      }
+    }
+    
+    setShowModal(false);
+    setSelectedBank(null);
   };
-
-  // Get status color
-  const getStatusColor = (isActive: boolean): string => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-  };
-
-  // Get transaction status color
-  const getTransactionStatusColor = (statut:string) => {
-    switch(statut) {
-      case 'Confirmé':
-        return 'bg-green-100 text-green-800';
-      case 'En attente':
-        return 'bg-amber-100 text-amber-800';
-      case 'Prévu':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  
+  // Handle deleting a bank
+  const handleDeleteBank = (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette banque?')) {
+      setBanks(banks.filter(bank => bank.id !== id));
     }
   };
-
-  // Get transaction type color
-  const getTransactionTypeColor = (type:string) => {
-    return type === 'Crédit' ? 'text-green-600' : 'text-red-600';
+  
+  // Handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    if (!selectedBank) return;
+    
+    const { name, value, type } = e.target;
+    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    
+    setSelectedBank({
+      ...selectedBank,
+      [name]: type === 'checkbox' ? checked : value
+    });
+    
+    // If setting this bank as default, ensure it's the only default
+    if (name === 'isDefault' && checked) {
+      setBanks(banks.map(bank => 
+        bank.id !== selectedBank.id ? {...bank, isDefault: false} : bank
+      ));
+    }
   };
-
+  
+  // Handle print
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  // Handle export
+  const handleExport = () => {
+    // Create a CSV string
+    const headers = ['Code', 'Nom', 'Compte comptable', 'Banque par défaut'];
+    const csvContent = 
+      headers.join(',') + '\n' + 
+      banks.map(bank => 
+        `"${bank.code}","${bank.name}","${bank.accountNumber}","${bank.isDefault ? 'Oui' : 'Non'}"`
+      ).join('\n');
+    
+    // Create a downloadable link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'banques.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-20 min-h-screen bg-gray-100"
+      className="pt-20 min-h-screen bg-gray-50"
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 pb-16">
         {/* Header */}
         <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
           <div>
@@ -517,390 +341,660 @@ export default function Banque() {
               Banque
             </motion.h1>
             <p className="text-sm text-gray-500 mt-1">
-              Gérez vos comptes bancaires et suivez vos transactions
+              Gérez les comptes bancaires de votre entreprise
             </p>
           </div>
           <div className="p-2 bg-indigo-100 rounded-lg">
-            <FiCreditCard className="w-6 h-6 text-indigo-600" />
+            <FiDollarSign className="w-6 h-6 text-indigo-600" />
           </div>
         </div>
-
-        {/* Tabs */}
+        
+        {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="flex border-b">
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'comptes' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('comptes');
-                setSelectedAccount(null);
-                setSelectedTransaction(null);
-                setReconciliationMode(false);
-              }}
-            >
-              Comptes
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'transactions' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('transactions');
-                setSelectedTransaction(null);
-                setReconciliationMode(false);
-              }}
-            >
-              Transactions
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'rapprochement' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('rapprochement');
-                setSelectedTransaction(null);
-                setReconciliationMode(true);
-              }}
-            >
-              Rapprochement
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'parametres' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => {
-                setActiveTab('parametres');
-                setSelectedAccount(null);
-                setSelectedTransaction(null);
-                setReconciliationMode(false);
-              }}
-            >
-              Paramètres
-            </button>
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg mr-4">
+                <FiCreditCard className="w-5 h-5 text-indigo-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800">Liste des banques</h2>
+            </div>
+            <p className="text-gray-500 text-sm mt-2 ml-11">
+              Gérez les informations bancaires de votre entreprise
+            </p>
           </div>
-
-          {/* Content for Comptes tab */}
-          {activeTab === 'comptes' && (
-            <div className="p-6">
-              {/* Statistics */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                {compteStatistics.map((stat, index) => (
-                  <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <div className="p-2 bg-indigo-50 rounded-lg mr-3">
-                        {stat.icon}
-                      </div>
-                      <span className="text-sm font-medium text-gray-500">{stat.title}</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    <div className="text-xs text-gray-500 mt-2">{stat.change}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Actions & Search Bar */}
-              <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-                {/* Search */}
-                <div className="w-full md:w-72 relative mb-4 md:mb-0">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiSearch className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Rechercher un compte..."
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+          
+          {/* Search and Actions */}
+          <div className="p-6 border-b border-gray-100 bg-gray-50">
+            <div className="flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0">
+              <div className="relative w-full sm:w-64">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400" />
                 </div>
-
-                {/* Actions */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-                    <FiPlus />
-                    <span>Ajouter un compte</span>
-                  </button>
-                  <button 
-                    onClick={toggleFilters}
-                    className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
-                  >
-                    <FiFilter />
-                    <span>{showFilters ? 'Masquer filtres' : 'Afficher filtres'}</span>
-                  </button>
-                  <button className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition">
-                    <FiRefreshCw />
-                    <span className="hidden md:inline">Actualiser</span>
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  placeholder="Rechercher une banque..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-
-              {/* Filters */}
-              {showFilters && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  className="mb-6 p-4 border border-gray-200 rounded-lg overflow-hidden"
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleExport}
+                  className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Type de compte
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                      >
-                        {typeOptions.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Catégorie
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                      >
-                        {categorieOptions.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Statut
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                      >
-                        {statutOptions.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <button 
-                      onClick={resetFilters}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
-                    >
-                      Réinitialiser les filtres
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Accounts List */}
-              <div className="space-y-4">
-                {getFilteredAccounts().map(account => (
-                  <div 
-                    key={account.id} 
-                    className={`p-4 bg-white rounded-lg shadow border cursor-pointer flex justify-between items-center ${selectedAccount === account.id ? 'border-indigo-500' : 'border-gray-200'}`}
-                    onClick={() => setActiveAccountHandler(account.id)}
-                  >
-                    <div>
-                      <h3 className="text-lg font-bold">{account.nom}</h3>
-                      <p className="text-sm text-gray-500">{account.numero}</p>
-                    </div>
-                    <div className={`px-2 py-1 rounded ${getStatusColor(account.isActive)}`}>
-                      {account.isActive ? 'Actif' : 'Inactif'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Content for Transactions tab */}
-          {activeTab === 'transactions' && (
-            <div className="p-6">
-              {/* Transaction Statistics */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                {transactionStatistics.map((stat, index) => (
-                  <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <div className="p-2 bg-indigo-50 rounded-lg mr-3">
-                        {stat.icon}
-                      </div>
-                      <span className="text-sm font-medium text-gray-500">{stat.title}</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    <div className="text-xs text-gray-500 mt-2">{stat.change}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Actions & Search Bar */}
-              <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-                {/* Search */}
-                <div className="w-full md:w-72 relative mb-4 md:mb-0">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiSearch className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Rechercher une transaction..."
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-                    <FiPlus />
-                    <span>Ajouter une transaction</span>
-                  </button>
-                  <button 
-                    onClick={toggleFilters}
-                    className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
-                  >
-                    <FiFilter />
-                    <span>{showFilters ? 'Masquer filtres' : 'Afficher filtres'}</span>
-                  </button>
-                  <button className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition">
-                    <FiRefreshCw />
-                    <span className="hidden md:inline">Actualiser</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Filters */}
-              {showFilters && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  className="mb-6 p-4 border border-gray-200 rounded-lg overflow-hidden"
+                  <FiDownload className="w-4 h-4" />
+                  <span className="hidden sm:inline">Exporter</span>
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Type de transaction
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                      >
-                        {transactionTypeOptions.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Statut
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                      >
-                        {transactionStatutOptions.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Catégorie
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                      >
-                        {categoriesTransactionOptions.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <button 
-                      onClick={resetFilters}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
-                    >
-                      Réinitialiser les filtres
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Transactions List */}
-              <div className="space-y-4">
-                {getFilteredTransactions().map(transaction => (
-                  <div 
-                    key={transaction.id} 
-                    className={`p-4 bg-white rounded-lg shadow border cursor-pointer flex flex-col ${selectedTransaction === transaction.id ? 'border-indigo-500' : 'border-gray-200'}`}
-                    onClick={() => setActiveTransactionHandler(transaction.id)}
-                  >
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-bold">{transaction.libelle}</h3>
-                      <span className={`px-2 py-1 rounded ${getTransactionStatusColor(transaction.statut)}`}>
-                        {transaction.statut}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className={`font-bold ${getTransactionTypeColor(transaction.type)}`}>
-                        {transaction.type === 'Crédit' ? '+' : '-'}{Math.abs(transaction.montant).toLocaleString('fr-FR')} €
-                      </span>
-                      <span className="text-sm text-gray-500">{transaction.date}</span>
-                    </div>
-                  </div>
-                ))}
+                  <FiPrinter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Imprimer</span>
+                </button>
+                <button
+                  onClick={handleAddBank}
+                  className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span>Ajouter</span>
+                </button>
               </div>
             </div>
-          )}
-
-          {/* Content for Rapprochement tab */}
-          {activeTab === 'rapprochement' && (
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Rapprochement</h2>
-              <p className="mb-4">Liste des transactions à rapprocher :</p>
-              <div className="space-y-4">
-                {getFilteredTransactions().filter(t => !t.rapproche).map(transaction => (
-                  <div 
-                    key={transaction.id} 
-                    className="p-4 bg-white rounded-lg shadow border flex justify-between items-center"
-                  >
-                    <div>
-                      <h3 className="text-lg font-bold">{transaction.libelle}</h3>
-                      <p className="text-sm text-gray-500">{transaction.date}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleReconciled(transaction.id)}
-                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                    >
-                      Marquer comme rapproché
-                    </button>
-                  </div>
+          </div>
+          
+          {/* Bank List Table */}
+          <div ref={printContentRef} className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Code
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nom
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Compte comptable
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Par défaut
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredBanks.map((bank) => (
+                  <tr key={bank.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleEditBank(bank)}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {bank.code}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {bank.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {bank.accountNumber}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {bank.isDefault ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <FiCheck className="w-3 h-3 mr-1" />
+                          Oui
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">Non</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditBank(bank);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteBank(bank.id);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
+                
+                {filteredBanks.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                      Aucune banque trouvée. Cliquez sur &quot;Ajouter&quot; pour créer une nouvelle banque.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Info Box */}
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center">
+              <FiInfo className="w-5 h-5 text-indigo-500 mr-2" />
+              <span className="text-sm text-gray-600">
+                Pour ajouter une nouvelle banque, cliquez sur le bouton &quot;Ajouter&quot;. Pour modifier une banque existante, cliquez sur la ligne correspondante.
+              </span>
             </div>
-          )}
-
-          {/* Content for Paramètres tab */}
-          {activeTab === 'parametres' && (
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
-              <p>Options de configuration de l&apos;application.</p>
-              {/* Additional settings can be added here */}
-            </div>
-          )}
+          </div>
         </div>
+        
+        {/* Bank Modal */}
+        {showModal && selectedBank && (
+          <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+              
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+              
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div className="absolute top-0 right-0 pt-4 pr-4">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                  >
+                    <span className="sr-only">Fermer</span>
+                    <FiX className="h-6 w-6" />
+                  </button>
+                </div>
+                
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  {/* Modal Header */}
+                  <div className="border-b border-gray-200 pb-4 mb-4">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                      {isAddingNew ? 'Ajouter une banque' : 'Modifier une banque'}
+                    </h3>
+                  </div>
+                  
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Code
+                      </label>
+                      <input
+                        type="text"
+                        name="code"
+                        value={selectedBank.code}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nom
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={selectedBank.name}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                      />
+                    </div>
+                    
+                    <div className="flex items-end pb-2">
+                      <label className="inline-flex items-center">
+                        <input
+                          type="checkbox"
+                          name="isDefault"
+                          checked={selectedBank.isDefault}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Banque par défaut</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {/* Tabs */}
+                  <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8">
+                      <button
+                        className={`${
+                          activeTab === 'address'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                        onClick={() => setActiveTab('address')}
+                      >
+                        Adresse
+                      </button>
+                      <button
+                        className={`${
+                          activeTab === 'banking'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                        onClick={() => setActiveTab('banking')}
+                      >
+                        Coordonnées bancaires
+                      </button>
+                    </nav>
+                  </div>
+                  
+                  {/* Tab Content */}
+                  <div className="mt-4">
+                    {/* Address Tab */}
+                    {activeTab === 'address' && (
+                      <div className="space-y-6">
+                        {/* Adresse Section */}
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                            <FiHome className="w-4 h-4 mr-2" />
+                            Adresse
+                          </h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Nom
+                              </label>
+                              <input
+                                type="text"
+                                name="addressName"
+                                value={selectedBank.addressName}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Adresse
+                              </label>
+                              <input
+                                type="text"
+                                name="address1"
+                                value={selectedBank.address1}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Adresse (suite)
+                              </label>
+                              <input
+                                type="text"
+                                name="address2"
+                                value={selectedBank.address2}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Adresse (suite)
+                              </label>
+                              <input
+                                type="text"
+                                name="address3"
+                                value={selectedBank.address3}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Adresse (fin)
+                              </label>
+                              <input
+                                type="text"
+                                name="address4"
+                                value={selectedBank.address4}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Code postal
+                              </label>
+                              <input
+                                type="text"
+                                name="postalCode"
+                                value={selectedBank.postalCode}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Ville
+                              </label>
+                              <input
+                                type="text"
+                                name="city"
+                                value={selectedBank.city}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Département
+                              </label>
+                              <input
+                                type="text"
+                                name="department"
+                                value={selectedBank.department}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Pays
+                              </label>
+                              <input
+                                type="text"
+                                name="country"
+                                value={selectedBank.country}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Site web
+                              </label>
+                              <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                  <FiGlobe className="h-4 w-4" />
+                                </span>
+                                <input
+                                  type="text"
+                                  name="website"
+                                  value={selectedBank.website}
+                                  onChange={handleInputChange}
+                                  className="flex-1 p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                  placeholder="www.example.com"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Contact Section */}
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                            <FiUser className="w-4 h-4 mr-2" />
+                            Contact
+                          </h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Civilité
+                              </label>
+                              <select
+                                name="contactTitle"
+                                value={selectedBank.contactTitle}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              >
+                                <option value="">Sélectionner</option>
+                                <option value="M">Monsieur</option>
+                                <option value="Mme">Madame</option>
+                              </select>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Fonction
+                              </label>
+                              <input
+                                type="text"
+                                name="contactRole"
+                                value={selectedBank.contactRole}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-1"></div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Nom
+                              </label>
+                              <input
+                                type="text"
+                                name="contactLastName"
+                                value={selectedBank.contactLastName}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Prénom
+                              </label>
+                              <input
+                                type="text"
+                                name="contactFirstName"
+                                value={selectedBank.contactFirstName}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Service/Bureau
+                              </label>
+                              <input
+                                type="text"
+                                name="contactService"
+                                value={selectedBank.contactService}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Téléphone fixe
+                              </label>
+                              <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                  <FiPhone className="h-4 w-4" />
+                                </span>
+                                <input
+                                  type="text"
+                                  name="contactPhone"
+                                  value={selectedBank.contactPhone}
+                                  onChange={handleInputChange}
+                                  className="flex-1 p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Téléphone portable
+                              </label>
+                              <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                  <FiPhone className="h-4 w-4" />
+                                </span>
+                                <input
+                                  type="text"
+                                  name="contactMobile"
+                                  value={selectedBank.contactMobile}
+                                  onChange={handleInputChange}
+                                  className="flex-1 p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Fax
+                              </label>
+                              <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                  <FiPhone className="h-4 w-4" />
+                                </span>
+                                <input
+                                  type="text"
+                                  name="contactFax"
+                                  value={selectedBank.contactFax}
+                                  onChange={handleInputChange}
+                                  className="flex-1 p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="md:col-span-3">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Email
+                              </label>
+                              <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                  <FiMail className="h-4 w-4" />
+                                </span>
+                                <input
+                                  type="email"
+                                  name="contactEmail"
+                                  value={selectedBank.contactEmail}
+                                  onChange={handleInputChange}
+                                  className="flex-1 p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Banking Tab */}
+                    {activeTab === 'banking' && (
+                      <div className="space-y-6">
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                            <FiCreditCard className="w-4 h-4 mr-2" />
+                            Coordonnées bancaires
+                          </h4>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                RIB / BBAN (Relevé d&apos;Identité Bancaire)
+                              </label>
+                              <input
+                                type="text"
+                                name="rib"
+                                value={selectedBank.rib}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                placeholder="Ex: 30004 00001 00012345678 36"
+                              />
+                              <p className="mt-1 text-xs text-gray-500">
+                                Format: Code banque + Code guichet + Numéro de compte + Clé RIB
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                IBAN (International Bank Account Number)
+                              </label>
+                              <input
+                                type="text"
+                                name="iban"
+                                value={selectedBank.iban}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                placeholder="Ex: FR76 3000 4000 0100 0123 4567 836"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                BIC (Bank Identifier Code) / SWIFT
+                              </label>
+                              <input
+                                type="text"
+                                name="bic"
+                                value={selectedBank.bic}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                placeholder="Ex: BNPAFRPP"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Compte comptable
+                              </label>
+                              <input
+                                type="text"
+                                name="accountNumber"
+                                value={selectedBank.accountNumber}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                                placeholder="Ex: 512000"
+                              />
+                              <p className="mt-1 text-xs text-gray-500">
+                                Numéro de compte comptable de la banque dans votre plan comptable (ex: 512, 514...)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="button"
+                    onClick={handleSaveBank}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    {isAddingNew ? 'Ajouter' : 'Enregistrer'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

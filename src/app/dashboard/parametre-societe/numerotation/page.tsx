@@ -1,344 +1,257 @@
 'use client';
-import {useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiHash, 
-  // FiSettings, 
-  FiRefreshCw, 
   FiEdit,
-  // FiSave,
-  FiCheck,
+  FiSave,
   FiX,
-  FiClock,
-  // FiAlertTriangle,
-  FiHelpCircle,
-  FiFileText,
-  FiClipboard,
-  // FiArchive,
-  FiLayers,
-  // FiRepeat,
-  // FiRotateCw,
   FiInfo,
-  FiChevronDown,
-  FiChevronUp,
-  // FiMessageSquare,
-  // FiSend,
-  // FiAlertCircle,
-  FiPlus,
-  // FiMinus,
-  // FiTrash2
+  FiFileText,
+  // FiSettings,
+  FiBox,
+  FiUsers,
+  // FiCreditCard,
+  FiGrid,
+  // FiCheck
 } from 'react-icons/fi';
 
-// Define an interface for the counter object
-interface Counter {
-  value: number;
-  padding: number;
-  resetPeriod: string;
-  lastReset: string;
+// Interface for form data
+interface VenteFormDataType {
+  serie: string;
+  methodeNumeration: string;
+  facturePrefix: string;
+  factureNumber: string;
+  factureUseCounter: boolean;
+  avoirPrefix: string;
+  avoirNumber: string;
+  avoirUseCounter: boolean;
+  factureAcomptePrefix: string;
+  factureAcompteNumber: string;
+  factureAcompteUseCounter: boolean;
+  avoirAcomptePrefix: string;
+  avoirAcompteNumber: string;
+  avoirAcompteUseCounter: boolean;
+  devisPrefix: string;
+  devisNumber: string;
+  devisUseCounter: boolean;
+  afficherOngletFactures: boolean;
 }
 
-// Define an interface for a numbering sequence item
-interface NumerotationSequence {
-  id: string;
-  documentType: string;
-  prefix: string;
-  suffix: string;
-  separator: string;
-  dateFormat: string;
-  counter: Counter;
-  format: string;
-  example: string;
-  isActive: boolean;
-  notes: string;
+interface AutreFormDataType {
+  // Articles
+  articlesMethode: string;
+  articlesCode: string;
+  articlesLongueur: string;
+  
+  // Clients
+  clientsMethode: string;
+  clientsCode: string;
+  clientsLongueur: string;
+  
+  // Other counters
+  famillesArticlesCode: string;
+  famillesArticlesUseCounter: boolean;
+  famillesClientsCode: string;
+  famillesClientsUseCounter: boolean;
+  ecoContributionCode: string;
+  ecoContributionUseCounter: boolean;
+  intervenantsCode: string;
+  intervenantsUseCounter: boolean;
+  referenceReglementCode: string;
+  referenceReglementUseCounter: boolean;
 }
 
 export default function Numerotation() {
   // State for active tab
-  const [activeTab, setActiveTab] = useState('sequences');
-  const [expandedItem, setExpandedItem] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<string | null>(null);
-  const [showHelp, setShowHelp] = useState(true);
+  const [activeTab, setActiveTab] = useState<'vente' | 'autre'>('vente');
   
-  // Sample numbering data for different document types
-  const [numerotationData, setNumerotationData] = useState([
-    {
-      id: 'NUM-001',
-      documentType: 'Facture',
-      prefix: 'FACT-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 42,
-        padding: 4,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'FACT-2025-0042',
-      isActive: true,
-      notes: 'Format standard pour factures'
-    },
-    {
-      id: 'NUM-002',
-      documentType: 'Devis',
-      prefix: 'DEV-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 28,
-        padding: 3,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'DEV-2025-028',
-      isActive: true,
-      notes: 'Format standard pour devis'
-    },
-    {
-      id: 'NUM-003',
-      documentType: 'Commande',
-      prefix: 'CMD-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 35,
-        padding: 3,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'CMD-2025-035',
-      isActive: true,
-      notes: 'Format standard pour bons de commande'
-    },
-    {
-      id: 'NUM-004',
-      documentType: 'Avoir',
-      prefix: 'AV-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 8,
-        padding: 3,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'AV-2025-008',
-      isActive: true,
-      notes: 'Format standard pour avoirs'
-    },
-    {
-      id: 'NUM-005',
-      documentType: 'Facture d\'acompte',
-      prefix: 'ACPT-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 12,
-        padding: 3,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'ACPT-2025-012',
-      isActive: true,
-      notes: 'Format pour factures d\'acompte'
-    },
-    {
-      id: 'NUM-006',
-      documentType: 'BL',
-      prefix: 'BL-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 21,
-        padding: 3,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'BL-2025-021',
-      isActive: true,
-      notes: 'Format pour bons de livraison'
-    },
-    {
-      id: 'NUM-007',
-      documentType: 'Note de frais',
-      prefix: 'NF-',
-      suffix: '',
-      separator: '-',
-      dateFormat: 'YYYY',
-      counter: {
-        value: 14,
-        padding: 3,
-        resetPeriod: 'Annuel',
-        lastReset: '01/01/2025'
-      },
-      format: '{prefix}{dateFormat}{separator}{counter}',
-      example: 'NF-2025-014',
-      isActive: true,
-      notes: 'Format pour notes de frais'
-    }
-  ]);
-
-  // Sample history of numbering changes
-  const historyData = [
-    {
-      id: 'HIST-001',
-      date: '15/01/2025',
-      documentType: 'Facture',
-      action: 'Changement de format',
-      oldValue: 'F-YYYY-{counter}',
-      newValue: 'FACT-YYYY-{counter}',
-      user: 'Jean Martin'
-    },
-    {
-      id: 'HIST-002',
-      date: '01/01/2025',
-      documentType: 'Facture',
-      action: 'Réinitialisation compteur',
-      oldValue: '132',
-      newValue: '1',
-      user: 'Système (automatique)'
-    },
-    {
-      id: 'HIST-003',
-      date: '01/01/2025',
-      documentType: 'Devis',
-      action: 'Réinitialisation compteur',
-      oldValue: '91',
-      newValue: '1',
-      user: 'Système (automatique)'
-    },
-    {
-      id: 'HIST-004',
-      date: '01/01/2025',
-      documentType: 'Commande',
-      action: 'Réinitialisation compteur',
-      oldValue: '76',
-      newValue: '1',
-      user: 'Système (automatique)'
-    },
-    {
-      id: 'HIST-005',
-      date: '16/11/2024',
-      documentType: 'Devis',
-      action: 'Modification padding',
-      oldValue: '2',
-      newValue: '3',
-      user: 'Sophie Dupont'
-    },
-    {
-      id: 'HIST-006',
-      date: '10/09/2024',
-      documentType: 'Note de frais',
-      action: 'Création séquence',
-      oldValue: '-',
-      newValue: 'NF-YYYY-{counter}',
-      user: 'Jean Martin'
-    }
-  ];
-
-  // Sample settings data
-  const [settingsData, setSettingsData] = useState({
-    defaultPadding: 3,
-    defaultResetPeriod: 'Annuel',
-    defaultDateFormat: 'YYYY',
-    defaultSeparator: '-',
-    autoResetCounters: true,
-    allowManualOverride: true,
-    validateUniqueNumbers: true,
-    notifyBeforeReset: true
+  // State for edit mode
+  const [editMode, setEditMode] = useState<boolean>(false);
+  
+  // State for Vente form data
+  const [venteFormData, setVenteFormData] = useState<VenteFormDataType>({
+    serie: 'principale',
+    methodeNumeration: 'distinctes',
+    facturePrefix: 'FACT',
+    factureNumber: '00001',
+    factureUseCounter: true,
+    avoirPrefix: 'AV',
+    avoirNumber: '00001',
+    avoirUseCounter: true,
+    factureAcomptePrefix: 'FA',
+    factureAcompteNumber: '00001',
+    factureAcompteUseCounter: true,
+    avoirAcomptePrefix: 'AA',
+    avoirAcompteNumber: '00001',
+    avoirAcompteUseCounter: true,
+    devisPrefix: 'DEV',
+    devisNumber: '00001',
+    devisUseCounter: true,
+    afficherOngletFactures: true
   });
-
-  // Format options
-  const resetPeriodOptions = ['Jamais', 'Annuel', 'Mensuel', 'Trimestriel'];
-  const dateFormatOptions = ['YYYY', 'YY', 'YYYYMM', 'YYMM', 'YYYYMMDD', 'YYMMDD'];
-  const separatorOptions = ['-', '/', '_', '.', ''];
-
-  // Statistics
-  const statistics = [
-    { title: "Séquences actives", value: numerotationData.filter(item => item.isActive).length, icon: <FiLayers className="text-green-500" /> },
-    { title: "Prochaine réinitialisation", value: "01/01/2026", icon: <FiClock className="text-blue-500" /> },
-    { title: "Dernière facture", value: "FACT-2025-0042", icon: <FiFileText className="text-indigo-500" /> },
-    { title: "Dernier devis", value: "DEV-2025-028", icon: <FiClipboard className="text-amber-500" /> }
+  
+  // State for Autre form data
+  const [autreFormData, setAutreFormData] = useState<AutreFormDataType>({
+    articlesMethode: 'compteur',
+    articlesCode: 'ART',
+    articlesLongueur: '5',
+    
+    clientsMethode: 'compteur',
+    clientsCode: 'CLI',
+    clientsLongueur: '5',
+    
+    famillesArticlesCode: 'FAM',
+    famillesArticlesUseCounter: true,
+    famillesClientsCode: 'FCL',
+    famillesClientsUseCounter: true,
+    ecoContributionCode: 'ECO',
+    ecoContributionUseCounter: true,
+    intervenantsCode: 'INT',
+    intervenantsUseCounter: true,
+    referenceReglementCode: 'REG',
+    referenceReglementUseCounter: true
+  });
+  
+  // Options for dropdowns
+  const serieOptions = [
+    { value: 'principale', label: 'Série principale' },
+    { value: 'secondaire', label: 'Série secondaire' },
+    { value: 'export', label: 'Export' }
   ];
-
-  // Toggle expanded item
-  const toggleExpand = (id: string) => {
-    setExpandedItem(expandedItem === id ? null : id);
+  
+  const methodeNumerationOptions = [
+    { value: 'distinctes', label: 'Numérotations distinctes' },
+    { value: 'commune', label: 'Numérotation commune' },
+    { value: 'personnalisee', label: 'Numérotation personnalisée' }
+  ];
+  
+  const methodeCodificationOptions = [
+    { value: 'compteur', label: 'Compteur' },
+    { value: 'manuel', label: 'Manuel' },
+    { value: 'auto', label: 'Auto-généré' }
+  ];
+  
+  // Toggle edit mode
+  const toggleEditMode = (): void => {
+    setEditMode(!editMode);
   };
-
-  // Start editing item
-  const startEditing = (id: string) => {
-    setEditingItem(id);
-  };
-
-  // Cancel editing
-  const cancelEditing = () => {
-    setEditingItem(null);
-  };
-
-  // Save changes (stub)
-  const saveChanges = () => {
-    // Handle saving the edited item here
-    setEditingItem(null);
-  };
-
-  // Handle toggling active status
-  const toggleActive = (id: string) => {
-    setNumerotationData(
-      numerotationData.map(item => 
-        item.id === id ? { ...item, isActive: !item.isActive } : item
-      )
-    );
-  };
-
-  // Use the interface in your generateExample function
-const generateExample = (item: NumerotationSequence): string => {
-  const paddedCounter = String(item.counter.value).padStart(item.counter.padding, '0');
-  let result = item.format;
-  result = result.replace('{prefix}', item.prefix);
-  result = result.replace('{dateFormat}', item.dateFormat);
-  result = result.replace('{separator}', item.separator);
-  result = result.replace('{counter}', paddedCounter);
-  result = result.replace('{suffix}', item.suffix);
-  return result;
-};
-
-  // Get text color based on active status
-  const getStatusTextColor = (isActive: boolean) => {
-    return isActive ? 'text-green-600' : 'text-red-600';
-  };
-
-  // Get background color based on active status
-  const getStatusBgColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100' : 'bg-red-100';
-  };
-
-  // Update settings
-  const updateSetting = (key: string, value: string | number | boolean) => {
-    setSettingsData({
-      ...settingsData,
-      [key]: value
+  
+  // Handle input changes for Vente form
+  const handleVenteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setVenteFormData({
+      ...venteFormData,
+      [name]: type === 'checkbox' ? checked : value
     });
+  };
+  
+  // Handle input changes for Autre form
+  const handleAutreInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setAutreFormData({
+      ...autreFormData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    // Here you would typically send the data to your backend
+    console.log('Vente Form submitted:', venteFormData);
+    console.log('Autre Form submitted:', autreFormData);
+    // Show success message and exit edit mode
+    alert('Paramètres de numérotation mis à jour avec succès!');
+    setEditMode(false);
+  };
+  
+  // Handle form reset
+  const handleReset = (): void => {
+    if (window.confirm('Êtes-vous sûr de vouloir annuler les modifications?')) {
+      // Reset to original data (you would fetch this from your backend in a real app)
+      setVenteFormData({
+        serie: 'principale',
+        methodeNumeration: 'distinctes',
+        facturePrefix: 'FACT',
+        factureNumber: '00001',
+        factureUseCounter: true,
+        avoirPrefix: 'AV',
+        avoirNumber: '00001',
+        avoirUseCounter: true,
+        factureAcomptePrefix: 'FA',
+        factureAcompteNumber: '00001',
+        factureAcompteUseCounter: true,
+        avoirAcomptePrefix: 'AA',
+        avoirAcompteNumber: '00001',
+        avoirAcompteUseCounter: true,
+        devisPrefix: 'DEV',
+        devisNumber: '00001',
+        devisUseCounter: true,
+        afficherOngletFactures: true
+      });
+      
+      setAutreFormData({
+        articlesMethode: 'compteur',
+        articlesCode: 'ART',
+        articlesLongueur: '5',
+        
+        clientsMethode: 'compteur',
+        clientsCode: 'CLI',
+        clientsLongueur: '5',
+        
+        famillesArticlesCode: 'FAM',
+        famillesArticlesUseCounter: true,
+        famillesClientsCode: 'FCL',
+        famillesClientsUseCounter: true,
+        ecoContributionCode: 'ECO',
+        ecoContributionUseCounter: true,
+        intervenantsCode: 'INT',
+        intervenantsUseCounter: true,
+        referenceReglementCode: 'REG',
+        referenceReglementUseCounter: true
+      });
+      
+      setEditMode(false);
+    }
+  };
+  
+  // Input field styling based on edit mode
+  const getInputClass = (): string => {
+    return `w-full p-3 border ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+  };
+  
+  // Prefix input field styling
+  const getPrefixInputClass = (): string => {
+    return `w-24 p-3 border ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-l-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+  };
+  
+  // Number input field styling
+  const getNumberInputClass = (): string => {
+    return `w-32 p-3 border-t border-b border-r ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-r-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+  };
+  
+  // Select field styling based on edit mode
+  const getSelectClass = (): string => {
+    return `w-full p-3 border ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+  };
+  
+  // Checkbox field styling
+  const getCheckboxContainerClass = (): string => {
+    return `flex items-center space-x-2 ${!editMode ? 'opacity-75' : ''}`;
   };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-20 min-h-screen"
+      className="pt-20 min-h-screen bg-gray-50"
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 pb-16">
         {/* Header */}
         <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
           <div>
@@ -350,504 +263,735 @@ const generateExample = (item: NumerotationSequence): string => {
               Numérotation
             </motion.h1>
             <p className="text-sm text-gray-500 mt-1">
-              Gérez les séquences de numérotation de vos documents
+              Paramètres de numérotation des documents et compteurs
             </p>
           </div>
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <FiHash className="w-6 h-6 text-indigo-600" />
+          <div className="flex items-center space-x-3">
+            {!editMode ? (
+              <button 
+                onClick={toggleEditMode}
+                className="p-2 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors duration-200"
+              >
+                <FiEdit className="w-6 h-6 text-indigo-600" />
+              </button>
+            ) : (
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <FiEdit className="w-6 h-6 text-amber-600" />
+              </div>
+            )}
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <FiHash className="w-6 h-6 text-indigo-600" />
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Edit Mode Banner */}
+        {editMode && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg text-amber-800 flex justify-between items-center"
+          >
+            <div className="flex items-center">
+              <FiInfo className="h-5 w-5 mr-2" />
+              <span>Mode édition activé. Vous pouvez modifier les paramètres de numérotation.</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Main Form */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="flex border-b">
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'sequences' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab('sequences')}
-            >
-              Séquences
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'history' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab('history')}
-            >
-              Historique
-            </button>
-            <button
-              className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'settings' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab('settings')}
-            >
-              Paramètres
-            </button>
-          </div>
-
-          {/* Sequences Tab */}
-          {activeTab === 'sequences' && (
-            <>
-              {/* Statistics */}
-              <div className="p-6 border-b">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                  {statistics.map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col">
-                      <div className="flex items-center mb-2">
-                        <div className="p-2 bg-indigo-50 rounded-lg mr-3">
-                          {stat.icon}
-                        </div>
-                        <span className="text-sm font-medium text-gray-500">{stat.title}</span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    </div>
-                  ))}
-                </div>
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg mr-4">
+                <FiHash className="w-5 h-5 text-indigo-600" />
               </div>
-
-              {/* Help Box */}
-              {showHelp && (
-                <div className="mx-6 my-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <FiInfo className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">Guide de numérotation</h3>
-                        <div className="mt-2 text-sm text-blue-700">
-                          <p>
-                            Les numéros de documents sont générés selon un format personnalisable avec ces éléments :
-                          </p>
-                          <ul className="list-disc pl-5 mt-1 space-y-1">
-                            <li><strong>{'{prefix}'}</strong> : Texte au début du numéro (ex: FACT)</li>
-                            <li><strong>{'{dateFormat}'}</strong> : Format de date (ex: YYYY pour l&apos;année)</li>
-                            <li><strong>{'{separator}'}</strong> : Caractère de séparation (ex: -)</li>
-                            <li><strong>{'{counter}'}</strong> : Compteur incrémenté automatiquement</li>
-                            <li><strong>{'{suffix}'}</strong> : Texte à la fin du numéro (optionnel)</li>
-                          </ul>
+              <h2 className="text-xl font-semibold text-gray-800">Paramètres de numérotation</h2>
+            </div>
+            <p className="text-gray-500 text-sm mt-2 ml-11">
+              Vous pouvez spécifier le prochain numéro pour chaque type de documents de vente
+            </p>
+          </div>
+          
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <div className="flex">
+              <button 
+                className={`py-4 px-8 text-sm font-medium transition-colors duration-150 ${
+                  activeTab === 'vente' 
+                    ? 'text-indigo-700 border-b-2 border-indigo-500' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab('vente')}
+              >
+                Vente
+              </button>
+              <button 
+                className={`py-4 px-8 text-sm font-medium transition-colors duration-150 ${
+                  activeTab === 'autre' 
+                    ? 'text-indigo-700 border-b-2 border-indigo-500' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab('autre')}
+              >
+                Autre
+              </button>
+            </div>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            {/* Tab Content */}
+            <div className="p-6">
+              {/* Vente Tab */}
+              {activeTab === 'vente' && (
+                <div className="space-y-8">
+                  {/* Série Dropdown */}
+                  <div className="max-w-md">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Série
+                    </label>
+                    <select
+                      name="serie"
+                      value={venteFormData.serie}
+                      onChange={handleVenteInputChange}
+                      className={getSelectClass()}
+                      disabled={!editMode}
+                    >
+                      {serieOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Sélectionnez la série pour laquelle vous souhaitez configurer la numérotation
+                    </p>
+                  </div>
+                  
+                  {/* Factures/Avoirs/Acomptes Section */}
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                      <FiFileText className="mr-2 text-indigo-600" />
+                      Factures/Avoirs/Acomptes
+                    </h3>
+                    
+                    {/* Méthode de numérotation */}
+                    <div className="mb-6 max-w-md">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Méthode de numérotation
+                      </label>
+                      <select
+                        name="methodeNumeration"
+                        value={venteFormData.methodeNumeration}
+                        onChange={handleVenteInputChange}
+                        className={getSelectClass()}
+                        disabled={!editMode}
+                      >
+                        {methodeNumerationOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Document Number Groups */}
+                    <div className="space-y-6">
+                      {/* Facture */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Facture
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex">
+                            <input
+                              type="text"
+                              name="facturePrefix"
+                              value={venteFormData.facturePrefix}
+                              onChange={handleVenteInputChange}
+                              className={getPrefixInputClass()}
+                              disabled={!editMode}
+                              maxLength={5}
+                              placeholder="Préfixe"
+                            />
+                            <input
+                              type="text"
+                              name="factureNumber"
+                              value={venteFormData.factureNumber}
+                              onChange={handleVenteInputChange}
+                              className={getNumberInputClass()}
+                              disabled={!editMode}
+                              placeholder="Numéro"
+                            />
+                          </div>
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="factureUseCounter"
+                              name="factureUseCounter"
+                              checked={venteFormData.factureUseCounter}
+                              onChange={handleVenteInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="factureUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
                         </div>
                       </div>
-                      <div className="ml-auto pl-3">
-                        <button
-                          onClick={() => setShowHelp(false)}
-                          className="inline-flex rounded-md text-blue-500 hover:bg-blue-100 focus:outline-none"
+                      
+                      {/* Avoir */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Avoir
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex">
+                            <input
+                              type="text"
+                              name="avoirPrefix"
+                              value={venteFormData.avoirPrefix}
+                              onChange={handleVenteInputChange}
+                              className={getPrefixInputClass()}
+                              disabled={!editMode}
+                              maxLength={5}
+                              placeholder="Préfixe"
+                            />
+                            <input
+                              type="text"
+                              name="avoirNumber"
+                              value={venteFormData.avoirNumber}
+                              onChange={handleVenteInputChange}
+                              className={getNumberInputClass()}
+                              disabled={!editMode}
+                              placeholder="Numéro"
+                            />
+                          </div>
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="avoirUseCounter"
+                              name="avoirUseCounter"
+                              checked={venteFormData.avoirUseCounter}
+                              onChange={handleVenteInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="avoirUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Facture d'acompte */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Facture d&apos;acompte
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex">
+                            <input
+                              type="text"
+                              name="factureAcomptePrefix"
+                              value={venteFormData.factureAcomptePrefix}
+                              onChange={handleVenteInputChange}
+                              className={getPrefixInputClass()}
+                              disabled={!editMode}
+                              maxLength={5}
+                              placeholder="Préfixe"
+                            />
+                            <input
+                              type="text"
+                              name="factureAcompteNumber"
+                              value={venteFormData.factureAcompteNumber}
+                              onChange={handleVenteInputChange}
+                              className={getNumberInputClass()}
+                              disabled={!editMode}
+                              placeholder="Numéro"
+                            />
+                          </div>
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="factureAcompteUseCounter"
+                              name="factureAcompteUseCounter"
+                              checked={venteFormData.factureAcompteUseCounter}
+                              onChange={handleVenteInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="factureAcompteUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Avoir d'acompte */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Avoir d&apos;acompte
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex">
+                            <input
+                              type="text"
+                              name="avoirAcomptePrefix"
+                              value={venteFormData.avoirAcomptePrefix}
+                              onChange={handleVenteInputChange}
+                              className={getPrefixInputClass()}
+                              disabled={!editMode}
+                              maxLength={5}
+                              placeholder="Préfixe"
+                            />
+                            <input
+                              type="text"
+                              name="avoirAcompteNumber"
+                              value={venteFormData.avoirAcompteNumber}
+                              onChange={handleVenteInputChange}
+                              className={getNumberInputClass()}
+                              disabled={!editMode}
+                              placeholder="Numéro"
+                            />
+                          </div>
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="avoirAcompteUseCounter"
+                              name="avoirAcompteUseCounter"
+                              checked={venteFormData.avoirAcompteUseCounter}
+                              onChange={handleVenteInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="avoirAcompteUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Devis Section */}
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                      <FiFileText className="mr-2 text-indigo-600" />
+                      Devis
+                    </h3>
+                    
+                    {/* Devis */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Devis
+                      </label>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex">
+                          <input
+                            type="text"
+                            name="devisPrefix"
+                            value={venteFormData.devisPrefix}
+                            onChange={handleVenteInputChange}
+                            className={getPrefixInputClass()}
+                            disabled={!editMode}
+                            maxLength={5}
+                            placeholder="Préfixe"
+                          />
+                          <input
+                            type="text"
+                            name="devisNumber"
+                            value={venteFormData.devisNumber}
+                            onChange={handleVenteInputChange}
+                            className={getNumberInputClass()}
+                            disabled={!editMode}
+                            placeholder="Numéro"
+                          />
+                        </div>
+                        <div className={getCheckboxContainerClass()}>
+                          <input
+                            type="checkbox"
+                            id="devisUseCounter"
+                            name="devisUseCounter"
+                            checked={venteFormData.devisUseCounter}
+                            onChange={handleVenteInputChange}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            disabled={!editMode}
+                          />
+                          <label htmlFor="devisUseCounter" className="text-sm text-gray-700">
+                            Utiliser le compteur
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Display Tab Checkbox */}
+                  <div className={getCheckboxContainerClass()}>
+                    <input
+                      type="checkbox"
+                      id="afficherOngletFactures"
+                      name="afficherOngletFactures"
+                      checked={venteFormData.afficherOngletFactures}
+                      onChange={handleVenteInputChange}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      disabled={!editMode}
+                    />
+                    <label htmlFor="afficherOngletFactures" className="text-sm text-gray-700">
+                      Afficher l&apos;onglet Factures/Avoirs/Acomptes
+                    </label>
+                  </div>
+                </div>
+              )}
+              
+              {/* Autre Tab */}
+              {activeTab === 'autre' && (
+                <div className="space-y-8">
+                  {/* Articles Section */}
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                      <FiBox className="mr-2 text-indigo-600" />
+                      Articles
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Méthode de codification */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Méthode de codification
+                        </label>
+                        <select
+                          name="articlesMethode"
+                          value={autreFormData.articlesMethode}
+                          onChange={handleAutreInputChange}
+                          className={getSelectClass()}
+                          disabled={!editMode}
                         >
-                          <span className="sr-only">Dismiss</span>
-                          <FiX className="h-5 w-5" />
-                        </button>
+                          {methodeCodificationOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Code */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Code
+                        </label>
+                        <input
+                          type="text"
+                          name="articlesCode"
+                          value={autreFormData.articlesCode}
+                          onChange={handleAutreInputChange}
+                          className={getInputClass()}
+                          disabled={!editMode}
+                          maxLength={5}
+                        />
+                      </div>
+                      
+                      {/* Longueur du code */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Longueur du code
+                        </label>
+                        <input
+                          type="number"
+                          name="articlesLongueur"
+                          value={autreFormData.articlesLongueur}
+                          onChange={handleAutreInputChange}
+                          className={getInputClass()}
+                          disabled={!editMode}
+                          min="1"
+                          max="10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Clients Section */}
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                      <FiUsers className="mr-2 text-indigo-600" />
+                      Clients
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Méthode de codification */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Méthode de codification
+                        </label>
+                        <select
+                          name="clientsMethode"
+                          value={autreFormData.clientsMethode}
+                          onChange={handleAutreInputChange}
+                          className={getSelectClass()}
+                          disabled={!editMode}
+                        >
+                          {methodeCodificationOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Code */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Code
+                        </label>
+                        <input
+                          type="text"
+                          name="clientsCode"
+                          value={autreFormData.clientsCode}
+                          onChange={handleAutreInputChange}
+                          className={getInputClass()}
+                          disabled={!editMode}
+                          maxLength={5}
+                        />
+                      </div>
+                      
+                      {/* Longueur du code */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Longueur du code
+                        </label>
+                        <input
+                          type="number"
+                          name="clientsLongueur"
+                          value={autreFormData.clientsLongueur}
+                          onChange={handleAutreInputChange}
+                          className={getInputClass()}
+                          disabled={!editMode}
+                          min="1"
+                          max="10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Other Counters Section */}
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                      <FiGrid className="mr-2 text-indigo-600" />
+                      Autres compteurs
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {/* Familles d'articles */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Familles d&apos;articles
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="text"
+                            name="famillesArticlesCode"
+                            value={autreFormData.famillesArticlesCode}
+                            onChange={handleAutreInputChange}
+                            className={`${getInputClass()} max-w-xs`}
+                            disabled={!editMode}
+                            maxLength={5}
+                          />
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="famillesArticlesUseCounter"
+                              name="famillesArticlesUseCounter"
+                              checked={autreFormData.famillesArticlesUseCounter}
+                              onChange={handleAutreInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="famillesArticlesUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Familles clients */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Familles clients
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="text"
+                            name="famillesClientsCode"
+                            value={autreFormData.famillesClientsCode}
+                            onChange={handleAutreInputChange}
+                            className={`${getInputClass()} max-w-xs`}
+                            disabled={!editMode}
+                            maxLength={5}
+                          />
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="famillesClientsUseCounter"
+                              name="famillesClientsUseCounter"
+                              checked={autreFormData.famillesClientsUseCounter}
+                              onChange={handleAutreInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="famillesClientsUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Eco-contribution DEEE */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Eco-contribution DEEE
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="text"
+                            name="ecoContributionCode"
+                            value={autreFormData.ecoContributionCode}
+                            onChange={handleAutreInputChange}
+                            className={`${getInputClass()} max-w-xs`}
+                            disabled={!editMode}
+                            maxLength={5}
+                          />
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="ecoContributionUseCounter"
+                              name="ecoContributionUseCounter"
+                              checked={autreFormData.ecoContributionUseCounter}
+                              onChange={handleAutreInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="ecoContributionUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Intervenants */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Intervenants
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="text"
+                            name="intervenantsCode"
+                            value={autreFormData.intervenantsCode}
+                            onChange={handleAutreInputChange}
+                            className={`${getInputClass()} max-w-xs`}
+                            disabled={!editMode}
+                            maxLength={5}
+                          />
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="intervenantsUseCounter"
+                              name="intervenantsUseCounter"
+                              checked={autreFormData.intervenantsUseCounter}
+                              onChange={handleAutreInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="intervenantsUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Référence de règlement */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Référence de règlement
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="text"
+                            name="referenceReglementCode"
+                            value={autreFormData.referenceReglementCode}
+                            onChange={handleAutreInputChange}
+                            className={`${getInputClass()} max-w-xs`}
+                            disabled={!editMode}
+                            maxLength={5}
+                          />
+                          <div className={getCheckboxContainerClass()}>
+                            <input
+                              type="checkbox"
+                              id="referenceReglementUseCounter"
+                              name="referenceReglementUseCounter"
+                              checked={autreFormData.referenceReglementUseCounter}
+                              onChange={handleAutreInputChange}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              disabled={!editMode}
+                            />
+                            <label htmlFor="referenceReglementUseCounter" className="text-sm text-gray-700">
+                              Utiliser le compteur
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-
-              {/* Actions */}
-              <div className="px-6 pt-4 pb-2 flex justify-between items-center">
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center">
-                  <FiPlus className="mr-2" />
-                  <span>Ajouter une séquence</span>
+              
+              {/* Info Box */}
+              <div className="mt-8 bg-blue-50 p-4 rounded-xl">
+                <div className="flex items-start">
+                  <div className="p-1.5 bg-blue-100 rounded-lg mr-3 mt-0.5">
+                    <FiInfo className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-blue-800 mb-1">
+                      Informations sur la numérotation
+                    </h3>
+                    <p className="text-xs text-blue-700">
+                      La numérotation des documents est essentielle pour assurer un suivi efficace. 
+                      Vous pouvez paramétrer un préfixe (ex: FACT) et un numéro de départ pour chaque type de document. 
+                      Le compteur s&apos;incrémentera automatiquement à chaque nouvelle création si l&apos;option &quot;Utiliser le compteur&quot; est activée.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Form Actions */}
+            {editMode && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-end space-x-4 p-6 bg-gray-50 border-t border-gray-200"
+              >
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
+                >
+                  <FiX className="w-5 h-5" />
+                  <span>Annuler</span>
                 </button>
                 
                 <button
-                  onClick={() => setShowHelp(!showHelp)}
-                  className="px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition flex items-center"
+                  type="submit"
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2"
                 >
-                  <FiHelpCircle className="mr-2" />
-                  <span>{showHelp ? 'Masquer l\'aide' : 'Afficher l\'aide'}</span>
+                  <FiSave className="w-5 h-5" />
+                  <span>Enregistrer les modifications</span>
                 </button>
-              </div>
-
-              {/* Numbering Sequences List */}
-              <div className="px-6 pb-6">
-                <div className="space-y-4">
-                  {numerotationData.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-white border border-gray-200 rounded-lg overflow-hidden"
-                    >
-                      {/* Header */}
-                      <div 
-                        className={`px-4 py-3 flex items-center justify-between cursor-pointer ${
-                          expandedItem === item.id ? 'bg-indigo-50 border-b border-gray-200' : ''
-                        }`}
-                        onClick={() => toggleExpand(item.id)}
-                      >
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 mr-2">
-                            <FiFileText className={`h-5 w-5 ${item.isActive ? 'text-indigo-500' : 'text-gray-400'}`} />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">{item.documentType}</h3>
-                            <p className="text-xs text-gray-500">Format: {item.format}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right mr-2">
-                            <span className="text-sm font-semibold">Exemple: {item.example}</span>
-                            <div className="flex items-center justify-end">
-                              <span className={`inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                getStatusBgColor(item.isActive)} ${getStatusTextColor(item.isActive)}`}
-                              >
-                                {item.isActive ? 'Actif' : 'Inactif'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {expandedItem === item.id ? (
-                              <FiChevronUp className="h-5 w-5 text-gray-500" />
-                            ) : (
-                              <FiChevronDown className="h-5 w-5 text-gray-500" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Expanded Content */}
-                      {expandedItem === item.id && (
-                        <div className="p-4 border-t border-gray-200 bg-white">
-                          {editingItem === item.id ? (
-                            /* Edit Form */
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Préfixe
-                                  </label>
-                                  <input
-                                    type="text"
-                                    defaultValue={item.prefix}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Format de date
-                                  </label>
-                                  <select
-                                    defaultValue={item.dateFormat}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  >
-                                    {dateFormatOptions.map((option, index) => (
-                                      <option key={index} value={option}>{option}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Séparateur
-                                  </label>
-                                  <select
-                                    defaultValue={item.separator}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  >
-                                    {separatorOptions.map((option, index) => (
-                                      <option key={index} value={option}>{option === '' ? 'Aucun' : option}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Valeur du compteur
-                                  </label>
-                                  <input
-                                    type="number"
-                                    defaultValue={item.counter.value}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Padding (zéros)
-                                  </label>
-                                  <select
-                                    defaultValue={item.counter.padding}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  >
-                                    {[1, 2, 3, 4, 5].map((option) => (
-                                      <option key={option} value={option}>{option}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Réinitialisation
-                                  </label>
-                                  <select
-                                    defaultValue={item.counter.resetPeriod}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  >
-                                    {resetPeriodOptions.map((option, index) => (
-                                      <option key={index} value={option}>{option}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Suffixe
-                                  </label>
-                                  <input
-                                    type="text"
-                                    defaultValue={item.suffix}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
-                                </div>
-                                
-                                <div className="md:col-span-2">
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Format
-                                  </label>
-                                  <input
-                                    type="text"
-                                    defaultValue={item.format}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
-                                </div>
-                              </div>
-                              
-                              <div className="flex justify-end space-x-2 pt-4">
-                                <button
-                                  onClick={cancelEditing}
-                                  className="px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
-                                >
-                                  Annuler
-                                </button>
-                                <button
-                                  onClick={saveChanges}
-                                  className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-                                >
-                                  Enregistrer
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            /* Details View */
-                            <div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Détails de la séquence</h4>
-                                  <dl className="grid grid-cols-2 gap-2">
-                                    <dt className="text-xs text-gray-500">Préfixe:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.prefix}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Format date:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.dateFormat}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Séparateur:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.separator === '' ? '(Aucun)' : item.separator}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Suffixe:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.suffix || '(Aucun)'}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Format complet:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.format}</dd>
-                                  </dl>
-                                </div>
-                                
-                                <div>
-                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Paramètres du compteur</h4>
-                                  <dl className="grid grid-cols-2 gap-2">
-                                    <dt className="text-xs text-gray-500">Valeur actuelle:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.counter.value}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Padding (zéros):</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.counter.padding}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Réinitialisation:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.counter.resetPeriod}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Dernière réinitialisation:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">{item.counter.lastReset}</dd>
-                                    
-                                    <dt className="text-xs text-gray-500">Prochain numéro:</dt>
-                                    <dd className="text-xs font-medium text-gray-900">
-                                      {generateExample({
-                                        ...item, 
-                                        counter: { ...item.counter, value: item.counter.value + 1 }
-                                      })}
-                                    </dd>
-                                  </dl>
-                                </div>
-                              </div>
-                              
-                              {item.notes && (
-                                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                                  <span className="font-medium">Notes:</span> {item.notes}
-                                </div>
-                              )}
-                              
-                              <div className="flex justify-end space-x-2 pt-3">
-                                <button
-                                  onClick={() => toggleActive(item.id)}
-                                  className={`px-3 py-1.5 text-xs rounded flex items-center space-x-1 ${
-                                    item.isActive 
-                                      ? 'bg-red-100 text-red-800 hover:bg-red-200' 
-                                      : 'bg-green-100 text-green-800 hover:bg-green-200'
-                                  }`}
-                                >
-                                  {item.isActive ? <FiX /> : <FiCheck />}
-                                  <span>{item.isActive ? 'Désactiver' : 'Activer'}</span>
-                                </button>
-                                
-                                <button
-                                  onClick={() => startEditing(item.id)}
-                                  className="px-3 py-1.5 text-xs bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200 flex items-center space-x-1"
-                                >
-                                  <FiEdit />
-                                  <span>Modifier</span>
-                                </button>
-                                
-                                <button
-                                  className="px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 flex items-center space-x-1"
-                                  onClick={() => {
-                                    // Stub: refresh logic can go here
-                                    console.log('Refresh action for', item.id);
-                                  }}
-                                >
-                                  <FiRefreshCw />
-                                  <span>Rafraîchir</span>
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* History Tab */}
-          {activeTab === 'history' && (
-            <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">Historique</h2>
-              {historyData.map(entry => (
-                <div key={entry.id} className="mb-4 p-4 border border-gray-200 rounded">
-                  <p><strong>Date:</strong> {entry.date}</p>
-                  <p><strong>Type de document:</strong> {entry.documentType}</p>
-                  <p><strong>Action:</strong> {entry.action}</p>
-                  <p><strong>Ancienne valeur:</strong> {entry.oldValue}</p>
-                  <p><strong>Nouvelle valeur:</strong> {entry.newValue}</p>
-                  <p><strong>Utilisateur:</strong> {entry.user}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Settings Tab */}
-          {activeTab === 'settings' && (
-            <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">Paramètres</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Padding par défaut
-                  </label>
-                  <input 
-                    type="number"
-                    value={settingsData.defaultPadding}
-                    onChange={(e) => updateSetting('defaultPadding', parseInt(e.target.value))}
-                    className="mt-1 p-2 border border-gray-300 rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Période de réinitialisation par défaut
-                  </label>
-                  <select 
-                    value={settingsData.defaultResetPeriod}
-                    onChange={(e) => updateSetting('defaultResetPeriod', e.target.value)}
-                    className="mt-1 p-2 border border-gray-300 rounded"
-                  >
-                    {resetPeriodOptions.map((option, index) => (
-                      <option key={index} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Format de date par défaut
-                  </label>
-                  <select 
-                    value={settingsData.defaultDateFormat}
-                    onChange={(e) => updateSetting('defaultDateFormat', e.target.value)}
-                    className="mt-1 p-2 border border-gray-300 rounded"
-                  >
-                    {dateFormatOptions.map((option, index) => (
-                      <option key={index} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Séparateur par défaut
-                  </label>
-                  <select 
-                    value={settingsData.defaultSeparator}
-                    onChange={(e) => updateSetting('defaultSeparator', e.target.value)}
-                    className="mt-1 p-2 border border-gray-300 rounded"
-                  >
-                    {separatorOptions.map((option, index) => (
-                      <option key={index} value={option}>{option === '' ? 'Aucun' : option}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mt-4 space-y-4">
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox"
-                    checked={settingsData.autoResetCounters}
-                    onChange={(e) => updateSetting('autoResetCounters', e.target.checked)}
-                    className="mr-2"
-                  />
-                  <span>Réinitialisation automatique des compteurs</span>
-                </div>
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox"
-                    checked={settingsData.allowManualOverride}
-                    onChange={(e) => updateSetting('allowManualOverride', e.target.checked)}
-                    className="mr-2"
-                  />
-                  <span>Autoriser la modification manuelle</span>
-                </div>
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox"
-                    checked={settingsData.validateUniqueNumbers}
-                    onChange={(e) => updateSetting('validateUniqueNumbers', e.target.checked)}
-                    className="mr-2"
-                  />
-                  <span>Valider l&apos;unicité des numéros</span>
-                </div>
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox"
-                    checked={settingsData.notifyBeforeReset}
-                    onChange={(e) => updateSetting('notifyBeforeReset', e.target.checked)}
-                    className="mr-2"
-                  />
-                  <span>Notifier avant réinitialisation</span>
-                </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </form>
         </div>
       </div>
     </motion.div>
