@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FiDollarSign, 
+  // FiDollarSign, 
   FiSearch, 
   FiFilter, 
   FiPlus, 
@@ -30,9 +30,11 @@ import {
   FiChevronsLeft,
   FiChevronsRight,
   FiSliders,
-  FiClock
+  FiClock,
+  FiMail
 } from 'react-icons/fi';
 import { BarChart, Bar, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { FaEuroSign } from 'react-icons/fa';
 
 /** Interface for the notification object */
 interface NotificationState {
@@ -106,6 +108,10 @@ export default function ReglementsEcheancier() {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [bulkDelete, setBulkDelete] = useState<boolean>(false);
+  
+  // New modal state for reminder
+  const [showReminderModal, setShowReminderModal] = useState<boolean>(false);
+  const [itemToRemind, setItemToRemind] = useState<string | null>(null);
 
   // Check for scroll position
   useEffect(() => {
@@ -126,17 +132,6 @@ export default function ReglementsEcheancier() {
       setShowNotification(false);
     }, 3000);
   };
-
-  // New form state
-  // const [newItem, setNewItem] = useState({
-  //   client: "",
-  //   nom: "",
-  //   prenom: "",
-  //   montant: "",
-  //   date: new Date().toISOString().split('T')[0],
-  //   moyenPaiement: "Virement",
-  //   notes: ""
-  // });
 
   // Primary colors from the provided colors
   const primaryColor = "#1B0353";
@@ -552,6 +547,22 @@ export default function ReglementsEcheancier() {
     setSelectAll(false);
   };
 
+  // Handler for reminder confirmation
+  const confirmReminder = (id: string) => {
+    setItemToRemind(id);
+    setShowReminderModal(true);
+  };
+
+  // Handler for sending reminder
+  const handleSendReminder = () => {
+    // Here you would implement the logic to send a reminder
+    displayNotification(`Relance envoyée au client ${itemToRemind}`, 'success');
+    
+    // Reset states
+    setShowReminderModal(false);
+    setItemToRemind(null);
+  };
+
   // Filter reglements based on search and filter criteria
   const filteredReglements = reglementsData.filter(reglement => {
     const matchesSearch = 
@@ -644,48 +655,48 @@ export default function ReglementsEcheancier() {
   });
 
   // Apply sorting to echeances
-const sortedEcheances = [...filteredEcheances].sort((a, b) => {
-  let aValue: SortValueType = '';
-  let bValue: SortValueType = '';
-  
-  // Determine which values to compare based on sortField
-  switch(sortField) {
-    case 'montant':
-      aValue = a.montantNum;
-      bValue = b.montantNum;
-      break;
-    case 'soldeDu':
-      aValue = a.soldeDuNum;
-      bValue = b.soldeDuNum;
-      break;
-    case 'dateEcheancier':
-      aValue = new Date(a.dateEcheancier.split('/').reverse().join('-')).getTime();
-      bValue = new Date(b.dateEcheancier.split('/').reverse().join('-')).getTime();
-      break;
-    case 'soldee':
-      aValue = a.soldee ? 1 : 0;
-      bValue = b.soldee ? 1 : 0;
-      break;
-    default:
-      // Type assertion to avoid undefined error
-      if (sortField in a && sortField in b) {
-        aValue = a[sortField as keyof Echeance];
-        bValue = b[sortField as keyof Echeance];
-      }
-      break;
-  }
-  
-  // Compare values with null checks
-  if (sortDirection === 'asc') {
-    if (aValue === undefined) return 1;
-    if (bValue === undefined) return -1;
-    return aValue > bValue ? 1 : -1;
-  } else {
-    if (aValue === undefined) return -1;
-    if (bValue === undefined) return 1;
-    return aValue < bValue ? 1 : -1;
-  }
-});
+  const sortedEcheances = [...filteredEcheances].sort((a, b) => {
+    let aValue: SortValueType = '';
+    let bValue: SortValueType = '';
+    
+    // Determine which values to compare based on sortField
+    switch(sortField) {
+      case 'montant':
+        aValue = a.montantNum;
+        bValue = b.montantNum;
+        break;
+      case 'soldeDu':
+        aValue = a.soldeDuNum;
+        bValue = b.soldeDuNum;
+        break;
+      case 'dateEcheancier':
+        aValue = new Date(a.dateEcheancier.split('/').reverse().join('-')).getTime();
+        bValue = new Date(b.dateEcheancier.split('/').reverse().join('-')).getTime();
+        break;
+      case 'soldee':
+        aValue = a.soldee ? 1 : 0;
+        bValue = b.soldee ? 1 : 0;
+        break;
+      default:
+        // Type assertion to avoid undefined error
+        if (sortField in a && sortField in b) {
+          aValue = a[sortField as keyof Echeance];
+          bValue = b[sortField as keyof Echeance];
+        }
+        break;
+    }
+    
+    // Compare values with null checks
+    if (sortDirection === 'asc') {
+      if (aValue === undefined) return 1;
+      if (bValue === undefined) return -1;
+      return aValue > bValue ? 1 : -1;
+    } else {
+      if (aValue === undefined) return -1;
+      if (bValue === undefined) return 1;
+      return aValue < bValue ? 1 : -1;
+    }
+  });
 
   // Reset filters
   const resetFilters = () => {
@@ -787,7 +798,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="font-bold text-lg flex items-center">
             <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 shadow-lg" style={{ background: primaryGradient }}>
-              <FiDollarSign className="text-white text-xl" />
+              <FaEuroSign className="text-white text-xl" />
             </div>
             {isScrolled && <span style={{ color: primaryColor }}>Règlements & Échéancier</span>}
           </div>
@@ -851,9 +862,9 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
           </div>
         </motion.div>
 
-        {/* Main Content with Tabs */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Left Sidebar - Recent Activity */}
+        {/* Main Content with modified layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
+          {/* Left Sidebar - Only Recent Activity */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -876,13 +887,13 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                   >
                     <div className="p-2 rounded-full bg-gray-100 mr-3">
                       {activity.type === 'payment' ? (
-                        <FiDollarSign size={16} style={{ color: secondaryColor }} />
+                        <FaEuroSign size={16} style={{ color: secondaryColor }} />
                       ) : (
                         <FiCalendar size={16} style={{ color: primaryColor }} />
                       )}
                     </div>
                     <div>
-                      <div className="text-sm font-medium">{activity.action}</div>
+                      <div className="text-sm font-medium text-gray-800">{activity.action}</div>
                       <div className="text-xs text-gray-500">{activity.details}</div>
                       <div className="text-xs text-gray-400 mt-1">{activity.time}</div>
                     </div>
@@ -890,52 +901,14 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                 ))}
               </div>
             </div>
-            
-            {/* Chart */}
-            <div className="bg-white rounded-2xl shadow-md p-6">
-              <h3 className="font-bold text-gray-800 mb-4">Evolution sur 12 mois</h3>
-              <div className="h-60">
-                {activeTab === 'reglements' ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyStatsReglements}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="name" fontSize={10} tickMargin={5} />
-                      <YAxis fontSize={10} tickFormatter={(value) => `${value / 1000}k€`} />
-                      <Tooltip 
-                        formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
-                        labelFormatter={(label) => `Mois: ${label}`}
-                      />
-                      <Bar dataKey="amount" fill={accentColor} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyStatsEcheances}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="name" fontSize={10} tickMargin={5} />
-                      <YAxis fontSize={10} tickFormatter={(value) => `${value / 1000}k€`} />
-                      <Tooltip 
-                        formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
-                        labelFormatter={(label) => `Mois: ${label}`}
-                      />
-                      <Bar dataKey="prevues" name="Échéances prévues" fill={secondaryColor} radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="soldees" name="Échéances soldées" fill={accentColor} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-              <div className="mt-4 text-xs text-center text-gray-500">
-                Évolution des {activeTab === 'reglements' ? 'règlements' : 'échéances'} sur les 12 derniers mois
-              </div>
-            </div>
           </motion.div>
           
-          {/* Main Content */}
+          {/* Main Content - Bigger Table */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-4 space-y-6"
+            className="lg:col-span-5 space-y-6"
           >
             {/* Tabs */}
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -953,7 +926,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                   }}
                   style={activeTab === 'reglements' ? { borderColor: primaryColor, backgroundColor: `${primaryColor}10`, color: primaryColor } : {}}
                 >
-                  <FiDollarSign className={`mr-2 ${activeTab === 'reglements' ? '' : 'text-gray-400'}`} style={activeTab === 'reglements' ? { color: primaryColor } : {}} />
+                  <FaEuroSign className={`mr-2 ${activeTab === 'reglements' ? '' : 'text-gray-400'}`} style={activeTab === 'reglements' ? { color: primaryColor } : {}} />
                   Règlements
                 </button>
                 <button
@@ -1009,7 +982,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                     >
                       <div className="flex items-center mb-2">
                         <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${secondaryColor}15` }}>
-                          <FiDollarSign size={20} style={{ color: secondaryColor }} />
+                          <FaEuroSign size={20} style={{ color: secondaryColor }} />
                         </div>
                         <span className="text-sm font-medium text-gray-500">Montant total</span>
                       </div>
@@ -1023,7 +996,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                     </motion.div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <motion.div 
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
@@ -1055,7 +1028,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                     >
                       <div className="flex items-center mb-2">
                         <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${secondaryColor}15` }}>
-                          <FiDollarSign size={20} style={{ color: secondaryColor }} />
+                          <FaEuroSign size={20} style={{ color: secondaryColor }} />
                         </div>
                         <span className="text-sm font-medium text-gray-500">Montant total</span>
                       </div>
@@ -1104,8 +1077,11 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                     <input
                       type="text"
                       placeholder={`Rechercher ${activeTab === 'reglements' ? 'un règlement' : 'une échéance'}...`}
-                      className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                      // style={{ focusRing: primaryColor }}
+                      className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all`}
+                      style={{ 
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                        // focusWithin: { borderColor: primaryColor, ringColor: primaryColor }
+                      }}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -1167,7 +1143,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                   </div>
                 </div>
 
-                {/* Filters */}
+                {/* Filters - IMPROVED DATE FIELDS */}
                 <AnimatePresence>
                   {showFilters && (
                     <motion.div 
@@ -1177,14 +1153,13 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                       transition={{ duration: 0.3 }}
                       className="mt-4 p-6 border border-gray-200 rounded-lg overflow-hidden bg-gray-50"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             {activeTab === 'reglements' ? 'Moyen de paiement' : 'Moyen de paiement'}
                           </label>
                           <select 
-                            className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                            // style={{ focusRing: primaryColor }}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition text-gray-500"
                             value={selectedMoyenPaiement}
                             onChange={(e) => setSelectedMoyenPaiement(e.target.value)}
                           >
@@ -1199,8 +1174,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                             Client
                           </label>
                           <select 
-                            className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                            // style={{ focusRing: primaryColor }}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition text-gray-500"
                             value={selectedClient}
                             onChange={(e) => setSelectedClient(e.target.value)}
                           >
@@ -1215,8 +1189,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                             Période prédéfinie
                           </label>
                           <select 
-                            className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                            // style={{ focusRing: primaryColor }}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition text-gray-500"
                             value={selectedPeriod}
                             onChange={(e) => {
                               setSelectedPeriod(e.target.value);
@@ -1228,36 +1201,37 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                             ))}
                           </select>
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Date début
-                            </label>
-                            <input 
-                              type="date" 
-                              className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                              // style={{ focusRing: primaryColor }}
-                              value={dateDebut}
-                              onChange={(e) => setDateDebut(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Date fin
-                            </label>
-                            <input 
-                              type="date" 
-                              className={`w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                              // style={{ focusRing: primaryColor }}
-                              value={dateFin}
-                              onChange={(e) => setDateFin(e.target.value)}
-                            />
-                          </div>
+                      </div>
+                      
+                      {/* Improved date fields - now in their own row, with more space */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Date début
+                          </label>
+                          <input 
+                            type="date" 
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition text-gray-500"
+                            style={{ height: "42px" }} 
+                            value={dateDebut}
+                            onChange={(e) => setDateDebut(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Date fin
+                          </label>
+                          <input 
+                            type="date" 
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition text-gray-500"
+                            style={{ height: "42px" }}
+                            value={dateFin}
+                            onChange={(e) => setDateFin(e.target.value)}
+                          />
                         </div>
                       </div>
                       
-                      <div className="flex justify-end space-x-2 mt-4">
+                      <div className="flex justify-end space-x-2 mt-5">
                         <motion.button 
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -1319,6 +1293,22 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                             <span>Marquer comme soldée</span>
                           </motion.button>
                         )}
+                        {/* Add bulk send reminder button for Reglements */}
+                        {activeTab === 'reglements' && (
+                          <motion.button 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-3 py-1.5 text-sm text-white rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1"
+                            style={{ backgroundColor: '#6366F1' }}
+                            onClick={() => {
+                              displayNotification(`Relances envoyées à ${selectedItems.length} client(s)`, 'success');
+                              setSelectedItems([]);
+                            }}
+                          >
+                            <FiMail size={16} />
+                            <span>Envoyer des relances</span>
+                          </motion.button>
+                        )}
                         <motion.button 
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -1357,8 +1347,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                               <div className="flex items-center">
                                 <input
                                   type="checkbox"
-                                  className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                                  // style={{ color: primaryColor, focusRing: primaryColor }}
+                                  className="h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 transition"
                                   checked={selectAll}
                                   onChange={handleSelectAll}
                                 />
@@ -1480,9 +1469,8 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                               >
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   <input 
-                                    type="checkbox" 
-                                    className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                                    // style={{ color: primaryColor, focusRing: primaryColor }}
+                                    type="checkbox"
+                                    className="h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 transition"
                                     checked={selectedItems.includes(reglement.id)}
                                     onChange={() => handleSelectItem(reglement.id)}
                                   />
@@ -1519,6 +1507,17 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                                     >
                                       <FiEye size={18} />
                                     </button>
+                                    
+                                    {/* Enhanced Reminder button with tooltip */}
+                                    <button 
+                                      className="p-1.5 text-white bg-indigo-500 hover:bg-indigo-600 transition-colors rounded-md flex items-center"
+                                      onClick={() => confirmReminder(reglement.id)}
+                                      title="Envoyer une relance"
+                                    >
+                                      <FiMail size={16} className="mr-1" />
+                                      <span className="text-xs whitespace-nowrap">Relance</span>
+                                    </button>
+                                    
                                     <button 
                                       className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
                                       onClick={() => displayNotification(`Modification du règlement ${reglement.id}`, 'info')}
@@ -1575,8 +1574,7 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                               <div className="flex items-center">
                                 <input
                                   type="checkbox"
-                                  className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                                  // style={{ color: primaryColor, focusRing: primaryColor }}
+                                  className="h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 transition"
                                   checked={selectAll}
                                   onChange={handleSelectAll}
                                 />
@@ -1713,9 +1711,8 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                               >
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   <input 
-                                    type="checkbox" 
-                                    className={`h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 text-[${primaryColor}] focus:ring-[${primaryColor}] transition`}
-                                    // style={{ color: primaryColor, focusRing: primaryColor }}
+                                    type="checkbox"
+                                    className="h-4 w-4 border-gray-300 rounded focus:ring-2 focus:ring-offset-0 focus:ring-opacity-50 transition"
                                     checked={selectedItems.includes(echeance.id)}
                                     onChange={() => handleSelectItem(echeance.id)}
                                   />
@@ -1763,159 +1760,257 @@ const sortedEcheances = [...filteredEcheances].sort((a, b) => {
                                       onClick={() => displayNotification(`Détails de l'échéance ${echeance.id}`, 'info')}
                                     >
                                       <FiEye size={18} />
-                                </button>
-                                <button 
-                                  className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                  onClick={() => displayNotification(`Modification de l'échéance ${echeance.id}`, 'info')}
-                                >
-                                  <FiEdit size={18} />
-                                </button>
-                                {!echeance.soldee && (
+                                    </button>
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                      onClick={() => displayNotification(`Modification de l'échéance ${echeance.id}`, 'info')}
+                                    >
+                                      <FiEdit size={18} />
+                                    </button>
+                                    {!echeance.soldee && (
+                                      <button 
+                                        className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                                        onClick={() => {
+                                          displayNotification(`Échéance ${echeance.id} marquée comme soldée`, 'success');
+                                        }}
+                                      >
+                                        <FiCheckCircle size={18} />
+                                      </button>
+                                    )}
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                      onClick={() => confirmDelete(echeance.id)}
+                                    >
+                                      <FiTrash2 size={18} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </motion.tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                                <div className="flex flex-col items-center">
+                                  <FiInfo className="w-10 h-10 text-gray-300 mb-2" />
+                                  <p>Aucune échéance ne correspond à vos critères</p>
                                   <button 
-                                    className="p-1 text-gray-400 hover:text-green-600 transition-colors"
-                                    onClick={() => {
-                                      displayNotification(`Échéance ${echeance.id} marquée comme soldée`, 'success');
-                                    }}
+                                    className="mt-2 hover:underline font-medium"
+                                    style={{ color: primaryColor }}
+                                    onClick={resetFilters}
                                   >
-                                    <FiCheckCircle size={18} />
+                                    Réinitialiser les filtres
                                   </button>
-                                )}
-                                <button 
-                                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                  onClick={() => confirmDelete(echeance.id)}
-                                >
-                                  <FiTrash2 size={18} />
-                                </button>
-                              </div>
-                            </td>
-                          </motion.tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
-                            <div className="flex flex-col items-center">
-                              <FiInfo className="w-10 h-10 text-gray-300 mb-2" />
-                              <p>Aucune échéance ne correspond à vos critères</p>
-                              <button 
-                                className="mt-2 hover:underline font-medium"
-                                style={{ color: primaryColor }}
-                                onClick={resetFilters}
-                              >
-                                Réinitialiser les filtres
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination */}
+              <div className="px-6 pb-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                <div className="text-sm text-gray-700">
+                  Affichage de <span className="font-medium">1</span> à <span className="font-medium">
+                    {activeTab === 'reglements' ? filteredReglements.length : filteredEcheances.length}
+                  </span> sur <span className="font-medium">
+                    {activeTab === 'reglements' ? reglementsData.length : echeancesData.length}
+                  </span> résultats
+                </div>
+                <div className="flex space-x-2">
+                  <button className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>
+                    <FiChevronsLeft size={16} />
+                  </button>
+                  <button className="px-3 py-2 border text-white rounded-md text-sm font-medium" style={{ backgroundColor: primaryColor }}>
+                    1
+                  </button>
+                  <button className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>
+                    <FiChevronsRight size={16} />
+                  </button>
                 </div>
               </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Full-width Chart - Evolution sur 12 mois */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-2xl shadow-md p-6 overflow-hidden"
+        >
+          <h3 className="font-bold text-gray-800 mb-4">Evolution sur 12 mois</h3>
+          <div className="h-80">
+            {activeTab === 'reglements' ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyStatsReglements}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" fontSize={10} tickMargin={5} />
+                  <YAxis fontSize={10} tickFormatter={(value) => `${value / 1000}k€`} />
+                  <Tooltip 
+                    formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
+                    labelFormatter={(label) => `Mois: ${label}`}
+                  />
+                  <Bar dataKey="amount" fill={accentColor} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyStatsEcheances}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" fontSize={10} tickMargin={5} />
+                  <YAxis fontSize={10} tickFormatter={(value) => `${value / 1000}k€`} />
+                  <Tooltip 
+                    formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
+                    labelFormatter={(label) => `Mois: ${label}`}
+                  />
+                  <Bar dataKey="prevues" name="Échéances prévues" fill={secondaryColor} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="soldees" name="Échéances soldées" fill={accentColor} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </div>
-
-          {/* Pagination */}
-          <div className="px-6 pb-6 flex items-center justify-between border-t border-gray-200">
-            <div className="text-sm text-gray-700">
-              Affichage de <span className="font-medium">1</span> à <span className="font-medium">
-                {activeTab === 'reglements' ? filteredReglements.length : filteredEcheances.length}
-              </span> sur <span className="font-medium">
-                {activeTab === 'reglements' ? reglementsData.length : echeancesData.length}
-              </span> résultats
-            </div>
-            <div className="flex space-x-2">
-              <button className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>
-                <FiChevronsLeft size={16} />
-              </button>
-              <button className="px-3 py-2 border text-white rounded-md text-sm font-medium" style={{ backgroundColor: primaryColor }}>
-                1
-              </button>
-              <button className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>
-                <FiChevronsRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  </div>
-
-  {/* Delete Confirmation Modal */}
-  <AnimatePresence>
-    {showDeleteModal && (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl"
-        >
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Confirmation de suppression</h3>
-          <p className="text-gray-600 mb-6">
-            {bulkDelete 
-              ? `Êtes-vous sûr de vouloir supprimer les ${selectedItems.length} élément(s) sélectionné(s) ?` 
-              : `Êtes-vous sûr de vouloir supprimer cet élément "${itemToDelete}" ?`
-            }
-            <br />
-            Cette action est irréversible.
-          </p>
-          <div className="flex justify-end space-x-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Annuler
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              onClick={handleDelete}
-            >
-              Supprimer
-            </motion.button>
+          <div className="mt-4 text-xs text-center text-gray-500">
+            Évolution des {activeTab === 'reglements' ? 'règlements' : 'échéances'} sur les 12 derniers mois
           </div>
         </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
+      </div>
 
-  {/* Notification */}
-  <AnimatePresence>
-    {showNotification && (
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 50, opacity: 0 }}
-        className="fixed bottom-5 right-5 p-4 rounded-lg shadow-lg z-50"
-        style={{
-          background: notification?.type === 'success' 
-            ? 'linear-gradient(to right, #10B981, #059669)' 
-            : notification?.type === 'error'
-              ? 'linear-gradient(to right, #EF4444, #DC2626)'
-              : 'linear-gradient(to right, #6366F1, #4F46E5)'
-        }}
-      >
-        <div className="flex items-center text-white">
-          {notification?.type === 'success' ? (
-            <FiCheckCircle className="w-5 h-5 mr-2" />
-          ) : notification?.type === 'error' ? (
-            <FiAlertCircle className="w-5 h-5 mr-2" />
-          ) : (
-            <FiInfo className="w-5 h-5 mr-2" />
-          )}
-          <span>{notification?.message}</span>
-        </div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</motion.div>
-);
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Confirmation de suppression</h3>
+              <p className="text-gray-600 mb-6">
+                {bulkDelete 
+                  ? `Êtes-vous sûr de vouloir supprimer les ${selectedItems.length} élément(s) sélectionné(s) ?` 
+                  : `Êtes-vous sûr de vouloir supprimer cet élément "${itemToDelete}" ?`
+                }
+                <br />
+                Cette action est irréversible.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Annuler
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                  onClick={handleDelete}
+                >
+                  Supprimer
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reminder Modal */}
+      <AnimatePresence>
+        {showReminderModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Envoyer une relance</h3>
+              <p className="text-gray-600 mb-4">
+                Êtes-vous sûr de vouloir envoyer une relance au client concernant le règlement &quot;{itemToRemind}&quot; ?
+              </p>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start">
+                  <FiInfo size={18} className="text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-blue-700">
+                      La relance sera envoyée par e-mail avec un rappel du montant à payer et des instructions de paiement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  onClick={() => setShowReminderModal(false)}
+                >
+                  Annuler
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center"
+                  onClick={handleSendReminder}
+                >
+                  <FiMail size={16} className="mr-2" />
+                  Envoyer la relance
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notification */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            className="fixed bottom-5 right-5 p-4 rounded-lg shadow-lg z-50"
+            style={{
+              background: notification?.type === 'success' 
+                ? 'linear-gradient(to right, #10B981, #059669)' 
+                : notification?.type === 'error'
+                  ? 'linear-gradient(to right, #EF4444, #DC2626)'
+                  : 'linear-gradient(to right, #6366F1, #4F46E5)'
+            }}
+          >
+            <div className="flex items-center text-white">
+              {notification?.type === 'success' ? (
+                <FiCheckCircle className="w-5 h-5 mr-2" />
+              ) : notification?.type === 'error' ? (
+                <FiAlertCircle className="w-5 h-5 mr-2" />
+              ) : (
+                <FiInfo className="w-5 h-5 mr-2" />
+              )}
+              <span>{notification?.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
 }

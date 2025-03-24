@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiUsers, 
   FiSearch, 
@@ -21,7 +21,12 @@ import {
   FiUserCheck,
   // FiUserX,
   FiAward,
-  FiCalendar
+  FiCalendar,
+  FiSend,
+  FiX,
+  FiFileText,
+  FiCreditCard,
+  FiClipboard
 } from 'react-icons/fi';
 
 // Define client interface
@@ -53,6 +58,14 @@ interface Stats {
   lastMonthNewClients: number;
 }
 
+// Define the document types for the modal
+interface DocumentOption {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  description: string;
+}
+
 export default function Clients() {
   // State for filters and search
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -64,6 +77,10 @@ export default function Clients() {
   // State for selected clients (for bulk actions)
   const [selectedClients, setSelectedClients] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState<boolean>(false);
+
+  // State for the send modal
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedClientForModal, setSelectedClientForModal] = useState<Client | null>(null);
 
   // Stats calculations
   const [stats, setStats] = useState<Stats>({
@@ -240,6 +257,40 @@ export default function Clients() {
     }
   ];
 
+  // Document options for the modal
+  const documentOptions: DocumentOption[] = [
+    {
+      id: 'facture',
+      title: 'Envoyer une facture',
+      icon: <FiFileText className="w-6 h-6 text-blue-600" />,
+      description: 'Envoyer une facture standard au client'
+    },
+    {
+      id: 'devis',
+      title: 'Envoyer un devis',
+      icon: <FiClipboard className="w-6 h-6 text-green-600" />,
+      description: 'Envoyer un devis pour une prestation ou des produits'
+    },
+    {
+      id: 'avoir',
+      title: 'Envoyer un avoir',
+      icon: <FiCreditCard className="w-6 h-6 text-purple-600" />,
+      description: 'Émettre un avoir pour un remboursement ou annulation'
+    },
+    {
+      id: 'factureAcompte',
+      title: 'Envoyer une facture d\'acompte',
+      icon: <FiFileText className="w-6 h-6 text-orange-600" />,
+      description: 'Envoyer une facture pour un paiement partiel anticipé'
+    },
+    {
+      id: 'avoirAcompte',
+      title: 'Envoyer un avoir d\'acompte',
+      icon: <FiCreditCard className="w-6 h-6 text-red-600" />,
+      description: 'Émettre un avoir pour un acompte déjà versé'
+    }
+  ];
+
   // Calculate statistics based on client data
   useEffect(() => {
     const activeClients = clients.filter(client => client.statut === 'Actif').length;
@@ -287,6 +338,32 @@ export default function Clients() {
     } else {
       setSelectedClients([...selectedClients, clientId]);
     }
+  };
+
+  // Handler for opening send modal
+  const handleOpenSendModal = (client: Client): void => {
+    setSelectedClientForModal(client);
+    setIsModalOpen(true);
+  };
+
+  // Handler for closing send modal
+  const handleCloseSendModal = (): void => {
+    setIsModalOpen(false);
+    setSelectedClientForModal(null);
+  };
+
+  // Handler for document selection in modal
+  const handleSendDocument = (documentType: string): void => {
+    // Here you would implement the logic to send the document
+    console.log(`Sending ${documentType} to ${selectedClientForModal?.prenom} ${selectedClientForModal?.nom}`);
+    
+    // Close the modal after sending
+    handleCloseSendModal();
+
+    // For demo purposes, we'll just close the modal
+    setTimeout(() => {
+      alert(`${documentType} envoyé à ${selectedClientForModal?.prenom} ${selectedClientForModal?.nom}`);
+    }, 500);
   };
 
   // Filter clients based on search and filter criteria
@@ -698,7 +775,7 @@ export default function Clients() {
                   <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Valeur Due
                   </th>
-                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                     Actions
                   </th>
                 </tr>
@@ -782,6 +859,14 @@ export default function Clients() {
                       </td>
                       <td className="px-2 py-4 text-right text-sm font-medium">
                         <div className="flex justify-end space-x-1">
+                          {/* New Send Button */}
+                          <button 
+                            onClick={() => handleOpenSendModal(client)}
+                            className="p-1.5 text-green-600 hover:text-green-900 hover:bg-green-100 rounded-full transition duration-150" 
+                            title="Envoyer au client"
+                          >
+                            <FiSend size={16} />
+                          </button>
                           <button className="p-1.5 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition duration-150" title="Voir">
                             <FiEye size={16} />
                           </button>
@@ -882,6 +967,14 @@ export default function Clients() {
                   </div>
                   
                   <div className="mt-3 flex justify-end space-x-2">
+                    {/* New Send Button for mobile */}
+                    <button 
+                      onClick={() => handleOpenSendModal(client)}
+                      className="p-2 text-green-600 hover:text-green-900 hover:bg-green-100 rounded-full transition duration-150" 
+                      title="Envoyer au client"
+                    >
+                      <FiSend size={18} />
+                    </button>
                     <button className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition duration-150" title="Voir">
                       <FiEye size={18} />
                     </button>
@@ -938,6 +1031,84 @@ export default function Clients() {
           </nav>
         </div>
       </div>
+
+      {/* Send Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black z-40"
+              onClick={handleCloseSendModal}
+            />
+            
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.3 }}
+              className="fixed inset-0 z-50 overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-center min-h-screen px-4">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-auto overflow-hidden">
+                  {/* Modal Header */}
+                  <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-white">
+                      Envoyer au client: {selectedClientForModal?.prenom} {selectedClientForModal?.nom}
+                    </h3>
+                    <button 
+                      onClick={handleCloseSendModal}
+                      className="text-white hover:bg-white/20 rounded-full p-1 transition"
+                    >
+                      <FiX className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6">
+                    <p className="text-gray-600 mb-4">
+                      Sélectionnez le type de document à envoyer à {selectedClientForModal?.prenom} {selectedClientForModal?.nom}
+                    </p>
+                    
+                    <div className="grid gap-3">
+                      {documentOptions.map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => handleSendDocument(option.title)}
+                          className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition group"
+                        >
+                          <div className="p-3 rounded-lg bg-gray-100 group-hover:bg-white">
+                            {option.icon}
+                          </div>
+                          <div className="ml-4 text-left">
+                            <h4 className="font-medium text-gray-900">{option.title}</h4>
+                            <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="px-6 py-4 bg-gray-50 flex justify-end">
+                    <button 
+                      onClick={handleCloseSendModal}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
