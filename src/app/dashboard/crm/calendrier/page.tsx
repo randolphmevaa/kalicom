@@ -15,32 +15,25 @@ import {
   CheckSquare,
   Search,
   X,
-
   Tag,
   MapPin,
-
   Copy,
   Repeat,
   Trash,
   Edit,
   Move,
   MoreHorizontal,
-
   Zap,
   Share,
   Bell,
-
   AlertCircle,
-
   Paperclip,
   CheckCircle,
-
   Maximize2,
   Minimize2,
   Eye,
   EyeOff,
   Save,
-
   Keyboard,
   Printer
 } from 'lucide-react';
@@ -107,7 +100,6 @@ export default function Calendrier() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
-  // const [showMiniCalendar, setShowMiniCalendar] = useState(false);
   const [dragInfo, setDragInfo] = useState<DragInfo>({
     event: null,
     isDragging: false,
@@ -116,10 +108,8 @@ export default function Calendrier() {
   const [isLoading, setIsLoading] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  // const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [hiddenElements, setHiddenElements] = useState<string[]>([]);
-  // const [isNewEventModalOpen, setIsNewEventModalOpen] = useState(false);
   
   // References
   const dragRef = useRef<HTMLDivElement>(null);

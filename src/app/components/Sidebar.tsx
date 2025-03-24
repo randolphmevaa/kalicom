@@ -2,6 +2,8 @@
 'use client';
 
 import { JSX, useState, useRef, useEffect } from 'react';
+import { PiToolbox } from "react-icons/pi";
+import { IoHomeOutline } from "react-icons/io5";
 import Link from 'next/link';
 import {
   FiChevronsLeft,
@@ -10,6 +12,7 @@ import {
   FiHome,
   FiPhoneOutgoing,
   FiSmartphone,
+  // Chat,
   FiPhoneCall,
   FiBarChart,
   FiMonitor,
@@ -37,6 +40,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { FaEuroSign } from 'react-icons/fa';
+import { CiChat1 } from "react-icons/ci";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -58,6 +62,13 @@ export type MenuSection = {
 };
 
 const sections: Record<string, MenuSection> = {
+  acceuil: {
+    title: 'Acceuil',
+    icon: <IoHomeOutline size={20} className="text-white" />,
+    items: [
+      { name: 'Acceuil', href: '/dashboard/acceuil', icon: <IoHomeOutline size={20} className="text-white" /> },
+    ],
+  },
   pbx: {
     title: 'PBX',
     icon: <FiPhoneCall size={20} className="text-white" />,
@@ -81,6 +92,7 @@ const sections: Record<string, MenuSection> = {
       { name: 'Prospects', href: '/dashboard/crm/prospects', icon: <FiUser size={20} className="text-white" /> },
       { name: 'Importer prospects', href: '/dashboard/crm/importer-prospects', icon: <FiUpload size={20} className="text-white" /> },
       { name: 'Calendrier', href: '/dashboard/crm/calendrier', icon: <FiCalendar size={20} className="text-white" /> },
+      { name: 'Chat', href: '/dashboard/crm/chat', icon: <CiChat1 size={20} className="text-white" /> },
     ],
   },
   clients: {
@@ -161,6 +173,13 @@ const sections: Record<string, MenuSection> = {
     icon: <FiUsers size={20} className="text-white" />,
     items: [
       { name: 'Utilisateurs', href: '/dashboard/utilisateurs', icon: <FiUsers size={20} className="text-white" /> },
+    ],
+  },
+  support: {
+    title: 'Support & Tickets',
+    icon: <PiToolbox size={20} className="text-white" />,
+    items: [
+      { name: 'Support & Tickets', href: '/dashboard/support-tickets', icon: <PiToolbox size={20} className="text-white" /> },
     ],
   },
 };
