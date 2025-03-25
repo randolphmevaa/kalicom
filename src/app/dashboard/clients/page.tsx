@@ -26,8 +26,13 @@ import {
   FiX,
   FiFileText,
   FiCreditCard,
-  FiClipboard
+  FiClipboard,
+  FiChevronRight,
+  FiHome,
+  FiUserPlus,
+  FiStar
 } from 'react-icons/fi';
+import Link from 'next/link';
 
 // Define client interface
 interface Client {
@@ -65,6 +70,28 @@ interface DocumentOption {
   icon: React.ReactNode;
   description: string;
 }
+
+// Updated Breadcrumbs component with navigation
+const Breadcrumbs = ({ items }: { items: string[] }) => (
+  <div className="flex items-center text-sm text-gray-600 mb-6">
+    <FiHome className="mr-2 text-gray-500" />
+    {items.map((item, index) => (
+      <div key={index} className="flex items-center">
+        {index > 0 && <FiChevronRight className="mx-2 text-gray-400" />}
+        {index === items.length - 1 ? (
+          <span className="text-[#004AC8] font-medium">{item}</span>
+        ) : (
+          <Link 
+            href={item === 'Acceuil' ? '/dashboard/acceuil' : `/${item.toLowerCase()}`}
+            className="hover:text-[#004AC8] transition-colors duration-200"
+          >
+            {item}
+          </Link>
+        )}
+      </div>
+    ))}
+  </div>
+);
 
 export default function Clients() {
   // State for filters and search
@@ -414,28 +441,85 @@ export default function Clients() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-20 min-h-screen"
+      className="min-h-screen bg-gray-50"
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-12">
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={['Accueil', 'Clients']} />
+
         {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
-          <div>
-            <motion.h1
-              initial={{ y: -20 }}
-              animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
-              style={{ color: "#1B0353" }}
-            >
-              Clients
-            </motion.h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Gérez votre base de clients et leurs informations
-            </p>
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
+        >
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/10 via-white/70 to-indigo-400/10 rounded-3xl pointer-events-none" />
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <FiUsers className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-indigo-500">
+                    Clients
+                  </h1>
+                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Gérez votre base de clients et leurs informations. Consultez l&apos;historique des interactions et des transactions pour chaque client.
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-4">
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center px-4 py-2.5 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium bg-gradient-to-r from-indigo-700 to-indigo-500"
+                >
+                  <FiUserPlus className="mr-2" />
+                  <span>Ajouter un client</span>
+                </motion.button>
+                
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all font-medium"
+                >
+                  <FiFilter className="mr-2" style={{ color: "#1B0353" }} />
+                  <span>Filtrer</span>
+                </motion.button>
+              </div>
+            </div>
+            
+            {/* Quick tip */}
+            <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiStar className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Étiquetez vos clients par catégorie pour faciliter la segmentation et les campagnes marketing ciblées.
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <FiUsers className="w-6 h-6 text-indigo-600" />
-          </div>
-        </div>
+        </motion.div>
 
         {/* Statistics Boxes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -887,10 +887,10 @@ export default function AccueilDashboard() {
   const [timeRange, setTimeRange] = useState('today');
   const [taskView, setTaskView] = useState('board'); // 'list' or 'board'
   const [darkMode, setDarkMode] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [showNotifications ] = useState(false);
   const [notifications, setNotifications] = useState(notificationsData);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isSearchActive ] = useState(false);
   
   // Calculate summary statistics
   const totalCalls = callData.reduce((sum, item) => sum + item.appels, 0);
@@ -1082,27 +1082,7 @@ export default function AccueilDashboard() {
                     </motion.button>
                     
                     <div className="relative">
-                        <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setShowNotifications(!showNotifications)}
-                        className={`p-3 rounded-xl transition-all shadow-md ${
-                            darkMode 
-                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                        >
-                        <FiBell className="w-5 h-5" />
-                        {unreadNotifications > 0 && (
-                            <motion.div 
-                            initial={{ scale: 0.5 }}
-                            animate={{ scale: 1 }}
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                            >
-                            {unreadNotifications}
-                            </motion.div>
-                        )}
-                        </motion.button>
+
                         
                         <AnimatePresence>
                         {showNotifications && (
@@ -1271,28 +1251,6 @@ export default function AccueilDashboard() {
                 {/* Global Search & Quick Links */}
                 <div className="flex flex-wrap justify-between items-center mt-8 gap-y-4">
                 <div className="relative">
-                    <div className={`flex items-center rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${
-                    isSearchActive 
-                        ? darkMode 
-                        ? 'bg-gray-700 w-80' 
-                        : 'bg-white w-80' 
-                        : darkMode 
-                        ? 'bg-gray-800/80 w-64' 
-                        : 'bg-white/80 w-64'
-                    }`}>
-                    <div className="p-3 text-gray-400">
-                        <FiSearch className="w-5 h-5" />
-                    </div>
-                    <input 
-                        type="text" 
-                        placeholder="Rechercher..." 
-                        className={`flex-1 py-3 pr-4 text-sm border-none focus:ring-0 ${
-                        darkMode ? 'bg-transparent text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'
-                        }`}
-                        onFocus={() => setIsSearchActive(true)}
-                        onBlur={() => setIsSearchActive(false)}
-                    />
-                    </div>
                     
                     <AnimatePresence>
                     {isSearchActive && (

@@ -19,6 +19,7 @@ import {
   FiFilter,
   FiFlag,
   FiHelpCircle,
+  FiHome,
   FiImage,
   FiInfo,
   FiList,
@@ -37,6 +38,7 @@ import {
   FiVideo,
   FiX
 } from "react-icons/fi";
+import Link from "next/link";
 
 /** -----------------------------
  *  Define TypeScript interfaces
@@ -945,6 +947,28 @@ export default function SupportTicketsPage() {
     setTickets(updatedTickets);
     setSelectedTicket(updatedTicket);
   };
+
+  // Breadcrumbs component
+const Breadcrumbs = ({ items }: { items: string[] }) => (
+  <div className="flex items-center text-sm text-gray-600 mb-6">
+    <FiHome className="mr-2 text-gray-500" />
+    {items.map((item, index) => (
+      <div key={index} className="flex items-center">
+        {index > 0 && <FiChevronRight className="mx-2 text-gray-400" />}
+        {index === items.length - 1 ? (
+          <span className="text-[#004AC8] font-medium">{item}</span>
+        ) : (
+          <Link 
+            href={item === 'Acceuil' ? '/dashboard/acceuil' : `/${item.toLowerCase()}`}
+            className="hover:text-[#004AC8] transition-colors duration-200"
+          >
+            {item}
+          </Link>
+        )}
+      </div>
+    ))}
+  </div>
+);
   
   const handleAssignTicket = (userId: string) => {
     if (!selectedTicket) return;
@@ -981,12 +1005,31 @@ export default function SupportTicketsPage() {
       });
     }
   };
+
+  // Animation variants for the header
+  const headerVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { ease: 'easeOut', duration: 0.6 } 
+    }
+  };
+
+  const statsCardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { type: "spring", stiffness: 300, damping: 30 } 
+    }
+  };
   
   // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.3 } }
-  };
+  // const fadeIn = {
+  //   hidden: { opacity: 0 },
+  //   visible: { opacity: 1, transition: { duration: 0.3 } }
+  // };
   
   const slideIn = {
     hidden: { x: 30, opacity: 0 },
@@ -1026,138 +1069,189 @@ export default function SupportTicketsPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-8xl mx-auto h-screen flex flex-col pt-16">
-        {/* Page Header */}
-        <div className="bg-white px-6 py-5 shadow-sm border-b border-gray-200 rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Gestion des Tickets Support</h1>
-              <p className="text-gray-500 text-sm">Gérez et suivez tous vos tickets de support client</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowCreateTicketModal(true)}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#1B0353] to-[#004AC8] text-white rounded-lg shadow-md flex items-center font-medium transition duration-200 ease-in-out hover:shadow-lg"
-              >
-                <FiPlus className="mr-2" />
-                <span>Créer un ticket</span>
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200 ease-in-out"
-              >
-                <FiRefreshCw className="w-5 h-5" />
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200 ease-in-out relative"
-              >
-                <FiBell className="w-5 h-5" />
-                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-              </motion.button>
-
-            </div>
-          </div>
+        {/* Breadcrumbs positioned higher for better visibility */}
+        <div className="px-6 py-6">
+          <Breadcrumbs items={['Acceuil', 'Gestion des Tickets Support']} />
         </div>
         
-        {/* Dashboard & Stats */}
-        <div className="px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
-          <div className="grid grid-cols-5 gap-5">
-            <motion.div 
-              variants={fadeIn}
-              initial="hidden"
-              animate="visible"
-              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Total tickets</p>
-                  <h3 className="text-2xl font-bold text-gray-900">{ticketStats.total}</h3>
+        {/* Enhanced Header with integrated stats */}
+        <motion.div
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+          className="relative mx-6 mb-4 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-xl border border-gray-100"
+        >
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-[#004AC8]/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#4BB2F6]/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="absolute inset-0 bg-gradient-to-br from-[#004AC8]/10 via-white/70 to-[#4BB2F6]/10 rounded-3xl pointer-events-none" />
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-[#004AC8]/10 rounded-lg">
+                    <FiMessageCircle className="w-6 h-6 text-[#004AC8]" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#1B0353] to-[#4BB2F6]">
+                    Gestion des Tickets Support
+                  </h1>
+                  <span className="px-2 py-1 text-xs font-medium text-[#004AC8] bg-[#004AC8]/10 rounded-full">
+                    {ticketStats.total} tickets
+                  </span>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <FiList className="w-6 h-6 text-purple-600" />
-                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Gérez et suivez tous vos tickets de support client. Visualisez leur progression et assignez les demandes à votre équipe pour une résolution efficace.
+                </p>
               </div>
-            </motion.div>
+              
+              <div className="flex items-center space-x-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowCreateTicketModal(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#1B0353] to-[#004AC8] text-white rounded-lg shadow-md flex items-center font-medium transition duration-200 ease-in-out hover:shadow-lg"
+                >
+                  <FiPlus className="mr-2" />
+                  <span>Créer un ticket</span>
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200 ease-in-out"
+                >
+                  <FiRefreshCw className="w-5 h-5" />
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200 ease-in-out relative"
+                >
+                  <FiBell className="w-5 h-5" />
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                </motion.button>
+              </div>
+            </div>
             
-            <motion.div 
-              variants={fadeIn}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.1 }}
-              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Nouveaux</p>
-                  <h3 className="text-2xl font-bold text-blue-600">{ticketStats.new}</h3>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <FiPaperclip className="w-6 h-6 text-blue-600" />
-                </div>
+            {/* Quick tip */}
+            <div className="mb-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiInfo className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Filtrez les tickets par statut ou priorité pour une gestion plus efficace. Les tickets urgents nécessitent une attention immédiate pour respecter les SLAs.
+                </span>
               </div>
-            </motion.div>
-            
-            <motion.div 
-              variants={fadeIn}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.2 }}
-              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">En cours</p>
-                  <h3 className="text-2xl font-bold text-purple-600">{ticketStats.inProgress}</h3>
+            </div>
+
+            {/* Integrated Stats Cards in Header */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+              <motion.div 
+                variants={statsCardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: 0 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Total tickets</p>
+                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">{ticketStats.total}</h3>
+                  </div>
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <FiList className="w-5 h-5 text-purple-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <FiRefreshCw className="w-6 h-6 text-purple-600" />
+              </motion.div>
+              
+              <motion.div 
+                variants={statsCardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: 0.1 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Nouveaux</p>
+                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-blue-700">{ticketStats.new}</h3>
+                  </div>
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FiPaperclip className="w-5 h-5 text-blue-600" />
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              variants={fadeIn}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.3 }}
-              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Urgents</p>
-                  <h3 className="text-2xl font-bold text-red-600">{ticketStats.urgent}</h3>
+              </motion.div>
+              
+              <motion.div 
+                variants={statsCardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: 0.2 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">En cours</p>
+                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-purple-700">{ticketStats.inProgress}</h3>
+                  </div>
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <FiRefreshCw className="w-5 h-5 text-purple-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <FiAlertCircle className="w-6 h-6 text-red-600" />
+              </motion.div>
+              
+              <motion.div 
+                variants={statsCardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: 0.3 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Urgents</p>
+                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-700">{ticketStats.urgent}</h3>
+                  </div>
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <FiAlertCircle className="w-5 h-5 text-red-600" />
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              variants={fadeIn}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.4 }}
-              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Non assignés</p>
-                  <h3 className="text-2xl font-bold text-yellow-600">{ticketStats.unassigned}</h3>
+              </motion.div>
+              
+              <motion.div 
+                variants={statsCardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: 0.4 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Non assignés</p>
+                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-600">{ticketStats.unassigned}</h3>
+                  </div>
+                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <FiHelpCircle className="w-5 h-5 text-yellow-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <FiHelpCircle className="w-6 h-6 text-yellow-600" />
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
-        </div>
+        </motion.div>
         
         {/* Main Content Area */}
         <div className="flex-1 px-6 py-4 flex overflow-hidden">

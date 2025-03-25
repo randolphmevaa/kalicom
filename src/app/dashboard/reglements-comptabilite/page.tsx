@@ -31,10 +31,14 @@ import {
   FiChevronsRight,
   FiSliders,
   FiClock,
-  FiMail
+  FiMail,
+  FiHome,
+  FiChevronRight,
+  FiCreditCard
 } from 'react-icons/fi';
 import { BarChart, Bar, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { FaEuroSign } from 'react-icons/fa';
+import Link from 'next/link';
 
 /** Interface for the notification object */
 interface NotificationState {
@@ -80,6 +84,28 @@ interface Echeance {
 // Define a type for possible sort values
 type SortValueType = string | number | boolean | undefined;
 
+// Updated Breadcrumbs component with navigation
+const Breadcrumbs = ({ items }: { items: string[] }) => (
+  <div className="flex items-center text-sm text-gray-600 mb-6">
+    <FiHome className="mr-2 text-gray-500" />
+    {items.map((item, index) => (
+      <div key={index} className="flex items-center">
+        {index > 0 && <FiChevronRight className="mx-2 text-gray-400" />}
+        {index === items.length - 1 ? (
+          <span className="text-[#004AC8] font-medium">{item}</span>
+        ) : (
+          <Link 
+            href={item === 'Acceuil' ? '/dashboard/acceuil' : `/${item.toLowerCase()}`}
+            className="hover:text-[#004AC8] transition-colors duration-200"
+          >
+            {item}
+          </Link>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
 export default function ReglementsEcheancier() {
   // State for active tab, filters, and search
   const [activeTab, setActiveTab] = useState<"reglements" | "echeancier">("reglements");
@@ -112,6 +138,29 @@ export default function ReglementsEcheancier() {
   // New modal state for reminder
   const [showReminderModal, setShowReminderModal] = useState<boolean>(false);
   const [itemToRemind, setItemToRemind] = useState<string | null>(null);
+  // const primaryGradient = 'linear-gradient(to right, #004AC8, #4BB2F6)';
+  // const secondaryColor = '#004AC8';
+  
+  // Custom notification function
+  // const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage]  = useState('');
+  const [notificationType ] = useState('info');
+  
+  // const displayNotification = (message, type = 'info') => {
+  //   setNotificationMessage(message);
+  //   setNotificationType(type);
+  //   setShowNotification(true);
+    
+  //   setTimeout(() => {
+  //     setShowNotification(false);
+  //   }, 3000);
+  // };
+
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 }
+  };
 
   // Check for scroll position
   useEffect(() => {
@@ -819,48 +868,121 @@ export default function ReglementsEcheancier() {
       </div>
 
       <div className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-12">
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="p-6 bg-white rounded-2xl shadow-xl overflow-hidden relative"
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-full opacity-70"></div>
-          <div className="relative">
-            <div className="flex items-center mb-2">
-              <h1 className="text-3xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: primaryGradient }}>
-                Règlements & Échéancier
-              </h1>
-            </div>
-            <p className="text-gray-600 max-w-2xl">
-              Gérez efficacement vos règlements clients et votre échéancier de paiements. Suivez l&apos;état de vos encaissements et planifiez vos revenus futurs.
-            </p>
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+        className=""
+      >
+        <div className="">
+          {/* Breadcrumbs */}
+          <Breadcrumbs items={['Acceuil', 'Règlements & Échéancier']} />
+          
+          {/* Header */}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
+          >
+            {/* Background gradient with pattern */}
+            <div 
+              className="absolute inset-0 opacity-5 mix-blend-overlay"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                backgroundSize: '30px 30px'
+              }}
+            />
             
-            <div className="flex flex-wrap gap-4 mt-4">
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center px-4 py-2.5 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
-                style={{ background: primaryGradient }}
-                onClick={() => displayNotification('Synchronisation des données en cours...', 'info')}
-              >
-                <FiRefreshCw className="mr-2" />
-                <span>Synchroniser les données</span>
-              </motion.button>
+            {/* Blurred circles for decoration */}
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-[#004AC8]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#4BB2F6]/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div className="absolute inset-0 bg-gradient-to-br from-[#004AC8]/10 via-white/70 to-[#4BB2F6]/10 rounded-3xl pointer-events-none" />
+
+            <div className="relative p-8 z-10">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+                <div className="max-w-2xl">
+                  {/* Title with decorative elements */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-[#004AC8]/10 rounded-lg">
+                      <FaEuroSign className="w-6 h-6 text-[#004AC8]" />
+                    </div>
+                    <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#1B0353] to-[#4BB2F6]">
+                      Règlements & Échéancier
+                    </h1>
+                  </div>
+                  
+                  <p className="text-base text-gray-600 leading-relaxed">
+                    Gérez efficacement vos règlements clients et votre échéancier de paiements. Suivez l&apos;état de vos encaissements et planifiez vos revenus futurs.
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap gap-4">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="inline-flex items-center px-4 py-2.5 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+                    style={{ background: primaryGradient }}
+                    onClick={() => displayNotification('Synchronisation des données en cours...', 'info')}
+                  >
+                    <FiRefreshCw className="mr-2" />
+                    <span>Synchroniser les données</span>
+                  </motion.button>
+                  
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all font-medium"
+                    onClick={() => displayNotification('Rapports financiers générés avec succès', 'success')}
+                  >
+                    <FiFileText className="mr-2" style={{ color: secondaryColor }} />
+                    <span>Exporter les rapports</span>
+                  </motion.button>
+                </div>
+              </div>
               
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
-                onClick={() => displayNotification('Rapports financiers générés avec succès', 'success')}
-              >
-                <FiFileText className="mr-2" style={{ color: secondaryColor }} />
-                <span>Exporter les rapports</span>
-              </motion.button>
+              {/* Quick tip */}
+              <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+                <FiCreditCard className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                  <span className="text-amber-700">
+                    Utilisez les filtres pour afficher uniquement les transactions de la période souhaitée. Les règlements sont automatiquement mis à jour chaque jour à minuit.
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+          
+          {/* Notification toast */}
+          {showNotification && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className={`fixed bottom-5 right-5 ${
+                notificationType === 'success' ? 'bg-green-100 border-green-200' : 
+                notificationType === 'error' ? 'bg-red-100 border-red-200' : 
+                'bg-blue-100 border-blue-200'
+              } rounded-xl p-4 shadow-lg max-w-md z-50 flex items-center border`}
+            >
+              <div className="flex-shrink-0 mr-3">
+                {notificationType === 'success' ? (
+                  <div className="w-5 h-5 text-green-600">✓</div>
+                ) : notificationType === 'error' ? (
+                  <div className="w-5 h-5 text-red-600">✗</div>
+                ) : (
+                  <FiRefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+                )}
+              </div>
+              <div>
+                <p className="font-medium text-gray-800">{notificationMessage}</p>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
 
         {/* Main Content with modified layout */}
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
