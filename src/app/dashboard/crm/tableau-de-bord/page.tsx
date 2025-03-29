@@ -17,9 +17,9 @@ import {
 } from 'recharts';
 import { 
   FiCalendar, 
-  FiPhoneCall, 
-  FiClipboard, 
-  FiClock, 
+  // FiPhoneCall, 
+  // FiClipboard, 
+  // FiClock, 
   FiUserPlus, 
   FiAward, 
   FiFileText,
@@ -35,11 +35,17 @@ import {
   FiDollarSign,
   FiUsers,
   FiBarChart2,
-  FiAlertCircle,
+  // FiAlertCircle,
   FiBriefcase,
   FiCheck,
   FiX,
+  // FiMapPin,
+  // FiUser,
+  // FiInfo,
 } from 'react-icons/fi';
+// import { useState } from 'react';
+import EventsComponent from './EventsComponent';
+
 
 const prospectData = [
   { name: 'Jan', prospects: 30, leads: 20, clients: 10 },
@@ -50,12 +56,69 @@ const prospectData = [
   { name: 'Jun', prospects: 90, leads: 60, clients: 45 },
 ];
 
-const eventsData = [
-  { type: 'Appel', time: '09:30', contact: 'Marie Dupont', status: 'À venir', priority: 'Haute' },
-  { type: 'Tâche', time: '11:00', contact: 'Jean Martin', status: 'À venir', priority: 'Moyenne' },
-  { type: 'Rendez-vous', time: '14:30', contact: 'Sophie Leclerc', status: 'À venir', priority: 'Haute' },
-  { type: 'Appel', time: '16:00', contact: 'Thomas Bernard', status: 'À venir', priority: 'Basse' },
-];
+// Enhanced event data with more details
+// const eventsData = [
+//   { 
+//     id: 1,
+//     type: 'Appel', 
+//     time: '09:30', 
+//     contact: 'Marie Dupont', 
+//     status: 'À venir', 
+//     priority: 'Haute',
+//     description: 'Suivi de la proposition commerciale récemment envoyée. Discuter des points spécifiques concernant la tarification.',
+//     assignedTo: 'Thomas',
+//     phoneNumber: '+33 6 12 34 56 78',
+//     company: 'Acme Corp',
+//     notes: 'La cliente a demandé des précisions sur nos services premium'
+//   },
+//   { 
+//     id: 2,
+//     type: 'Tâche', 
+//     time: '11:00', 
+//     contact: 'Jean Martin', 
+//     status: 'À venir', 
+//     priority: 'Moyenne',
+//     description: 'Préparer et envoyer la documentation technique pour le nouveau produit',
+//     assignedTo: 'Sophie',
+//     dueDate: '28/03/2025',
+//     subtasks: [
+//       'Finaliser les spécifications techniques',
+//       'Créer les PDF de présentation',
+//       'Envoyer par email avec suivi de lecture'
+//     ],
+//     company: 'Nexus Tech'
+//   },
+//   { 
+//     id: 3,
+//     type: 'Rendez-vous', 
+//     time: '14:30', 
+//     contact: 'Sophie Leclerc', 
+//     status: 'À venir', 
+//     priority: 'Haute',
+//     description: 'Présentation du prototype et démonstration des nouvelles fonctionnalités',
+//     assignedTo: 'Marc',
+//     location: '15 Rue de la Paix, 75002 Paris',
+//     duration: '1h30',
+//     participants: ['Marc', 'Julie', 'Sophie Leclerc', 'Alexandre Leclerc'],
+//     company: 'Zenith SA',
+//     materials: 'Ordinateur portable, projecteur, documents imprimés',
+//     clientInfo: 'Directrice des opérations, intéressée par notre solution enterprise'
+//   },
+//   { 
+//     id: 4,
+//     type: 'Appel', 
+//     time: '16:00', 
+//     contact: 'Thomas Bernard', 
+//     status: 'À venir', 
+//     priority: 'Basse',
+//     description: 'Première prise de contact suite à sa demande d\'information via notre site web',
+//     assignedTo: 'Léa',
+//     phoneNumber: '+33 7 98 76 54 32',
+//     company: 'Startup Innovante',
+//     leadSource: 'Formulaire de contact site web',
+//     interests: 'Solution de gestion pour petite entreprise'
+//   },
+// ];
 
 const notesData = [
   { time: '08:45', text: 'Suivi nécessaire avec client Acme Corp', author: 'Léa', avatar: '/api/placeholder/30/30' },
@@ -602,108 +665,7 @@ export default function CRMTableauDeBord() {
           </motion.div>
 
           {/* Événements du jour */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            whileHover={{ y: -5 }}
-            className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl relative overflow-hidden"
-          >
-            {/* Subtle gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white -z-10"></div>
-            
-            {/* Subtle pattern overlay */}
-            <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#000_1px,transparent_1px)]" 
-              style={{ backgroundSize: '20px 20px' }}></div>
-            
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center space-x-3">
-                <CircleStat icon={<FiClock />} color="#3B82F6" size="sm" />
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Événements du jour</span>
-                  <div className="text-gray-500 text-xs">4 événements programmés</div>
-                </div>
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 p-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                <FiPlusCircle className="w-3.5 h-3.5" />
-                Ajouter
-              </motion.button>
-            </div>
-            
-            <div className="mt-4 space-y-3">
-              {eventsData.map((event, index) => (
-                <motion.div 
-                  key={index} 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={{ scale: 1.02, x: 5 }}
-                  className="flex items-start p-3 rounded-lg hover:bg-blue-50/50 transition-all border border-gray-100 shadow-sm hover:shadow-md"
-                >
-                  <div className={`p-2 rounded-lg mr-3 ${
-                    event.type === 'Appel' ? 'bg-indigo-100' : 
-                    event.type === 'Tâche' ? 'bg-amber-100' : 'bg-blue-100'
-                  }`}>
-                    {event.type === 'Appel' ? (
-                      <FiPhoneCall className="w-4 h-4 text-indigo-600" />
-                    ) : event.type === 'Tâche' ? (
-                      <FiClipboard className="w-4 h-4 text-amber-600" />
-                    ) : (
-                      <FiCalendar className="w-4 h-4 text-blue-600" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium text-gray-800">{event.type}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">{event.time}</span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                          event.priority === 'Haute' ? 'bg-red-100 text-red-700' : 
-                          event.priority === 'Moyenne' ? 'bg-amber-100 text-amber-700' : 
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {event.priority}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-700 mt-1 font-medium">{event.contact}</p>
-                    <div className="flex justify-end mt-2 gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="p-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                      >
-                        <FiCheck className="w-3.5 h-3.5" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="p-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
-                      >
-                        <FiAlertCircle className="w-3.5 h-3.5" />
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            
-            {/* Add subtle divider */}
-            <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-              <motion.button
-                whileHover={{ x: 5 }}
-                whileTap={{ x: -2 }}
-                className="text-xs text-blue-600 font-medium flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
-              >
-                Voir tous les événements <FiChevronRight className="w-3 h-3" />
-              </motion.button>
-            </div>
-          </motion.div>
+          <EventsComponent />
         </div>
 
         {/* Third row */}

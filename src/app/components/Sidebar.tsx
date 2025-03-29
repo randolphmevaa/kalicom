@@ -2,8 +2,13 @@
 'use client';
 
 import { JSX, useState, useRef, useEffect } from 'react';
+import { FaGoogleDrive } from "react-icons/fa6";
 import { PiToolbox } from "react-icons/pi";
+import { RiWhatsappFill } from "react-icons/ri";
+import { BiLogoGmail } from "react-icons/bi";
 import { IoHomeOutline } from "react-icons/io5";
+import { IoApps } from "react-icons/io5";
+import { IoIosChatboxes } from "react-icons/io";
 import Link from 'next/link';
 import {
   FiChevronsLeft,
@@ -40,7 +45,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { FaEuroSign } from 'react-icons/fa';
-import { CiChat1 } from "react-icons/ci";
+// import { CiChat1 } from "react-icons/ci";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -91,8 +96,15 @@ const sections: Record<string, MenuSection> = {
       { name: 'Tableau de bord', href: '/dashboard/crm/tableau-de-bord', icon: <FiHome size={20} className="text-white" /> },
       { name: 'Prospects', href: '/dashboard/crm/prospects', icon: <FiUser size={20} className="text-white" /> },
       { name: 'Importer prospects', href: '/dashboard/crm/importer-prospects', icon: <FiUpload size={20} className="text-white" /> },
-      { name: 'Calendrier', href: '/dashboard/crm/calendrier', icon: <FiCalendar size={20} className="text-white" /> },
-      { name: 'Chat', href: '/dashboard/crm/chat', icon: <CiChat1 size={20} className="text-white" /> },
+      // { name: 'Agenda', href: '/dashboard/crm/calendrier', icon: <FiCalendar size={20} className="text-white" /> },
+      { name: 'Chat', href: '/dashboard/crm/chat', icon: <IoIosChatboxes size={20} className="text-white" /> },
+    ],
+  },
+  agenda: {
+    title: 'Agenda',
+    icon: <FiCalendar size={20} className="text-white" />,
+    items: [
+      { name: 'Agenda', href: '/dashboard/crm/calendrier', icon: <FiCalendar size={20} className="text-white" /> },
     ],
   },
   clients: {
@@ -107,6 +119,17 @@ const sections: Record<string, MenuSection> = {
     icon: <FiBox size={20} className="text-white" />,
     items: [
       { name: 'Produits', href: '/dashboard/produits', icon: <FiBox size={20} className="text-white" /> },
+    ],
+  },
+  applications: {
+    title: 'Applications',
+    icon: <IoApps size={20} className="text-white" />,
+    items: [
+      { name: 'Whatsapp', href: '/dashboard/applications/whatsapp', icon: <RiWhatsappFill size={20} className="text-white" /> },
+      { name: 'Gmail', href: '/dashboard/applications/gmail', icon: <BiLogoGmail size={20} className="text-white" /> },
+      { name: 'Drive', href: '/dashboard/applications/drive', icon: <FaGoogleDrive size={20} className="text-white" /> },
+      // { name: 'Facebook Ads', href: '/dashboard/applications/factures-acompte', icon: <FiFileText size={20} className="text-white" /> },
+      // { name: 'Avoir d’acompte', href: '/dashboard/applications/avoirs-acompte', icon: <FiFile size={20} className="text-white" /> },
     ],
   },
   documents_ventes: {

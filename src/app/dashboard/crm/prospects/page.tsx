@@ -1,26 +1,25 @@
-"use client";
-import React, { useState } from "react";
+'use client';
+
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   FiSearch,
   FiPlus,
   FiFilter,
   FiCalendar,
   FiChevronDown,
+  FiChevronUp,
   FiRefreshCw,
   FiCheckSquare,
   FiSquare,
-  // FiMoreVertical,
   FiTag,
   FiUser,
   FiDownload,
-  // FiFileText,
   FiMail,
   FiPhone,
   FiMapPin,
   FiBriefcase,
-  // FiClock,
-  // FiStar,
   FiGrid,
   FiList,
   FiEdit,
@@ -31,7 +30,8 @@ import {
   FiArrowRight,
   FiBarChart2,
   FiUserCheck,
-  FiCheck
+  FiCheck,
+  FiFileText
 } from "react-icons/fi";
 
 /** -----------------------------
@@ -73,12 +73,6 @@ interface FieldOption {
   label: string;
   checked: boolean;
 }
-
-// interface PropertyOption {
-//   id: string;
-//   label: string;
-//   checked: boolean;
-// }
 
 /** -----------------------------
  *  Sample Data
@@ -212,15 +206,6 @@ const fieldOptions: FieldOption[] = [
   { id: "lastContactDate", label: "Dernier contact", checked: true },
 ];
 
-// const propertyOptions: PropertyOption[] = [
-//   { id: "tags", label: "Tags", checked: true },
-//   { id: "leadId", label: "Lead ID", checked: true },
-//   { id: "assignedTo", label: "Assigné à", checked: true },
-//   { id: "createdAt", label: "Créé le", checked: true },
-//   { id: "updatedAt", label: "Mis à jour le", checked: false },
-//   { id: "action", label: "Action", checked: true },
-// ];
-
 // Tag color mapping with brand colors (fixed with index signature)
 const tagColors: { [key: string]: string } = {
   "VIP": "#1B0353",
@@ -240,6 +225,7 @@ export default function ProspectPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [phoneSearch, setPhoneSearch] = useState<string>("");
   const [tagSearch, setTagSearch] = useState<string>("");
+  // const [showDetailedView, setShowDetailedView] = useState<boolean>(false);
   const [dateFilter, setDateFilter] = useState<string>("");
   const [selectedAssignee, setSelectedAssignee] = useState<string | null>(null);
   const [selectedFilterModel, setSelectedFilterModel] = useState<string | null>(null);
@@ -257,9 +243,28 @@ export default function ProspectPage() {
   const [showTeamDropdown, setShowTeamDropdown] = useState<boolean>(false);
   const [showFilterModelsDropdown, setShowFilterModelsDropdown] = useState<boolean>(false);
   const [selectedFields, setSelectedFields] = useState<FieldOption[]>(fieldOptions);
-  // const [selectedProperties, setSelectedProperties] = useState<PropertyOption[]>(propertyOptions);
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  
+  // New state for export dropdown
+  const [showExportDropdown, setShowExportDropdown] = useState<boolean>(false);
+  // State to check if dropdown should be positioned above button
+  const [showAbove, setShowAbove] = useState<boolean>(false);
+  
+  // Refs for checking position
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Check dropdown position when showing export dropdown
+  useEffect(() => {
+    if (showExportDropdown && exportButtonRef.current) {
+      const buttonRect = exportButtonRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const spaceBelow = windowHeight - buttonRect.bottom;
+      
+      // If space below button is less than 150px, show dropdown above
+      setShowAbove(spaceBelow < 150);
+    }
+  }, [showExportDropdown]);
 
   /** -----------------------------
    *  Handlers
@@ -283,6 +288,18 @@ export default function ProspectPage() {
       alert(`${prospect.firstName} ${prospect.lastName} a été converti en client avec succès!`);
     }
   };
+
+//   // Function to open detailed view
+// const openDetailedView = () => {
+//   if (selectedProspect) {
+//     setShowDetailedView(true);
+//   }
+// };
+
+// // Function to close detailed view
+// const closeDetailedView = () => {
+//   setShowDetailedView(false);
+// };
 
   // Toggle all rows
   const handleSelectAll = () => {
@@ -324,16 +341,6 @@ export default function ProspectPage() {
     );
     setSelectedFields(updatedFields);
   };
-
-  // Toggle a property's `checked` value
-  // const toggleProperty = (propertyId: string) => {
-  //   const updatedProperties = selectedProperties.map((property) =>
-  //     property.id === propertyId
-  //       ? { ...property, checked: !property.checked }
-  //       : property
-  //   );
-  //   setSelectedProperties(updatedProperties);
-  // };
 
   // Apply filters
   const applyFilters = () => {
@@ -419,23 +426,25 @@ export default function ProspectPage() {
       console.error("Erreur lors de l'export CSV:", error);
     } finally {
       setIsExporting(false);
+      setShowExportDropdown(false);
     }
   };
   
   // Export to PDF
-  // const exportToPDF = () => {
-  //   setIsExporting(true);
+  const exportToPDF = () => {
+    setIsExporting(true);
     
-  //   try {
-  //     alert("Fonctionnalité d'export PDF à implémenter avec une bibliothèque comme jsPDF");
-  //     // En production, utilisez une bibliothèque comme jsPDF pour générer un PDF
+    try {
+      alert("Fonctionnalité d'export PDF à implémenter avec une bibliothèque comme jsPDF");
+      // En production, utilisez une bibliothèque comme jsPDF pour générer un PDF
       
-  //   } catch (error) {
-  //     console.error("Erreur lors de l'export PDF:", error);
-  //   } finally {
-  //     setIsExporting(false);
-  //   }
-  // };
+    } catch (error) {
+      console.error("Erreur lors de l'export PDF:", error);
+    } finally {
+      setIsExporting(false);
+      setShowExportDropdown(false);
+    }
+  };
 
   // Get the initials of a person
   const getInitials = (firstName: string, lastName: string) => {
@@ -483,17 +492,6 @@ export default function ProspectPage() {
       transition: { duration: 0.3, ease: "easeInOut" }
     }
   };
-  
-  // Animation variants for staggered children
-  // const containerVariants = {
-  //   hidden: { opacity: 0 },
-  //   visible: { 
-  //     opacity: 1,
-  //     transition: {
-  //       staggerChildren: 0.08
-  //     }
-  //   }
-  // };
 
   // Pagination variables
   const itemsPerPage = 6;
@@ -507,7 +505,7 @@ export default function ProspectPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen"
+      className="min-h-screen bg-gray-50"
     >
       {/* Add additional top padding to account for fixed navbar */}
       <div className="max-w-7xl mx-auto px-4 py-6 pt-24">
@@ -666,16 +664,55 @@ export default function ProspectPage() {
                 </motion.button>
               </div>
               
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={exportToCSV}
-                disabled={isExporting}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#4BB2F6] to-[#004AC8] text-white rounded-lg shadow-sm hover:shadow transition text-sm font-medium"
-              >
-                <FiDownload className="w-4 h-4" />
-                <span>Exporter</span>
-              </motion.button>
+              {/* Export dropdown button with position control */}
+              <div className="relative">
+                <motion.button
+                  ref={exportButtonRef}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowExportDropdown(!showExportDropdown)}
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#4BB2F6] to-[#004AC8] text-white rounded-lg shadow-sm hover:shadow transition text-sm font-medium"
+                >
+                  <FiDownload className="w-4 h-4" />
+                  <span>Exporter</span>
+                  {showExportDropdown ? (
+                    <FiChevronUp className="w-4 h-4" />
+                  ) : (
+                    <FiChevronDown className="w-4 h-4" />
+                  )}
+                </motion.button>
+                
+                <AnimatePresence>
+                  {showExportDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: showAbove ? -10 : 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: showAbove ? -10 : 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className={`absolute z-20 ${showAbove ? 'bottom-full mb-2' : 'top-full mt-2'} right-0 w-40 bg-white border border-[#4BB2F6] border-opacity-30 rounded-xl shadow-xl overflow-hidden`}
+                      style={{ boxShadow: "0 10px 25px -5px rgba(27, 3, 83, 0.1), 0 8px 10px -6px rgba(27, 3, 83, 0.08)" }}
+                    >
+                      <motion.button
+                        whileHover={{ backgroundColor: "rgba(75, 178, 246, 0.1)" }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-[#004AC8] text-sm font-medium text-left hover:bg-blue-50"
+                        onClick={exportToCSV}
+                      >
+                        <FiDownload className="w-4 h-4" />
+                        <span>Exporter en CSV</span>
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ backgroundColor: "rgba(75, 178, 246, 0.1)" }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-[#004AC8] text-sm font-medium text-left hover:bg-blue-50"
+                        onClick={exportToPDF}
+                      >
+                        <FiFileText className="w-4 h-4" />
+                        <span>Exporter en PDF</span>
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -742,7 +779,7 @@ export default function ProspectPage() {
           </div>
         </motion.div>
 
-        {/* Filters Panel (Collapsible) with glass effect */}
+        {/* Filters Panel (Collapsible) with glass effect - Make it scrollable if needed */}
         <AnimatePresence>
           {isFilterExpanded && (
             <motion.div 
@@ -755,7 +792,7 @@ export default function ProspectPage() {
                 boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.01)"
               }}
             >
-              <div className="p-6">
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {/* Phone Number */}
                   <div className="col-span-1">
@@ -1110,7 +1147,7 @@ export default function ProspectPage() {
                             boxShadow: "0 2px 6px rgba(75, 178, 246, 0.1)"
                           }}
                         >
-                          <div className="p-2 rounded-full bg-[#4BB2F6] bg-opacity-10 text-[#004AC8] mr-3">
+                          <div className="p-2 rounded-full bg-[#4BB2F6] bg-opacity-10 text-[#004AC8] mr-3 flex-shrink-0">
                             <FiMail className="w-4 h-4" />
                           </div>
                           <span className="text-[#004AC8] text-sm font-medium truncate" title={prospect.email}>
@@ -1127,10 +1164,17 @@ export default function ProspectPage() {
                             boxShadow: "0 2px 6px rgba(0, 74, 200, 0.1)"
                           }}
                         >
-                          <div className="p-2 rounded-full bg-[#004AC8] bg-opacity-10 text-[#004AC8] mr-3">
+                          <div className="p-2 rounded-full bg-[#004AC8] bg-opacity-10 text-[#004AC8] mr-3 flex-shrink-0">
                             <FiPhone className="w-4 h-4" />
                           </div>
-                          <span className="text-gray-700 text-sm font-medium">{prospect.mobilePhoneNumber}</span>
+                          <a 
+                            href={`tel:${prospect.mobilePhoneNumber.replace(/\s/g, '')}`} 
+                            className="text-gray-700 text-sm font-medium truncate hover:text-[#004AC8]" 
+                            title={prospect.mobilePhoneNumber}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {prospect.mobilePhoneNumber}
+                          </a>
                         </motion.div>
                         
                         <motion.div
@@ -1142,15 +1186,18 @@ export default function ProspectPage() {
                             boxShadow: "0 2px 6px rgba(27, 3, 83, 0.1)"
                           }}
                         >
-                          <div className="p-2 rounded-full bg-[#1B0353] bg-opacity-10 text-[#1B0353] mr-3">
+                          <div className="p-2 rounded-full bg-[#1B0353] bg-opacity-10 text-[#1B0353] mr-3 flex-shrink-0">
                             <FiMapPin className="w-4 h-4" />
                           </div>
-                          <span className="text-gray-700 text-sm font-medium truncate" title={`${prospect.address}, ${prospect.zipCode} ${prospect.city}`}>
-                            {prospect.zipCode} {prospect.city}
-                          </span>
+                          {/* Show full address with proper truncation */}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-gray-700 text-sm font-medium truncate" title={`${prospect.address}, ${prospect.zipCode} ${prospect.city}, ${prospect.country}`}>
+                              {prospect.address}, {prospect.zipCode} {prospect.city}
+                            </div>
+                          </div>
                         </motion.div>
                       </div>
-                      
+
                       {/* Enhanced Quick Actions with advanced hover effects */}
                       <div className="flex justify-center space-x-2 mt-6">
                         <motion.button 
@@ -1164,7 +1211,7 @@ export default function ProspectPage() {
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert(`Appeler ${prospect.firstName} au ${prospect.mobilePhoneNumber}`);
+                            window.location.href = `tel:${prospect.mobilePhoneNumber.replace(/\s/g, '')}`;
                           }}
                         >
                           <FiPhone className="w-5 h-5 text-[#004AC8]" />
@@ -1180,7 +1227,7 @@ export default function ProspectPage() {
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert(`Envoyer un email à ${prospect.email}`);
+                            window.location.href = `mailto:${prospect.email}`;
                           }}
                         >
                           <FiMail className="w-5 h-5 text-[#004AC8]" />
@@ -1217,34 +1264,48 @@ export default function ProspectPage() {
                         >
                           <FiEdit className="w-5 h-5 text-[#004AC8]" />
                         </motion.button>
+                        
+                        {/* Added Transform to Client button as an action */}
+                        <motion.button 
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`p-2 rounded-lg shadow-sm transition-all duration-300 ${
+                            conversionSuccess[prospect.id] ? 'bg-green-100' : 'bg-gradient-to-r from-[#004AC8] to-[#1B0353]'
+                          }`}
+                          style={{
+                            border: conversionSuccess[prospect.id] ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(27, 3, 83, 0.2)',
+                            boxShadow: "0 2px 5px rgba(27, 3, 83, 0.1)"
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleConvertToClient(prospect.id, e);
+                          }}
+                          disabled={conversionSuccess[prospect.id]}
+                        >
+                          {conversionSuccess[prospect.id] ? (
+                            <FiCheck className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <FiUserCheck className="w-5 h-5 text-white" />
+                          )}
+                        </motion.button>
                       </div>
-                      
-                      {/* Convert to Client Button */}
+
+                      {/* Replace "Transformer en client" with "Voir le detail" Button */}
                       <div className="mt-5 flex justify-center">
                         <motion.button
                           whileHover={{ scale: 1.03, y: -2 }}
                           whileTap={{ scale: 0.97 }}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center w-full transition-all duration-300 ${
-                            conversionSuccess[prospect.id] 
-                              ? "bg-green-100 text-green-700 border border-green-200" 
-                              : "bg-gradient-to-r from-[#004AC8] to-[#1B0353] text-white shadow-md hover:shadow-lg"
-                          }`}
-                          onClick={(e) => handleConvertToClient(prospect.id, e)}
-                          disabled={conversionSuccess[prospect.id]}
+                          className="px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center w-full transition-all duration-300 bg-gradient-to-r from-[#004AC8] to-[#1B0353] text-white shadow-md hover:shadow-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openQuickView(prospect);
+                          }}
                         >
-                          {conversionSuccess[prospect.id] ? (
-                            <>
-                              <FiCheck className="mr-2 w-4 h-4" />
-                              <span>Converti en client</span>
-                            </>
-                          ) : (
-                            <>
-                              <FiUserCheck className="mr-2 w-4 h-4" />
-                              <span>Transformer en client</span>
-                            </>
-                          )}
+                          <FiArrowRight className="mr-2 w-4 h-4" />
+                          <span>Voir le détail</span>
                         </motion.button>
                       </div>
+                      
                     </div>
                   </motion.div>
                 ))}
@@ -1336,11 +1397,26 @@ export default function ProspectPage() {
                           {prospect.companyName}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-indigo-600">{prospect.email}</div>
-                          <div className="text-sm text-gray-500">{prospect.mobilePhoneNumber}</div>
+                          <div className="text-sm text-indigo-600">
+                            <a href={`mailto:${prospect.email}`} onClick={(e) => e.stopPropagation()}>
+                              {prospect.email}
+                            </a>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            <a 
+                              href={`tel:${prospect.mobilePhoneNumber.replace(/\s/g, '')}`} 
+                              className="hover:text-[#004AC8]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {prospect.mobilePhoneNumber}
+                            </a>
+                          </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {prospect.city}, {prospect.country}
+                          {/* Show full address in list view */}
+                          <div className="max-w-xs truncate" title={`${prospect.address}, ${prospect.zipCode} ${prospect.city}, ${prospect.country}`}>
+                            {prospect.address}, {prospect.zipCode} {prospect.city}
+                          </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-1">
@@ -1370,7 +1446,7 @@ export default function ProspectPage() {
                               className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                alert(`Appeler ${prospect.firstName}`);
+                                window.location.href = `tel:${prospect.mobilePhoneNumber.replace(/\s/g, '')}`;
                               }}
                             >
                               <FiPhone size={16} />
@@ -1379,7 +1455,7 @@ export default function ProspectPage() {
                               className="p-1 text-purple-600 hover:bg-purple-50 rounded"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                alert(`Envoyer un email à ${prospect.firstName}`);
+                                window.location.href = `mailto:${prospect.email}`;
                               }}
                             >
                               <FiMail size={16} />
@@ -1401,6 +1477,17 @@ export default function ProspectPage() {
                               }}
                             >
                               {conversionSuccess[prospect.id] ? <FiCheck size={16} /> : <FiUserCheck size={16} />}
+                            </button>
+                            
+                            {/* Added "Voir le détail" button */}
+                            <button 
+                              className="p-1 text-blue-700 hover:bg-blue-50 rounded"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openQuickView(prospect);
+                              }}
+                            >
+                              <FiArrowRight size={16} />
                             </button>
                           </div>
                         </td>
@@ -1488,14 +1575,14 @@ export default function ProspectPage() {
         </motion.div>
       </div>
 
-      {/* Quick View Modal - Enhanced with brand colors and glassmorphism */}
+      {/* Quick View Modal with Navigation to Detail Page */}
       <AnimatePresence>
         {isQuickViewOpen && selectedProspect && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[#1B0353] bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-[#1B0353] bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
             onClick={closeQuickView}
           >
             <motion.div
@@ -1508,7 +1595,7 @@ export default function ProspectPage() {
                 damping: 30,
                 mass: 1.5
               }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden relative"
               style={{ 
                 boxShadow: "0 25px 50px -12px rgba(27, 3, 83, 0.25), 0 0 40px rgba(0, 0, 0, 0.1)",
                 transform: "perspective(1000px)",
@@ -1642,7 +1729,8 @@ export default function ProspectPage() {
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           whileTap={{ scale: 0.95 }}
                           className="ml-auto p-2 rounded-lg text-[#004AC8] hover:bg-[#004AC8] hover:text-white transition-colors"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             alert(`Envoyer un email à ${selectedProspect.email}`);
                           }}
                           style={{
@@ -1678,7 +1766,8 @@ export default function ProspectPage() {
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           whileTap={{ scale: 0.95 }}
                           className="ml-auto p-2 rounded-lg text-[#1B0353] hover:bg-[#1B0353] hover:text-white transition-colors"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             alert(`Appeler ${selectedProspect.mobilePhoneNumber}`);
                           }}
                           style={{
@@ -1714,7 +1803,8 @@ export default function ProspectPage() {
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           whileTap={{ scale: 0.95 }}
                           className="ml-auto p-2 rounded-lg text-[#004AC8] hover:bg-[#004AC8] hover:text-white transition-colors"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             alert(`Appeler ${selectedProspect.phoneNumber}`);
                           }}
                           style={{
@@ -1807,146 +1897,181 @@ export default function ProspectPage() {
                           }}
                           >
                           <div className="text-xs font-medium text-violet-700 uppercase tracking-wide">ID Prospect</div>
-  <div className="text-sm font-mono font-semibold text-gray-800 mt-2 bg-violet-100 py-1 px-2 rounded inline-block">{selectedProspect.id}</div>
-</motion.div>
+                          <div className="text-sm font-mono font-semibold text-gray-800 mt-2 bg-violet-100 py-1 px-2 rounded inline-block">{selectedProspect.id}</div>
+                        </motion.div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                    <motion.div 
-                      className="p-4 rounded-xl shadow-sm transition-all duration-300"
-                      whileHover={{ y: -5, scale: 1.02 }}
-                      style={{
-                        background: "linear-gradient(145deg, #fff0f0, #ffe6e6)",
-                        boxShadow: "5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff",
-                        border: "1px solid rgba(244, 63, 94, 0.2)"
-                      }}
-                    >
-                      <div className="text-xs font-medium text-rose-700 uppercase tracking-wide">Créé le</div>
-                      <div className="text-sm font-semibold text-gray-800 mt-2">{selectedProspect.createdAt}</div>
-                    </motion.div>
-                    
-                    <motion.div 
-                      className="p-4 rounded-xl shadow-sm transition-all duration-300"
-                      whileHover={{ y: -5, scale: 1.02 }}
-                      style={{
-                        background: "linear-gradient(145deg, #fdf0ff, #f8e6ff)",
-                        boxShadow: "5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff",
-                        border: "1px solid rgba(217, 70, 239, 0.2)"
-                      }}
-                    >
-                      <div className="text-xs font-medium text-fuchsia-700 uppercase tracking-wide">Mise à jour</div>
-                      <div className="text-sm font-semibold text-gray-800 mt-2">{selectedProspect.updatedAt}</div>
-                    </motion.div>
-                  </div>
-                  
-                  <motion.div 
-                    className="p-4 rounded-xl shadow-sm transition-all duration-300"
-                    whileHover={{ y: -5, scale: 1.02 }}
-                    style={{
-                      background: "linear-gradient(145deg, #f0fff4, #e6ffe9)",
-                      boxShadow: "5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff",
-                      border: "1px solid rgba(52, 211, 153, 0.2)"
-                    }}
-                  >
-                    <div className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Dernier contact</div>
-                    <div className="flex items-center mt-2">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2 shadow-sm" 
-                        style={{ backgroundColor: getStatusColor(selectedProspect.lastContactDate) }}
-                      />
-                      <span className="text-sm font-semibold text-gray-800">{selectedProspect.lastContactDate}</span>
-                      
-                      <div className="ml-auto flex gap-1">
-                        {selectedProspect.tags.map((tag, index) => (
-                          <span 
-                            key={index} 
-                            className="px-2 py-1 text-xs rounded-full text-white font-medium shadow-sm" 
-                            style={{ backgroundColor: getTagColor(tag) }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                        <motion.div 
+                          className="p-4 rounded-xl shadow-sm transition-all duration-300"
+                          whileHover={{ y: -5, scale: 1.02 }}
+                          style={{
+                            background: "linear-gradient(145deg, #fff0f0, #ffe6e6)",
+                            boxShadow: "5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff",
+                            border: "1px solid rgba(244, 63, 94, 0.2)"
+                          }}
+                        >
+                          <div className="text-xs font-medium text-rose-700 uppercase tracking-wide">Créé le</div>
+                          <div className="text-sm font-semibold text-gray-800 mt-2">{selectedProspect.createdAt}</div>
+                        </motion.div>
+                        
+                        <motion.div 
+                          className="p-4 rounded-xl shadow-sm transition-all duration-300"
+                          whileHover={{ y: -5, scale: 1.02 }}
+                          style={{
+                            background: "linear-gradient(145deg, #fdf0ff, #f8e6ff)",
+                            boxShadow: "5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff",
+                            border: "1px solid rgba(217, 70, 239, 0.2)"
+                          }}
+                        >
+                          <div className="text-xs font-medium text-fuchsia-700 uppercase tracking-wide">Mise à jour</div>
+                          <div className="text-sm font-semibold text-gray-800 mt-2">{selectedProspect.updatedAt}</div>
+                        </motion.div>
                       </div>
+                      
+                      <motion.div 
+                        className="p-4 rounded-xl shadow-sm transition-all duration-300"
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        style={{
+                          background: "linear-gradient(145deg, #f0fff4, #e6ffe9)",
+                          boxShadow: "5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff",
+                          border: "1px solid rgba(52, 211, 153, 0.2)"
+                        }}
+                      >
+                        <div className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Dernier contact</div>
+                        <div className="flex items-center mt-2">
+                          <div 
+                            className="w-3 h-3 rounded-full mr-2 shadow-sm" 
+                            style={{ backgroundColor: getStatusColor(selectedProspect.lastContactDate) }}
+                          />
+                          <span className="text-sm font-semibold text-gray-800">{selectedProspect.lastContactDate}</span>
+                          
+                          <div className="ml-auto flex gap-1">
+                            {selectedProspect.tags.map((tag, index) => (
+                              <span 
+                                key={index} 
+                                className="px-2 py-1 text-xs rounded-full text-white font-medium shadow-sm" 
+                                style={{ backgroundColor: getTagColor(tag) }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
                     </div>
                   </motion.div>
                 </div>
-              </motion.div>
-            </div>
-          </div>
-          
-          {/* Modal Footer */}
-          <div className="border-t p-4 flex justify-between items-center bg-gray-50">
-            <div className="flex space-x-2">
-              <button 
-                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm flex items-center"
-                onClick={() => {
-                  alert(`Supprimer ${selectedProspect.firstName} ?`);
-                }}
-              >
-                <FiTrash2 className="mr-2" />
-                <span>Supprimer</span>
-              </button>
+              </div>
               
-              <button 
-                className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm flex items-center"
-                onClick={() => {
-                  alert(`Appeler ${selectedProspect.firstName} au ${selectedProspect.mobilePhoneNumber}`);
-                }}
-              >
-                <FiPhone className="mr-2" />
-                <span>Appeler</span>
-              </button>
-              
-              <button 
-                className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition text-sm flex items-center"
-                onClick={() => {
-                  alert(`Envoyer un email à ${selectedProspect.email}`);
-                }}
-              >
-                <FiMail className="mr-2" />
-                <span>Email</span>
-              </button>
-            </div>
-            
-            <div className="flex space-x-2">
-              <motion.button 
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                className={`px-4 py-2 rounded-lg text-sm flex items-center ${
-                  conversionSuccess[selectedProspect.id] 
-                    ? "bg-green-100 text-green-700 border border-green-200"
-                    : "bg-gradient-to-r from-[#004AC8] to-[#1B0353] text-white"
-                }`}
-                onClick={() => handleConvertToClient(selectedProspect.id)}
-                disabled={conversionSuccess[selectedProspect.id]}
-              >
-                {conversionSuccess[selectedProspect.id] ? (
-                  <>
-                    <FiCheck className="mr-2" />
-                    <span>Converti en client</span>
-                  </>
-                ) : (
-                  <>
-                    <FiUserCheck className="mr-2" />
-                    <span>Transformer en client</span>
-                  </>
-                )}
-              </motion.button>
-            
-              <button 
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm flex items-center"
-                onClick={() => {
-                  alert(`Éditer les informations de ${selectedProspect.firstName}`);
-                }}
-              >
-                <FiEdit className="mr-2" />
-                <span>Modifier</span>
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</motion.div>
-);
+              {/* Modal Footer */}
+              <div className="border-t p-4 flex justify-between items-center bg-gray-50">
+                <div className="flex space-x-2">
+                  <button 
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm flex items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(`Supprimer ${selectedProspect.firstName} ?`);
+                    }}
+                  >
+                    <FiTrash2 className="mr-2" />
+                    <span>Supprimer</span>
+                  </button>
+                  
+                  <button 
+                    className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm flex items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(`Appeler ${selectedProspect.firstName} au ${selectedProspect.mobilePhoneNumber}`);
+                    }}
+                  >
+                    <FiPhone className="mr-2" />
+                    <span>Appeler</span>
+                  </button>
+                  
+                  <button 
+                    className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition text-sm flex items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(`Envoyer un email à ${selectedProspect.email}`);
+                    }}
+                  >
+                    <FiMail className="mr-2" />
+                    <span>Email</span>
+                  </button>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <motion.button 
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`px-4 py-2 rounded-lg text-sm flex items-center ${
+                      conversionSuccess[selectedProspect.id] 
+                        ? "bg-green-100 text-green-700 border border-green-200"
+                        : "bg-gradient-to-r from-[#004AC8] to-[#1B0353] text-white"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConvertToClient(selectedProspect.id);
+                    }}
+                    disabled={conversionSuccess[selectedProspect.id]}
+                  >
+                    {conversionSuccess[selectedProspect.id] ? (
+                      <>
+                        <FiCheck className="mr-2" />
+                        <span>Converti en client</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiUserCheck className="mr-2" />
+                        <span>Transformer en client</span>
+                      </>
+                    )}
+                  </motion.button>
+                
+                  <button 
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm flex items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(`Éditer les informations de ${selectedProspect.firstName}`);
+                    }}
+                  >
+                    <FiEdit className="mr-2" />
+                    <span>Modifier</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Add a prominent "Voir fiche complète" button as a sticky element at bottom */}
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-white bg-opacity-90 backdrop-blur-sm border-t border-gray-100 flex justify-center shadow-lg">
+                <Link 
+                  href={`/dashboard/crm/prospects/${selectedProspect.id}`}
+                  passHref
+                  legacyBehavior
+                >
+                  <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-6 py-3 rounded-lg font-bold text-white flex items-center gap-2 w-full max-w-md"
+                    style={{
+                      background: "linear-gradient(135deg, #4BB2F6, #004AC8, #1B0353)"
+                    }}
+                    onClick={() => {
+                      // Close the modal when navigating to the detail page
+                      closeQuickView();
+                    }}
+                  >
+                    <span className="mx-auto flex items-center">
+                      Voir fiche complète
+                      <FiArrowRight className="ml-2" />
+                    </span>
+                  </motion.a>
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+    </motion.div>
+  );
 }

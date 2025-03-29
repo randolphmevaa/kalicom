@@ -3,20 +3,18 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiPercent, 
-  FiEdit,
   FiSave,
   FiX,
   FiPlus,
   FiTrash2,
   FiInfo,
-  // FiEye,
   FiSearch,
   FiFilter,
   FiCheck,
   FiChevronDown,
   FiSettings,
   FiAlertCircle,
-  // FiDollarSign
+  FiEdit
 } from 'react-icons/fi';
 
 // Define types for tax data
@@ -34,9 +32,6 @@ interface TaxType {
 }
 
 export default function Taxes() {
-  // State for edit mode
-  const [editMode, setEditMode] = useState<boolean>(false);
-  
   // State for managing tax editing
   const [editingTax, setEditingTax] = useState<TaxType | null>(null);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
@@ -122,16 +117,6 @@ export default function Taxes() {
       updatedAt: '2024-02-15'
     }
   ]);
-  
-  // Toggle edit mode
-  const toggleEditMode = (): void => {
-    setEditMode(!editMode);
-    // Reset editing state when exiting edit mode
-    if (editMode) {
-      setEditingTax(null);
-      setShowAddForm(false);
-    }
-  };
   
   // Filter taxes based on search and filters
   const filteredTaxes = taxes.filter(tax => {
@@ -327,6 +312,12 @@ export default function Taxes() {
     return `w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black resize-none`;
   };
 
+  // Animation variants for header
+  const headerVariants = {
+    initial: { opacity: 0, y: -20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -334,53 +325,59 @@ export default function Taxes() {
       className="pt-20 min-h-screen bg-gray-50"
     >
       <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 pb-16">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
-          <div>
-            <motion.h1
-              initial={{ y: -20 }}
-              animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
-            >
-              Taxes
-            </motion.h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Gérez les taxes et taux de TVA appliqués à vos produits et services
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            {!editMode ? (
-              <button 
-                onClick={toggleEditMode}
-                className="p-2 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors duration-200"
-              >
-                <FiEdit className="w-6 h-6 text-indigo-700" />
-              </button>
-            ) : (
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <FiEdit className="w-6 h-6 text-indigo-700" />
-              </div>
-            )}
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <FiPercent className="w-6 h-6 text-indigo-700" />
-            </div>
-          </div>
-        </div>
+        {/* New Header with gradient styling */}
+        <motion.div
+          variants={headerVariants}
+          initial="initial"
+          animate="animate"
+          className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
+        >
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-white/70 to-indigo-400/10 rounded-3xl pointer-events-none" />
 
-        {/* Edit Mode Banner */}
-        {editMode && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg text-amber-800 flex justify-between items-center"
-          >
-            <div className="flex items-center">
-              <FiInfo className="h-5 w-5 mr-2" />
-              <span>Mode édition activé. Vous pouvez modifier les taxes et taux de TVA.</span>
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <FiPercent className="w-6 h-6 text-indigo-700" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-800 to-indigo-500">
+                    Taxes
+                  </h1>
+                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Gérez les taxes et taux de TVA appliqués à vos produits et services. Configurez et personnalisez vos taxes selon vos besoins.
+                </p>
+              </div>
             </div>
-          </motion.div>
-        )}
-        
+            
+            {/* Quick tip */}
+            <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiInfo className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Vous pouvez ajouter, modifier ou désactiver des taxes à tout moment. Assurez-vous de configurer correctement les taux selon la législation en vigueur.
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Tax Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -552,22 +549,20 @@ export default function Taxes() {
                   )}
                 </div>
                 
-                {editMode && (
-                  <button
-                    className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                    onClick={handleAddNew}
-                    disabled={showAddForm}
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>Ajouter une taxe</span>
-                  </button>
-                )}
+                <button
+                  className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  onClick={handleAddNew}
+                  disabled={showAddForm}
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span>Ajouter une taxe</span>
+                </button>
               </div>
             </div>
           </div>
           
           {/* Add/Edit Form */}
-          {(editingTax || showAddForm) && editMode && (
+          {(editingTax || showAddForm) && (
             <div className="p-6 border-b border-gray-200 bg-indigo-50">
               <h3 className="text-lg font-medium text-gray-800 mb-4">
                 {editingTax ? 'Modifier la taxe' : 'Ajouter une nouvelle taxe'}
@@ -746,9 +741,7 @@ export default function Taxes() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                  {editMode && (
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  )}
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -800,38 +793,36 @@ export default function Taxes() {
                           )}
                         </span>
                       </td>
-                      {editMode && (
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
-                            <button 
-                              onClick={() => handleToggleActive(tax.id)}
-                              className={`p-1.5 ${tax.isActive ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'} rounded hover:bg-gray-100`}
-                              title={tax.isActive ? 'Désactiver' : 'Activer'}
-                            >
-                              {tax.isActive ? <FiX className="w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
-                            </button>
-                            <button 
-                              onClick={() => handleEdit(tax)}
-                              className="p-1.5 text-blue-600 hover:text-blue-800 rounded hover:bg-gray-100"
-                              title="Modifier"
-                            >
-                              <FiEdit className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteTax(tax.id)}
-                              className="p-1.5 text-red-600 hover:text-red-800 rounded hover:bg-gray-100"
-                              title="Supprimer"
-                            >
-                              <FiTrash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button 
+                            onClick={() => handleToggleActive(tax.id)}
+                            className={`p-1.5 ${tax.isActive ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'} rounded hover:bg-gray-100`}
+                            title={tax.isActive ? 'Désactiver' : 'Activer'}
+                          >
+                            {tax.isActive ? <FiX className="w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
+                          </button>
+                          <button 
+                            onClick={() => handleEdit(tax)}
+                            className="p-1.5 text-blue-600 hover:text-blue-800 rounded hover:bg-gray-100"
+                            title="Modifier"
+                          >
+                            <FiEdit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteTax(tax.id)}
+                            className="p-1.5 text-red-600 hover:text-red-800 rounded hover:bg-gray-100"
+                            title="Supprimer"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={editMode ? 6 : 5} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                       <FiAlertCircle className="w-6 h-6 mx-auto mb-2" />
                       <div>Aucune taxe trouvée</div>
                       <div className="text-sm">Essayez de modifier vos filtres ou créez une nouvelle taxe</div>

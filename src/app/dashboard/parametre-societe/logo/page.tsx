@@ -9,20 +9,13 @@ import {
   FiScissors,
   FiCopy,
   FiTrash2,
-  // FiX,
   FiInfo,
-  // FiCheck,
-  // FiEye,
   FiGrid,
   FiPlus,
-  FiMinus,
-  // FiRotateCw
+  FiMinus
 } from 'react-icons/fi';
 
 export default function LogoManagement() {
-  // State for edit mode
-  const [editMode, setEditMode] = useState<boolean>(false);
-  
   // State to track if a logo exists
   const [hasLogo, setHasLogo] = useState<boolean>(true);
   
@@ -31,11 +24,6 @@ export default function LogoManagement() {
   
   // Reference to the file input
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Toggle edit mode
-  const toggleEditMode = (): void => {
-    setEditMode(!editMode);
-  };
   
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -114,6 +102,12 @@ export default function LogoManagement() {
     setPreviewSize(80);
   };
 
+  // Animation variants for header
+  const headerVariants = {
+    initial: { opacity: 0, y: -20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -121,52 +115,58 @@ export default function LogoManagement() {
       className="pt-20 min-h-screen bg-gray-50"
     >
       <div className="max-w-5xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 pb-16">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
-          <div>
-            <motion.h1
-              initial={{ y: -20 }}
-              animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
-            >
-              Logo
-            </motion.h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Personnalisez l&apos;apparence de vos documents
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            {!editMode ? (
-              <button 
-                onClick={toggleEditMode}
-                className="p-2 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors duration-200"
-              >
-                <FiEdit2 className="w-6 h-6 text-indigo-600" />
-              </button>
-            ) : (
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <FiEdit2 className="w-6 h-6 text-amber-600" />
-              </div>
-            )}
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <FiImage className="w-6 h-6 text-indigo-600" />
-            </div>
-          </div>
-        </div>
+        {/* New Header with gradient styling */}
+        <motion.div
+          variants={headerVariants}
+          initial="initial"
+          animate="animate"
+          className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
+        >
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-white/70 to-indigo-400/10 rounded-3xl pointer-events-none" />
 
-        {/* Edit Mode Banner */}
-        {editMode && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg text-amber-800 flex justify-between items-center"
-          >
-            <div className="flex items-center">
-              <FiInfo className="h-5 w-5 mr-2" />
-              <span>Mode édition activé. Vous pouvez modifier le logo de votre entreprise.</span>
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <FiImage className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-800 to-indigo-500">
+                    Logo
+                  </h1>
+                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Personnalisez l&apos;apparence de vos documents grâce à votre logo d&apos;entreprise.
+                </p>
+              </div>
             </div>
-          </motion.div>
-        )}
+            
+            {/* Quick tip */}
+            <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiInfo className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Un logo de qualité améliore l&apos;image de marque sur vos documents. Utilisez de préférence un format vectoriel (SVG) pour une qualité optimale.
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -213,15 +213,13 @@ export default function LogoManagement() {
                     <div className="text-center">
                       <FiImage className="w-20 h-20 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Aucun logo disponible</p>
-                      {editMode && (
-                        <button
-                          onClick={triggerFileInput}
-                          className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2 mx-auto"
-                        >
-                          <FiUpload className="w-4 h-4" />
-                          <span>Importer un logo</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={triggerFileInput}
+                        className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2 mx-auto"
+                      >
+                        <FiUpload className="w-4 h-4" />
+                        <span>Importer un logo</span>
+                      </button>
                     </div>
                   )}
                   
@@ -267,84 +265,82 @@ export default function LogoManagement() {
                 )}
               </div>
               
-              {/* Edit Controls (only visible in edit mode) */}
-              {editMode && (
-                <div className="md:w-72 space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 className="font-medium text-gray-700 mb-3">Actions</h3>
-                    
-                    {/* Upload button */}
-                    <button
-                      onClick={triggerFileInput}
-                      className="w-full mb-3 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center space-x-2"
-                    >
-                      <FiUpload className="w-5 h-5" />
-                      <span>{hasLogo ? 'Remplacer le logo' : 'Importer un logo'}</span>
-                    </button>
-                    
-                    {/* Edit actions */}
-                    {hasLogo && (
-                      <>
-                        <button
-                          onClick={handleEdit}
-                          className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
-                        >
-                          <FiEdit2 className="w-4 h-4" />
-                          <span>Retoucher</span>
-                        </button>
-                        
-                        <button
-                          onClick={handleCut}
-                          className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
-                        >
-                          <FiScissors className="w-4 h-4" />
-                          <span>Couper</span>
-                        </button>
-                        
-                        <button
-                          onClick={handleCopy}
-                          className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
-                        >
-                          <FiCopy className="w-4 h-4" />
-                          <span>Copier</span>
-                        </button>
-                        
-                        <button
-                          onClick={handlePaste}
-                          className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
-                        >
-                          <FiCopy className="w-4 h-4" />
-                          <span>Coller</span>
-                        </button>
-                        
-                        <button
-                          onClick={handleDelete}
-                          className="w-full px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition flex items-center space-x-2"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                          <span>Supprimer</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
+              {/* Edit Controls - now always visible */}
+              <div className="md:w-72 space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="font-medium text-gray-700 mb-3">Actions</h3>
                   
-                  {/* File info */}
+                  {/* Upload button */}
+                  <button
+                    onClick={triggerFileInput}
+                    className="w-full mb-3 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center space-x-2"
+                  >
+                    <FiUpload className="w-5 h-5" />
+                    <span>{hasLogo ? 'Remplacer le logo' : 'Importer un logo'}</span>
+                  </button>
+                  
+                  {/* Edit actions */}
                   {hasLogo && (
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-blue-700 mb-2 flex items-center">
-                        <FiInfo className="w-4 h-4 mr-2" />
-                        Informations
-                      </h3>
-                      <ul className="text-sm text-blue-800 space-y-1.5">
-                        <li>Nom: Artboard 1.svg</li>
-                        <li>Type: Image SVG</li>
-                        <li>Dimensions: Vectoriel</li>
-                        <li>Date d&apos;ajout: 15/03/2025</li>
-                      </ul>
-                    </div>
+                    <>
+                      <button
+                        onClick={handleEdit}
+                        className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
+                      >
+                        <FiEdit2 className="w-4 h-4" />
+                        <span>Retoucher</span>
+                      </button>
+                      
+                      <button
+                        onClick={handleCut}
+                        className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
+                      >
+                        <FiScissors className="w-4 h-4" />
+                        <span>Couper</span>
+                      </button>
+                      
+                      <button
+                        onClick={handleCopy}
+                        className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
+                      >
+                        <FiCopy className="w-4 h-4" />
+                        <span>Copier</span>
+                      </button>
+                      
+                      <button
+                        onClick={handlePaste}
+                        className="w-full mb-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
+                      >
+                        <FiCopy className="w-4 h-4" />
+                        <span>Coller</span>
+                      </button>
+                      
+                      <button
+                        onClick={handleDelete}
+                        className="w-full px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition flex items-center space-x-2"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                        <span>Supprimer</span>
+                      </button>
+                    </>
                   )}
                 </div>
-              )}
+                
+                {/* File info */}
+                {hasLogo && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-blue-700 mb-2 flex items-center">
+                      <FiInfo className="w-4 h-4 mr-2" />
+                      Informations
+                    </h3>
+                    <ul className="text-sm text-blue-800 space-y-1.5">
+                      <li>Nom: Artboard 1.svg</li>
+                      <li>Type: Image SVG</li>
+                      <li>Dimensions: Vectoriel</li>
+                      <li>Date d&apos;ajout: 15/03/2025</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Best Practices */}

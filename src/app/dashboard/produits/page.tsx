@@ -34,6 +34,8 @@ import {
   FiHome,
 } from "react-icons/fi";
 import Link from "next/link";
+import ProductDetailsModal from "./ProductDetailsModal";
+import AddProductForm from "./AddProductForm";
 
 // 1) Define a Product interface for type safety:
 interface Product {
@@ -94,6 +96,10 @@ export default function Produits() {
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [ , setHoverProductId] = useState<number | null>(null);
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showProductDetails, setShowProductDetails] = useState<boolean>(false);
+  const [showAddProductForm, setShowAddProductForm] = useState<boolean>(false);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
   // 3) Provide a parameter type for this function
   const displaySuccessMessage = (message: string) => {
@@ -520,6 +526,44 @@ export default function Produits() {
     // Implementation
   };
 
+  // Function to handle opening product details
+const handleViewProduct = (product: Product) => {
+  setSelectedProduct(product);
+  setShowProductDetails(true);
+};
+
+// Function to handle opening the add product form
+const handleAddProduct = () => {
+  setProductToEdit(null);
+  setShowAddProductForm(true);
+};
+
+// Function to handle editing a product
+const handleEditProduct = (product: Product) => {
+  setProductToEdit(product);
+  setShowProductDetails(false);
+  setShowAddProductForm(true);
+};
+
+// Function to handle saving a new or edited product
+const handleSaveProduct = (productData: Product) => {
+  if (productToEdit) {
+    // Update existing product
+    // const updatedProducts = products.map(p => 
+    //   p.id === productData.id ? productData : p
+    // );
+    // In a real app, you would update your products state or call an API
+    // For now, we'll just display a success message
+    displaySuccessMessage(`Produit "${productData.nom}" mis à jour avec succès!`);
+  } else {
+    // Add new product
+    // In a real app, you would update your products state or call an API
+    // For now, we'll just display a success message
+    displaySuccessMessage(`Produit "${productData.nom}" ajouté avec succès!`);
+  }
+  setShowAddProductForm(false);
+};
+
   // -------------------------------------
   // 16) Render
   // -------------------------------------
@@ -613,6 +657,7 @@ export default function Produits() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all font-medium"
+                  onClick={handleAddProduct}
                 >
                   <FiPlus className="mr-2" style={{ color: '#1B0353' }} />
                   <span>Ajouter un produit</span>
@@ -713,6 +758,7 @@ export default function Produits() {
                   displaySuccessMessage("Formulaire d'ajout de produit ouvert")
                 }
                 className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-[#1B0353] to-[#3B0A87] text-white rounded-xl hover:from-[#2A0570] hover:to-[#4B0DA7] transition shadow-md"
+                // onClick={handleAddProduct}Z
               >
                 <FiPlus />
                 <span>Ajouter un produit</span>
@@ -1067,7 +1113,9 @@ export default function Produits() {
 
                   {/* Quick action buttons overlay on hover */}
                   <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-2">
-                    <button className="p-2 bg-white rounded-full text-[#1B0353] hover:bg-[#1B0353]/10 transition">
+                    <button 
+                    className="p-2 bg-white rounded-full text-[#1B0353] hover:bg-[#1B0353]/10 transition"
+                    onClick={() => handleViewProduct(product)}>
                       <FiEye size={18} />
                     </button>
                     <button className="p-2 bg-white rounded-full text-[#1B0353] hover:bg-[#1B0353]/10 transition">
@@ -1278,6 +1326,7 @@ export default function Produits() {
                           <button
                             className="p-1.5 text-[#1B0353] hover:text-[#2A0570] bg-[#1B0353]/10 rounded-lg hover:bg-[#1B0353]/20 transition"
                             title="Voir"
+                            onClick={() => handleViewProduct(product)}
                           >
                             <FiEye size={16} />
                           </button>
@@ -1434,6 +1483,24 @@ export default function Produits() {
           </motion.div>
         )}
       </div>
+      {/* Product Details Modal */}
+      {showProductDetails && selectedProduct && (
+        <ProductDetailsModal
+          product={selectedProduct}
+          onClose={() => setShowProductDetails(false)}
+          onEdit={handleEditProduct}
+        />
+      )}
+
+      {/* Add/Edit Product Form */}
+      {showAddProductForm && (
+        <AddProductForm
+          onClose={() => setShowAddProductForm(false)}
+          onSave={handleSaveProduct}
+          editProduct={productToEdit}
+        />
+      )}
     </motion.div>
+    
   );
 }

@@ -5,17 +5,28 @@ import {
   FiUsers,
   FiUserPlus,
   FiUserCheck,
+  FiArrowUp,
   FiUser,
   FiEdit,
+  FiCheck,
   FiEye,
   FiSearch,
   FiFilter,
+  FiChevronLeft,
   FiMail,
   FiPhone,
+  FiPhoneIncoming,
+  FiGlobe,
   FiShield,
   FiLock,
   FiList,
   FiGrid,
+  FiArrowDown,
+  // FiPhoneCall,
+  // FiUserX,
+  // FiUserCheck,
+  // FiEdit2,
+  FiArrowRight,
   FiSettings,
   FiAlertTriangle,
   FiClock,
@@ -143,10 +154,10 @@ const slideUp = {
   visible: { y: 0, opacity: 1 }
 };
 
-const slideRight = {
-  hidden: { x: -20, opacity: 0 },
-  visible: { x: 0, opacity: 1 }
-};
+// const slideRight = {
+//   hidden: { x: -20, opacity: 0 },
+//   visible: { x: 0, opacity: 1 }
+// };
 
 // New breadcrumb component
 import Link from 'next/link';
@@ -207,6 +218,133 @@ export default function Utilisateurs() {
   const addRoleModalRef = useRef<HTMLDivElement>(null);
   const addUserModalRef = useRef<HTMLDivElement>(null);
   
+  function initializeTabs() {
+    const tabs = ['info', 'lines', 'activity', 'permissions'];
+    
+    tabs.forEach(tab => {
+      const tabButton = document.getElementById(`${tab}-tab`);
+      const tabContent = document.getElementById(`${tab}-tab-content`);
+      
+      if (tabButton && tabContent) {
+        tabButton.addEventListener('click', () => {
+          // Hide all content
+          tabs.forEach(t => {
+            const content = document.getElementById(`${t}-tab-content`);
+            if (content) {
+              content.classList.add('hidden');
+            }
+            const button = document.getElementById(`${t}-tab`);
+            if (button) {
+              button.classList.remove('border-b-2', 'border-indigo-500', 'text-indigo-600');
+              button.classList.add('text-gray-500');
+            }
+          });
+          
+          // Show selected content
+          tabContent.classList.remove('hidden');
+          tabButton.classList.add('border-b-2', 'border-indigo-500', 'text-indigo-600');
+          tabButton.classList.remove('text-gray-500');
+        });
+      }
+    });
+  }
+
+  interface StepIndicatorElement extends HTMLElement {
+    classList: DOMTokenList;
+  }
+
+  interface StepContent extends HTMLElement {
+    classList: DOMTokenList;
+  }
+
+  interface ProgressBar extends HTMLElement {
+    style: CSSStyleDeclaration;
+  }
+
+  interface StepIndicatorContainer extends HTMLElement {
+    innerHTML: string;
+  }
+
+  interface NavigationButton extends HTMLElement {
+    classList: DOMTokenList;
+    querySelector: (selector: string) => HTMLElement | null;
+  }
+
+  interface StepLabels {
+    [key: number]: string;
+  }
+
+  function navigateStep(stepNumber: number): void {
+    const stepLabels: StepLabels = {
+      1: 'Informations personnelles',
+      2: 'Permissions',
+      3: 'Notifications'
+    };
+
+    // Update step indicators
+    document.querySelectorAll<StepIndicatorElement>('[id^="step-"][id$="-indicator"]').forEach((el, index) => {
+      if (index + 1 === stepNumber) {
+        el.classList.add('bg-indigo-100', 'text-indigo-700');
+        el.classList.remove('bg-gray-100', 'text-gray-600');
+      } else if (index + 1 < stepNumber) {
+        el.classList.add('bg-green-100', 'text-green-700');
+        el.classList.remove('bg-gray-100', 'text-gray-600', 'bg-indigo-100', 'text-indigo-700');
+      } else {
+        el.classList.add('bg-gray-100', 'text-gray-600');
+        el.classList.remove('bg-indigo-100', 'text-indigo-700', 'bg-green-100', 'text-green-700');
+      }
+    });
+    
+    // Update progress bar for mobile
+    const progressBar = document.getElementById('mobile-progress-bar') as ProgressBar | null;
+    if (progressBar) {
+      progressBar.style.width = `${(stepNumber / 3) * 100}%`;
+    }
+    
+    // Show/hide content for each step
+    for (let i = 1; i <= 3; i++) {
+      const content = document.getElementById(`step-${i}-content`) as StepContent | null;
+      if (content) {
+        if (i === stepNumber) {
+          content.classList.remove('hidden');
+        } else {
+          content.classList.add('hidden');
+        }
+      }
+    }
+    
+    // Update footer step indicator
+    const stepIndicator = document.getElementById('step-indicator') as StepIndicatorContainer | null;
+    if (stepIndicator) {
+      const label = stepLabels[stepNumber];
+      stepIndicator.innerHTML = `<span class="text-indigo-600 font-medium">Étape ${stepNumber}/3:</span> <span class="ml-1 text-gray-600">${label}</span>`;
+    }
+    
+    // Show/hide back button
+    const backButton = document.getElementById('back-button') as NavigationButton | null;
+    if (backButton) {
+      if (stepNumber > 1) {
+        backButton.classList.remove('hidden');
+      } else {
+        backButton.classList.add('hidden');
+      }
+    }
+    
+    // Update next button text on final step
+    const nextButton = document.getElementById('next-button') as NavigationButton | null;
+    if (nextButton) {
+      const nextSpan = nextButton.querySelector('span');
+      if (nextSpan) {
+        nextSpan.textContent = stepNumber === 3 ? 'Créer l\'utilisateur' : 'Suivant';
+      }
+    }
+  }
+  
+  // Initialize tabs when modal opens
+  if (showModal) {
+    setTimeout(initializeTabs, 100);
+  }
+
   // Define available roles
   const roles: Role[] = [
     {
@@ -1052,7 +1190,7 @@ const saveNewUser = () => {
                 <span>Rôles</span>
               </div>
             </button>
-            <button
+            {/* <button
               className={`flex-1 py-5 text-center transition duration-200 ${
                 activeTab === 'permissions'
                   ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50 font-semibold'
@@ -1064,7 +1202,7 @@ const saveNewUser = () => {
                 <FiLock className={`${activeTab === 'permissions' ? 'text-indigo-600' : 'text-gray-500'} w-5 h-5`} />
                 <span>Permissions</span>
               </div>
-            </button>
+            </button> */}
             <button
               className={`flex-1 py-5 text-center transition duration-200 ${
                 activeTab === 'parametres'
@@ -1447,7 +1585,7 @@ const saveNewUser = () => {
           )}
 
           {/* Content for Permissions tab */}
-          {activeTab === 'permissions' && (
+          {/* {activeTab === 'permissions' && (
             <div className="p-8">
               <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-lg">
                 <div className="flex items-center mb-6">
@@ -1515,7 +1653,7 @@ const saveNewUser = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Content for Paramètres tab */}
           {activeTab === 'parametres' && (
@@ -1632,10 +1770,78 @@ const saveNewUser = () => {
                         </div>
                         <select className="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-medium">
                           <option>Français</option>
-                          <option>English</option>
-                          <option>Español</option>
-                          <option>Deutsch</option>
+                          <option>Anglais</option>
+                          <option>Espagnol</option>
+                          <option>Hébreu</option>
+                          <option>Russe</option>
                         </select>
+                      </div>
+                      
+                      {/* New addition: Timezone setting */}
+                      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                        <div>
+                          <p className="font-semibold text-gray-700 mb-1">Fuseau horaire</p>
+                          <p className="text-sm text-gray-500">Fuseau horaire par défaut pour les dates et heures</p>
+                        </div>
+                        <select className="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-medium">
+                          <option>(GMT+01:00) Paris</option>
+                          <option>(GMT+00:00) Londres</option>
+                          <option>(GMT+02:00) Jérusalem</option>
+                          <option>(GMT+03:00) Moscou</option>
+                          <option>(GMT-05:00) New York</option>
+                        </select>
+                      </div>
+                      
+                      {/* New addition: Date format setting */}
+                      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                        <div>
+                          <p className="font-semibold text-gray-700 mb-1">Format de date</p>
+                          <p className="text-sm text-gray-500">Format d&apos;affichage des dates dans l&apos;application</p>
+                        </div>
+                        <select className="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-medium">
+                          <option>DD/MM/YYYY (31/12/2025)</option>
+                          <option>MM/DD/YYYY (12/31/2025)</option>
+                          <option>YYYY-MM-DD (2025-12-31)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* New section: Export and import */}
+                  <div className="border-t border-gray-200 pt-8">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                      <FiUpload className="mr-2 text-indigo-500" />
+                      Export et importation
+                    </h3>
+                    <div className="space-y-6">
+                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                        <div className="mb-3">
+                          <p className="font-semibold text-gray-700 mb-1">Exportation des données</p>
+                          <p className="text-sm text-gray-500">Téléchargez les données de l&apos;application au format CSV</p>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                          >
+                            <FiUsers className="w-4 h-4 mr-2" />
+                            <span>Utilisateurs</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                          >
+                            <FiShield className="w-4 h-4 mr-2" />
+                            <span>Rôles</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                          >
+                            <FiFile className="w-4 h-4 mr-2" />
+                            <span>Journaux d&apos;activité</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1647,346 +1853,644 @@ const saveNewUser = () => {
       </div>
 
       {/* User Details Modal */}
-      <AnimatePresence>
-        {showModal && modalData && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+<AnimatePresence>
+  {showModal && modalData && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+    >
+      <motion.div
+        ref={modalRef}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: 'spring', damping: 20 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto"
+      >
+        {/* Modal header */}
+        <div className="sticky top-0 bg-white z-10 border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+              <FiUser className="w-5 h-5 text-indigo-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Détails de l&apos;utilisateur</h3>
+          </div>
+          <button
+            onClick={closeModal}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Fermer"
           >
-            <motion.div
-              ref={modalRef}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', damping: 20 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-            >
-              {/* Modal header */}
-              <div className="sticky top-0 bg-white z-10 border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900">Détails de l&apos;utilisateur</h3>
-                <button
-                  onClick={closeModal}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <FiXCircle className="w-6 h-6 text-gray-500" />
-                </button>
+            <FiXCircle className="w-6 h-6 text-gray-500" />
+          </button>
+        </div>
+        
+        {/* Modal content */}
+        <div className="p-6">
+          {/* User header info */}
+          <div className="flex flex-col md:flex-row md:items-center mb-8 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
+            <div className="flex-shrink-0">
+              {getUserAvatar(modalData)}
+            </div>
+            
+            <div className="flex-grow">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {modalData.prenom} {modalData.nom}
+              </h2>
+              <div className="flex items-center text-gray-500 text-sm mb-2">
+                <span className="font-medium text-gray-600 mr-2">{modalData.id}</span>
+                <span className="flex items-center">
+                  <FiCalendar className="w-3.5 h-3.5 mr-1" />
+                  Créé le {modalData.dateCreation}
+                </span>
               </div>
               
-              {/* Modal content */}
-              <div className="p-6">
-                {/* User header info */}
-                <div className="flex flex-col md:flex-row md:items-center mb-8 gap-6">
-                  <div className="flex-shrink-0">
-                    {getUserAvatar(modalData)}
-                  </div>
-                  
-                  <div className="flex-grow">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                      {modalData.prenom} {modalData.nom}
-                    </h2>
-                    <p className="text-gray-500 text-sm mb-2">{modalData.id} · {modalData.role}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(modalData.statut)}`}>
-                        {modalData.statut}
-                      </span>
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(modalData.role)}`}>
-                        {modalData.role}
-                      </span>
-                      {modalData.authMethod === '2FA' && (
-                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
-                          2FA Activé
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="primary"
-                      // onClick={() => setEditMode(true)}
-                      onClick={handleEditMode}
-                    >
-                      <FiEdit className="w-4 h-4" />
-                      <span>Modifier</span>
-                    </Button>
-                    
-                    <Button
-                      variant="secondary"
-                      onClick={sendCredentials}
-                    >
-                      <FiSend className="w-4 h-4" />
-                      <span>Envoyer identifiants</span>
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Tabs for user details sections */}
-                <div className="border-b border-gray-200 mb-6">
-                  <div className="flex space-x-8">
-                    <button className="px-1 py-3 border-b-2 border-indigo-500 font-medium text-indigo-600">
-                      Informations
-                    </button>
-                    <button className="px-1 py-3 text-gray-500 hover:text-gray-700 font-medium">
-                      Activité
-                    </button>
-                    <button className="px-1 py-3 text-gray-500 hover:text-gray-700 font-medium">
-                      Permissions
-                    </button>
-                  </div>
-                </div>
-                
-                {/* User information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                      <FiUser className="mr-2 text-indigo-500" />
-                      Coordonnées
-                    </h4>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Email</p>
-                        <div className="flex items-center mt-1">
-                          <FiMail className="text-gray-400 mr-2" />
-                          <p className="font-medium text-gray-700">{modalData.email}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Téléphone</p>
-                        <div className="flex items-center mt-1">
-                          <FiPhone className="text-gray-400 mr-2" />
-                          <p className="font-medium text-gray-700">{modalData.telephone}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Adresse</p>
-                        <div className="flex items-center mt-1">
-                          <FiMapPin className="text-gray-400 mr-2" />
-                          <p className="font-medium text-gray-700">{modalData.adresse}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                      <FiInfo className="mr-2 text-indigo-500" />
-                      Détails du compte
-                    </h4>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Date de création</p>
-                        <div className="flex items-center mt-1">
-                          <FiCalendar className="text-gray-400 mr-2" />
-                          <p className="font-medium text-gray-700">{modalData.dateCreation}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Dernière connexion</p>
-                        <div className="flex items-center mt-1">
-                          <FiClock className="text-gray-400 mr-2" />
-                          <p className="font-medium text-gray-700">{modalData.derniereConnexion}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Méthode d&apos;authentification</p>
-                        <div className="flex items-center mt-1">
-                          <FiKey className="text-gray-400 mr-2" />
-                          <p className="font-medium text-gray-700">{modalData.authMethod}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Notes */}
-                {modalData.notes && (
-                  <div className="mb-8">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                      <FiStar className="mr-2 text-indigo-500" />
-                      Notes
-                    </h4>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                      <p className="text-gray-800 font-medium">{modalData.notes}</p>
-                    </div>
-                  </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(modalData.statut)}`}>
+                  {modalData.statut}
+                </span>
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(modalData.role)}`}>
+                  {modalData.role}
+                </span>
+                {modalData.authMethod === '2FA' && (
+                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    2FA Activé
+                  </span>
                 )}
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center">
+                  <FiSmartphone className="mr-1 w-3 h-3" />
+                  1 ligne attribuée
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="primary"
+                onClick={handleEditMode}
+              >
+                <FiEdit className="w-4 h-4" />
+                <span>Modifier</span>
+              </Button>
+              
+              <Button
+                variant="secondary"
+                onClick={sendCredentials}
+              >
+                <FiSend className="w-4 h-4" />
+                <span>Envoyer identifiants</span>
+              </Button>
+            </div>
+          </div>
+          
+          {/* Tabs for user details sections */}
+          <div className="border-b border-gray-200 mb-6">
+            <div className="flex flex-wrap space-x-8">
+              <button id="info-tab" className="px-1 py-3 border-b-2 border-indigo-500 font-medium text-indigo-600">
+                Informations
+              </button>
+              <button id="lines-tab" className="px-1 py-3 text-gray-500 hover:text-gray-700 font-medium">
+                Lignes téléphoniques
+              </button>
+              <button id="activity-tab" className="px-1 py-3 text-gray-500 hover:text-gray-700 font-medium">
+                Activité
+              </button>
+              <button id="permissions-tab" className="px-1 py-3 text-gray-500 hover:text-gray-700 font-medium">
+                Permissions
+              </button>
+            </div>
+          </div>
+          
+          {/* Tab content - Informations */}
+          <div id="info-tab-content">
+            {/* User information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <FiUser className="mr-2 text-indigo-500" />
+                  Coordonnées
+                </h4>
                 
-                {/* Role info */}
-                <div className="mb-8">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <FiShield className="mr-2 text-indigo-500" />
-                    Rôle
-                  </h4>
-                  
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <div className="flex items-center mb-4">
-                      {getRoleByName(modalData.role) && (
-                        <div className={`w-10 h-10 flex items-center justify-center rounded-lg ${getRoleByName(modalData.role)?.bgColor} ${getRoleByName(modalData.role)?.borderColor} mr-3`}>
-                          <FiShield className={getRoleByName(modalData.role)?.color} size={20} />
-                        </div>
-                      )}
-                      <div>
-                        <h5 className="font-semibold text-gray-800">{modalData.role}</h5>
-                        <p className="text-sm text-gray-500">{getRoleByName(modalData.role)?.description}</p>
-                      </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <div className="flex items-center mt-1 group">
+                      <FiMail className="text-gray-400 mr-2 group-hover:text-indigo-500" />
+                      <p className="font-medium text-gray-700">{modalData.email}</p>
+                      <button className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded-full">
+                        <FiCopy className="w-4 h-4 text-gray-500" />
+                      </button>
                     </div>
-                    
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (modalData.role) {
-                            closeModal();
-                            openRoleModal(modalData.role);
-                          }
-                        }}
-                      >
-                        <span>Détails du rôle</span>
-                        <FiExternalLink className="w-3 h-3 ml-1" />
-                      </Button>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Téléphone</p>
+                    <div className="flex items-center mt-1 group">
+                      <FiPhone className="text-gray-400 mr-2 group-hover:text-indigo-500" />
+                      <p className="font-medium text-gray-700">{modalData.telephone}</p>
+                      <button className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded-full">
+                        <FiCopy className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Adresse</p>
+                    <div className="flex items-start mt-1">
+                      <FiMapPin className="text-gray-400 mr-2 mt-0.5" />
+                      <p className="font-medium text-gray-700">{modalData.adresse}</p>
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <FiInfo className="mr-2 text-indigo-500" />
+                  Détails du compte
+                </h4>
                 
-                {/* Permissions */}
-                <div>
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <FiLock className="mr-2 text-indigo-500" />
-                    Permissions personnalisées
-                  </h4>
-                  
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <div className="mb-4 flex justify-between items-center">
-                      <p className="text-sm text-gray-500">Permissions ajoutées en supplément du rôle</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                      >
-                        <FiPlusCircle className="w-4 h-4" />
-                        <span>Ajouter</span>
-                      </Button>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Date de création</p>
+                    <div className="flex items-center mt-1">
+                      <FiCalendar className="text-gray-400 mr-2" />
+                      <p className="font-medium text-gray-700">{modalData.dateCreation}</p>
                     </div>
-                    
-                    {/* Permissions list */}
-                    <div className="space-y-2">
-                        {modalData.permissions.some(p => p === '*') ? (
-                          <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center justify-between">
-                            <div className="flex items-center">
-                              <FiCheckCircle className="text-indigo-500 mr-2" />
-                              <span className="font-medium text-indigo-700">Accès complet à toutes les fonctionnalités</span>
-                            </div>
-                            <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full font-medium">Admin</span>
-                          </div>
-                        ) : (
-                          modalData.permissions.map((permission, idx) => {
-                            const [category, key] = permission.split(':');
-                            const categoryInfo = permissionCategories[category];
-                            const isWildcard = key === '*';
-                            
-                            return (
-                              <div key={idx} className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-between">
-                                <div className="flex items-center">
-                                  {categoryInfo && categoryInfo.icon}
-                                  <span className="ml-2 font-medium text-gray-700">
-                                    {categoryInfo ? categoryInfo.title : category} {isWildcard ? '(Tous)' : `: ${key}`}
-                                  </span>
-                                </div>
-                                <div className="flex space-x-1">
-                                  <button className="p-1.5 hover:bg-gray-200 rounded-full">
-                                    <FiSlash className="w-4 h-4 text-gray-500" />
-                                  </button>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Dernière mise à jour</p>
+                    <div className="flex items-center mt-1">
+                      <FiRefreshCw className="text-gray-400 mr-2" />
+                      <p className="font-medium text-gray-700">{modalData.derniereMaj}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Dernière connexion</p>
+                    <div className="flex items-center mt-1">
+                      <FiClock className="text-gray-400 mr-2" />
+                      <p className="font-medium text-gray-700">{modalData.derniereConnexion}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Méthode d&apos;authentification</p>
+                    <div className="flex items-center mt-1">
+                      <FiKey className="text-gray-400 mr-2" />
+                      <p className="font-medium text-gray-700">{modalData.authMethod}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Langue</p>
+                    <div className="flex items-center mt-1">
+                      <FiGlobe className="text-gray-400 mr-2" />
+                      <p className="font-medium text-gray-700">{
+                        modalData.language === 'fr' ? 'Français' :
+                        modalData.language === 'en' ? 'Anglais' :
+                        modalData.language === 'es' ? 'Espagnol' :
+                        modalData.language === 'he' ? 'Hébreu' :
+                        modalData.language === 'ru' ? 'Russe' :
+                        modalData.language
+                      }</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Notes */}
+            {modalData.notes && (
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <FiStar className="mr-2 text-indigo-500" />
+                  Notes
+                </h4>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <p className="text-gray-800">{modalData.notes}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Role info */}
+            <div className="mb-8">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <FiShield className="mr-2 text-indigo-500" />
+                Rôle
+              </h4>
+              
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  {getRoleByName(modalData.role) && (
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-lg ${getRoleByName(modalData.role)?.bgColor} ${getRoleByName(modalData.role)?.borderColor} mr-3`}>
+                      <FiShield className={getRoleByName(modalData.role)?.color} size={20} />
+                    </div>
+                  )}
+                  <div>
+                    <h5 className="font-semibold text-gray-800">{modalData.role}</h5>
+                    <p className="text-sm text-gray-500">{getRoleByName(modalData.role)?.description}</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (modalData.role) {
+                        closeModal();
+                        openRoleModal(modalData.role);
+                      }
+                    }}
+                  >
+                    <span>Détails du rôle</span>
+                    <FiExternalLink className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tab content - Lignes téléphoniques (initially hidden) */}
+          <div id="lines-tab-content" className="hidden">
+            <div className="mb-6 flex justify-between items-center">
+              <h4 className="text-lg font-semibold text-gray-800 flex items-center">
+                <FiPhoneCall className="mr-2 text-indigo-500" />
+                Lignes téléphoniques attribuées
+              </h4>
+              
+              <Button
+                variant="outline"
+                size="sm"
+              >
+                <FiPlusCircle className="w-4 h-4 mr-2" />
+                <span>Attribuer une ligne</span>
+              </Button>
+            </div>
+            
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+              <div className="overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numéro</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appareil</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <FiPhone className="text-gray-400 mr-2" />
+                          <div className="font-medium text-gray-900">+33 1 23 45 67 89</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">Fixe</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">IP Phone XR-400</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Actif
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <button className="text-indigo-600 hover:text-indigo-900 p-1">
+                            <FiSettings className="w-4 h-4" />
+                          </button>
+                          <button className="text-red-600 hover:text-red-900 p-1">
+                            <FiSlash className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center text-gray-500">
+                          <FiPlus className="text-gray-400 mr-2" />
+                          <div className="italic">Aucune autre ligne attribuée</div>
+                        </div>
+                      </td>
+                      <td colSpan={4} className="px-6 py-4 whitespace-nowrap"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <FiActivity className="mr-2 text-indigo-500" />
+                Statistiques d&apos;appels (30 derniers jours)
+              </h4>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-500">Appels sortants</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">42</p>
+                    </div>
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <FiPhoneOutgoing className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 flex items-center">
+                    <FiArrowUp className="w-3 h-3 text-green-500 mr-1" />
+                    <span className="text-green-600 font-medium">+8%</span>
+                    <span className="ml-1">vs mois précédent</span>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-500">Appels entrants</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">37</p>
+                    </div>
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                      <FiPhoneIncoming className="w-5 h-5 text-indigo-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 flex items-center">
+                    <FiArrowDown className="w-3 h-3 text-red-500 mr-1" />
+                    <span className="text-red-600 font-medium">-3%</span>
+                    <span className="ml-1">vs mois précédent</span>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-500">Durée moyenne</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">3m 27s</p>
+                    </div>
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <FiClock className="w-5 h-5 text-purple-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 flex items-center">
+                    <FiArrowUp className="w-3 h-3 text-green-500 mr-1" />
+                    <span className="text-green-600 font-medium">+12%</span>
+                    <span className="ml-1">vs mois précédent</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tab content - Activity (initially hidden) */}
+          <div id="activity-tab-content" className="hidden">
+            <div className="mb-6 flex justify-between items-center">
+              <h4 className="text-lg font-semibold text-gray-800 flex items-center">
+                <FiActivity className="mr-2 text-indigo-500" />
+                Activité récente
+              </h4>
+              
+              <div className="flex items-center">
+                <span className="text-sm text-gray-500 mr-2">Filtrer:</span>
+                <select className="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option>Toutes les activités</option>
+                  <option>Connexions</option>
+                  <option>Modifications</option>
+                  <option>Appels</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+              <div className="space-y-6">
+                <div className="relative pl-8 pb-6 border-l-2 border-indigo-200">
+                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-indigo-500"></div>
+                  <div className="flex justify-between">
+                    <p className="font-medium text-gray-800">Connexion au système</p>
+                    <span className="text-xs text-gray-500">Aujourd&apos;hui à 10:25</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Connexion réussie depuis l&apos;appareil Windows Chrome</p>
+                  <p className="text-xs text-gray-500 mt-0.5">IP: 83.142.xx.xx · Paris, France</p>
+                </div>
+                
+                <div className="relative pl-8 pb-6 border-l-2 border-green-200">
+                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-green-500"></div>
+                  <div className="flex justify-between">
+                    <p className="font-medium text-gray-800">Modification du profil</p>
+                    <span className="text-xs text-gray-500">Hier à 14:32</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Numéro de téléphone mis à jour</p>
+                  <div className="text-xs text-gray-500 mt-0.5 flex">
+                    <span className="inline-block line-through">+33601020304</span>
+                    <FiArrowRight className="mx-1" />
+                    <span className="inline-block">{modalData.telephone}</span>
+                  </div>
+                </div>
+                
+                <div className="relative pl-8 pb-6 border-l-2 border-blue-200">
+                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-blue-500"></div>
+                  <div className="flex justify-between">
+                    <p className="font-medium text-gray-800">Attribution d&apos;une ligne</p>
+                    <span className="text-xs text-gray-500">02/03/2025 à 09:15</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Ligne téléphonique attribuée: +33 1 23 45 67 89</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Attribuée par: Admin (Jean Dupont)</p>
+                </div>
+                
+                <div className="relative pl-8 pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-gray-300"></div>
+                  <div className="flex justify-between">
+                    <p className="font-medium text-gray-800">Compte créé</p>
+                    <span className="text-xs text-gray-500">{modalData.dateCreation}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Utilisateur ajouté au système</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tab content - Permissions (initially hidden) */}
+          <div id="permissions-tab-content" className="hidden">
+            {/* Permissions */}
+            <div>
+              <div className="mb-6 flex justify-between items-center">
+                <h4 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <FiLock className="mr-2 text-indigo-500" />
+                  Permissions personnalisées
+                </h4>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                >
+                  <FiPlusCircle className="w-4 h-4 mr-2" />
+                  <span>Ajouter une permission</span>
+                </Button>
+              </div>
+              
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                <div className="mb-4 flex items-center">
+                  <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                    <FiShield className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-800">Permissions héritées du rôle</h5>
+                    <p className="text-sm text-gray-500">Ces permissions sont attribuées automatiquement via le rôle {modalData.role}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-100">
+                  {modalData.permissions.some(p => p === '*') ? (
+                    <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <FiCheckCircle className="text-indigo-500 mr-2" />
+                        <span className="font-medium text-indigo-700">Accès complet à toutes les fonctionnalités</span>
+                      </div>
+                      <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full font-medium">Admin</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {Object.entries(permissionCategories).map(([categoryKey, category]) => {
+                        const categoryPermissions = modalData.permissions.filter(
+                          p => p.startsWith(categoryKey + ':')
+                        );
+                        
+                        if (categoryPermissions.length === 0) return null;
+                        
+                        const hasAllInCategory = categoryPermissions.some(
+                          p => p.split(':')[1] === '*'
+                        );
+                        
+                        return (
+                          <div key={categoryKey} className="p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                {category.icon}
+                                <div className="ml-2">
+                                  <span className="font-medium text-gray-700">{category.title}</span>
+                                  {hasAllInCategory ? (
+                                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                      Toutes les permissions
+                                    </span>
+                                  ) : (
+                                    <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                      {categoryPermissions.length} permission{categoryPermissions.length > 1 ? 's' : ''}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          })
-                        )}
-                      </div>
+                              <button className="p-1.5 hover:bg-indigo-100 rounded text-gray-500 hover:text-indigo-600">
+                                <FiChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                </div>
-                
-                {/* Danger zone */}
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <h4 className="text-lg font-semibold text-red-600 mb-4 flex items-center">
-                    <FiAlertTriangle className="mr-2" />
-                    Zone de danger
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                      <div className="flex flex-col space-y-3">
-                        <div>
-                          <p className="font-medium text-red-700 mb-1">Désactiver l&apos;utilisateur</p>
-                          <p className="text-sm text-red-600">L&apos;utilisateur ne pourra plus se connecter.</p>
-                        </div>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={deactivateUser}
-                        >
-                          <FiLogOut className="w-4 h-4" />
-                          <span>Désactiver</span>
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                      <div className="flex flex-col space-y-3">
-                        <div>
-                          <p className="font-medium text-red-700 mb-1">Supprimer l&apos;utilisateur</p>
-                          <p className="text-sm text-red-600">Suppression définitive de l&apos;utilisateur.</p>
-                        </div>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => {
-                            showConfirmDialog(
-                              "Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action est irréversible.",
-                              () => {
-                                showToastMessage("L'utilisateur a été supprimé", "success");
-                                closeModal();
-                              }
-                            );
-                          }}
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                          <span>Supprimer</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
               
-              {/* Modal footer */}
-              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={closeModal}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  variant="primary"
-                >
-                  Enregistrer
-                </Button>
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <div className="mb-4 flex justify-between items-center">
+                  <div>
+                    <h5 className="font-semibold text-gray-800">Permissions supplémentaires</h5>
+                    <p className="text-sm text-gray-500">Permissions ajoutées en supplément du rôle</p>
+                  </div>
+                </div>
+                
+                {/* Here we would list any additional permissions beyond the role */}
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <div className="text-center py-8">
+                    <FiLock className="mx-auto h-10 w-10 text-gray-300 mb-2" />
+                    <p className="text-gray-500 text-sm">Aucune permission supplémentaire</p>
+                    <button className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors inline-flex items-center">
+                      <FiPlusCircle className="mr-2 h-4 w-4" />
+                      Ajouter une permission
+                    </button>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+          
+          {/* Danger zone */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h4 className="text-lg font-semibold text-red-600 mb-4 flex items-center">
+              <FiAlertTriangle className="mr-2" />
+              Zone de danger
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex flex-col space-y-3">
+                  <div>
+                    <p className="font-medium text-red-700 mb-1">Désactiver l&apos;utilisateur</p>
+                    <p className="text-sm text-red-600">L&apos;utilisateur ne pourra plus se connecter mais ses données seront conservées.</p>
+                  </div>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={deactivateUser}
+                  >
+                    <FiLogOut className="w-4 h-4" />
+                    <span>Désactiver</span>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex flex-col space-y-3">
+                  <div>
+                    <p className="font-medium text-red-700 mb-1">Supprimer l&apos;utilisateur</p>
+                    <p className="text-sm text-red-600">Suppression définitive de l&apos;utilisateur et de toutes ses données.</p>
+                  </div>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => {
+                      showConfirmDialog(
+                        "Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action est irréversible.",
+                        () => {
+                          showToastMessage("L'utilisateur a été supprimé", "success");
+                          closeModal();
+                        }
+                      );
+                    }}
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    <span>Supprimer</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Modal footer */}
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
+          <Button
+            variant="secondary"
+            onClick={closeModal}
+          >
+            Fermer
+          </Button>
+          <Button
+            variant="primary"
+          >
+            Enregistrer
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Role Details Modal */}
       <AnimatePresence>
@@ -2281,14 +2785,20 @@ const saveNewUser = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 20 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
             >
               {/* Modal header */}
               <div className="sticky top-0 bg-white z-10 border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900">Ajouter un nouveau rôle</h3>
+                <div className="flex items-center">
+                  <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                    <FiShield className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Ajouter un nouveau rôle</h3>
+                </div>
                 <button
                   onClick={() => setShowAddRoleModal(false)}
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Fermer"
                 >
                   <FiXCircle className="w-6 h-6 text-gray-500" />
                 </button>
@@ -2296,83 +2806,218 @@ const saveNewUser = () => {
               
               {/* Modal content */}
               <div className="p-6">
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nom du rôle
+                      Nom du rôle <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       placeholder="Ex: Manager"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
+                      required
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Description
+                      Couleur du rôle <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      placeholder="Décrivez les responsabilités de ce rôle..."
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 h-24"
-                    ></textarea>
+                    <div className="grid grid-cols-7 gap-2">
+                      {['indigo', 'blue', 'green', 'yellow', 'purple', 'pink', 'red'].map(color => (
+                        <div key={color} className="relative">
+                          <input 
+                            type="radio" 
+                            name="roleColor" 
+                            id={`color-${color}`} 
+                            value={color} 
+                            className="sr-only"
+                            defaultChecked={color === 'indigo'} 
+                          />
+                          <label 
+                            htmlFor={`color-${color}`}
+                            className={`flex items-center justify-center w-full h-10 rounded-lg cursor-pointer border-2 transition-all hover:opacity-90 bg-${color}-100 ${
+                              color === 'indigo' ? `border-${color}-700 ring-2 ring-${color}-200` : 'border-transparent'
+                            }`}
+                          >
+                            {color === 'indigo' && <FiCheck className={`text-${color}-700 w-5 h-5`} />}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2">
+                      <div className="p-2 rounded-lg bg-indigo-100 text-indigo-800 text-sm inline-block">
+                        Aperçu
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    placeholder="Décrivez les responsabilités de ce rôle..."
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 h-24"
+                  ></textarea>
+                </div>
+                
+                {/* Permissions section */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                        <FiLock className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-800">Permissions</h4>
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                      {/* Admin toggle */}
+                      <label className="flex items-center p-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">
+                        <input type="checkbox" className="w-4 h-4 text-indigo-600 rounded border-indigo-300 mr-2 focus:ring-indigo-500" />
+                        <span className="font-medium">Accès administrateur (*)</span>
+                      </label>
+                      
+                      {/* Search */}
+                      <div className="relative">
+                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input 
+                          type="text" 
+                          placeholder="Rechercher..." 
+                          className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm w-56"
+                        />
+                      </div>
+                    </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Couleur du rôle
-                    </label>
-                    <div className="flex space-x-3">
-                      {['indigo', 'blue', 'green', 'yellow', 'purple', 'pink', 'red'].map(color => (
-                        <div 
-                          key={color}
-                          className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
-                            color === 'indigo' ? 'border-indigo-700 ring-2 ring-indigo-200' : 'border-transparent'
-                          } bg-${color}-100`}
-                        ></div>
+                  {/* Permissions list */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button className="px-3 py-1.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 active:bg-gray-100">
+                        Tout sélectionner
+                      </button>
+                      <button className="px-3 py-1.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 active:bg-gray-100">
+                        Tout désélectionner
+                      </button>
+                      {Object.keys(permissionCategories).map(category => (
+                        <button 
+                          key={category}
+                          className="px-3 py-1.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 active:bg-gray-100 flex items-center"
+                        >
+                          {permissionCategories[category].icon}
+                          <span className="ml-1">{permissionCategories[category].title}</span>
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div className="space-y-6">
+                      {Object.entries(permissionCategories).map(([categoryKey, category]) => (
+                        <div key={categoryKey} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                          <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+                            <div className="flex items-center">
+                              <div className="p-2 bg-white rounded-lg shadow-sm mr-3">
+                                {category.icon}
+                              </div>
+                              <div>
+                                <h5 className="font-semibold text-gray-800">{category.title}</h5>
+                                <p className="text-xs text-gray-500">{categoryKey}</p>
+                              </div>
+                            </div>
+                            <label className="flex items-center">
+                              <input 
+                                type="checkbox" 
+                                className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer" 
+                                onChange={(e) => {
+                                  // This would select/deselect all permissions in this category
+                                  const checkboxes = document.querySelectorAll(`input[data-category="${categoryKey}"]`);
+                                  checkboxes.forEach(checkbox => {
+                                    (checkbox as HTMLInputElement).checked = e.target.checked;
+                                  });
+                                }}
+                              />
+                              <span className="ml-2 text-sm font-medium text-gray-700">Tout sélectionner</span>
+                            </label>
+                          </div>
+                          
+                          <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-1">
+                            {category.items.map((item) => (
+                              <div key={`${categoryKey}-${item.key}`}>
+                                <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                  <input 
+                                    type="checkbox" 
+                                    data-category={categoryKey}
+                                    data-permission={`${categoryKey}:${item.key}`}
+                                    className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3" 
+                                  />
+                                  <div>
+                                    <div className="flex items-center">
+                                      {item.icon}
+                                      <p className="ml-2 text-sm font-medium text-gray-700">{item.name}</p>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-0.5">{categoryKey}:{item.key}</p>
+                                  </div>
+                                </label>
+                                
+                                {item.subItems && item.subItems.length > 0 && (
+                                  <div className="ml-10 border-l-2 border-gray-100 pl-2 mt-1">
+                                    {item.subItems.map(subItem => (
+                                      <label key={`${categoryKey}-${item.key}-${subItem.key}`} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                        <input 
+                                          type="checkbox" 
+                                          data-category={categoryKey}
+                                          data-permission={`${categoryKey}:${item.key}:${subItem.key}`}
+                                          className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3" 
+                                        />
+                                        <div>
+                                          <div className="flex items-center">
+                                            {subItem.icon}
+                                            <p className="ml-2 text-xs text-gray-700">{subItem.name}</p>
+                                          </div>
+                                          <p className="text-xs text-gray-500 mt-0.5">{categoryKey}:{item.key}:{subItem.key}</p>
+                                        </div>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <label className="block text-sm font-semibold text-gray-700">
-                        Permissions
-                      </label>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                      >
-                        <FiPlusCircle className="w-4 h-4" />
-                        <span>Ajouter</span>
-                      </Button>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <div className="text-center text-gray-500 py-6">
-                        <FiLock className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                        <p className="font-medium">Aucune permission sélectionnée</p>
-                        <p className="text-sm mt-1">Ajoutez des permissions pour ce rôle</p>
-                      </div>
-                    </div>
+                  <div className="mt-3 text-xs text-gray-500 flex items-center">
+                    <FiInfo className="w-4 h-4 mr-1 text-gray-400" />
+                    <span>Le symbole (*) correspond à un accès complet à toutes les fonctionnalités.</span>
                   </div>
                 </div>
               </div>
               
               {/* Modal footer */}
-              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowAddRoleModal(false)}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={saveNewRole}
-                >
-                  Créer le rôle
-                </Button>
+              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-between items-center">
+                <div className="flex items-center text-sm">
+                  <span className="text-indigo-600 mr-2">
+                    <span className="font-medium">6</span> permissions sélectionnées
+                  </span>
+                  <span className="text-gray-500">sur 42 disponibles</span>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowAddRoleModal(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={saveNewRole}
+                  >
+                    Créer le rôle
+                  </Button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -2394,184 +3039,573 @@ const saveNewUser = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 20 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             >
-              {/* Modal header */}
+              {/* Modal header with step indicator */}
               <div className="sticky top-0 bg-white z-10 border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900">Ajouter un nouvel utilisateur</h3>
+                <div className="flex items-center">
+                  <h3 className="text-xl font-bold text-gray-900 mr-4">Ajouter un nouvel utilisateur</h3>
+                  <div className="hidden sm:flex items-center space-x-1 text-xs text-gray-500">
+                    <span id="step-1-indicator" className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full font-medium">1. Infos de base</span>
+                    <FiChevronRight className="text-gray-400" />
+                    <span id="step-2-indicator" className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">2. Permissions</span>
+                    <FiChevronRight className="text-gray-400" />
+                    <span id="step-3-indicator" className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">3. Notifications</span>
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowAddUserModal(false)}
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Fermer"
                 >
                   <FiXCircle className="w-6 h-6 text-gray-500" />
                 </button>
               </div>
               
-              {/* Modal content */}
+              {/* Modal content with step-based rendering */}
               <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Prénom
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Prénom"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    />
+                {/* Progress indicator for mobile */}
+                <div className="block sm:hidden mb-6">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="mobile-progress-bar" className="bg-indigo-600 h-2.5 rounded-full w-1/3"></div>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nom
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nom"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    />
+                  <div className="flex justify-between mt-2 text-xs text-gray-500">
+                    <span>Infos</span>
+                    <span>Permissions</span>
+                    <span>Notifications</span>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="nom@exemple.com"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    />
+                </div>
+
+                {/* Step 1: Basic information form */}
+                <div id="step-1-content" className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                      <FiUser className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-800">Informations personnelles</h4>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Téléphone
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="+33 X XX XX XX XX"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Prénom <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Prénom"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Nom <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Nom"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="nom@exemple.com"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Téléphone <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+33 X XX XX XX XX"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <div className="flex items-start justify-between">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Adresse
+                        </label>
+                        <span className="text-xs text-gray-500 italic">(optionnel)</span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Adresse complète"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
+                      />
+                    </div>
                   </div>
-                  
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Adresse
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Adresse complète"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Rôle
-                    </label>
-                    <select
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    >
-                      <option value="">Sélectionner un rôle</option>
-                      {roles.map(role => (
-                        <option key={role.name} value={role.name}>{role.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Statut
-                    </label>
-                    <select
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    >
-                      <option value="Actif">Actif</option>
-                      <option value="Inactif">Inactif</option>
-                    </select>
-                  </div>
-                  
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Notes
-                    </label>
-                    <textarea
-                      placeholder="Informations supplémentaires..."
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 h-24"
-                    ></textarea>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Méthode d&apos;authentification
-                    </label>
-                    <select
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    >
-                      <option value="Standard">Standard</option>
-                      <option value="2FA">2FA</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Langue
-                    </label>
-                    <select
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700"
-                    >
-                      <option value="fr">Français</option>
-                      <option value="en">English</option>
-                      <option value="es">Español</option>
-                      <option value="de">Deutsch</option>
-                    </select>
+
+                  <div className="mt-8">
+                    <div className="flex items-center mb-4">
+                      <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                        <FiShield className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-800">Rôle et accès système</h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Rôle <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 appearance-none pr-10"
+                            required
+                          >
+                            <option value="">Sélectionner un rôle</option>
+                            {roles.map(role => (
+                              <option key={role.name} value={role.name}>{role.name}</option>
+                            ))}
+                          </select>
+                          <FiChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400" />
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">Le rôle détermine les permissions de base de l&apos;utilisateur</p>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Statut <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 appearance-none pr-10"
+                            defaultValue="Actif"
+                            required
+                          >
+                            <option value="Actif">Actif</option>
+                            <option value="Inactif">Inactif</option>
+                          </select>
+                          <FiChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400" />
+                        </div>
+                      </div>
+
+                      {/* Attribution de ligne */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Attribution de ligne
+                        </label>
+                        <div className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 mb-1">Attribuer une ligne téléphonique</p>
+                              <p className="text-xs text-gray-500">Sélectionnez une ligne à assigner à cet utilisateur</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0"
+                            >
+                              <FiPhoneCall className="w-4 h-4 mr-2" />
+                              <span>Attribuer une ligne</span>
+                            </Button>
+                          </div>
+                          
+                          <div className="mt-3 flex items-center p-3 bg-white border border-indigo-100 rounded-lg">
+                            <div className="p-2 bg-indigo-100 rounded-full mr-3">
+                              <FiPhone className="w-4 h-4 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">Aucune ligne attribuée</p>
+                              <p className="text-xs text-gray-500">Cliquez sur le bouton pour attribuer une ligne</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Langue <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 appearance-none pr-10"
+                            defaultValue="fr"
+                            required
+                          >
+                            <option value="fr">Français</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="de">Deutsch</option>
+                          </select>
+                          <FiChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400" />
+                        </div>
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <div className="flex items-start justify-between">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Notes
+                          </label>
+                          <span className="text-xs text-gray-500 italic">(optionnel)</span>
+                        </div>
+                        <textarea
+                          placeholder="Informations supplémentaires..."
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700 h-24"
+                        ></textarea>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="mt-8">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <FiLock className="mr-2 text-indigo-500" />
-                    Permissions supplémentaires
-                  </h4>
+                {/* Step 2: Permissions section (initially hidden) */}
+                <div id="step-2-content" className="hidden">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                      <FiLock className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-800">Permissions</h4>
+                  </div>
                   
-                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <div className="flex justify-between items-center mb-4">
-                      <p className="text-sm text-gray-500">Permissions ajoutées en supplément du rôle</p>
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Permissions héritées du rôle</p>
+                        <p className="text-xs text-gray-500 mt-1">Ces permissions sont automatiquement assignées selon le rôle choisi</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                      <div className="space-y-2">
+                        {Object.entries(permissionCategories).slice(0, 3).map(([key, category]) => (
+                          <div key={key} className="p-3 bg-white border border-gray-200 rounded-lg">
+                            <div className="flex items-center">
+                              <div className="p-2 bg-indigo-50 rounded-lg mr-3">
+                                {category.icon}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-800">{category.title}</p>
+                                <p className="text-xs text-gray-500 mt-1">Accès complet</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Permissions supplémentaires</p>
+                        <p className="text-xs text-gray-500 mt-1">Ces permissions s&apos;ajoutent à celles du rôle</p>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => {
+                          // This would toggle visibility of the permissions list
+                          const permissionsList = document.getElementById('permissions-list');
+                          if (permissionsList) {
+                            permissionsList.classList.toggle('hidden');
+                          }
+                        }}
                       >
-                        <FiPlusCircle className="w-4 h-4" />
+                        <FiPlusCircle className="w-4 h-4 mr-2" />
                         <span>Ajouter</span>
                       </Button>
                     </div>
                     
-                    <div className="text-center text-gray-500 py-6">
-                      <p className="text-sm">Aucune permission supplémentaire</p>
+                    {/* Initially hidden list of available permissions */}
+                    <div id="permissions-list" className="hidden mb-6">
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <p className="font-medium text-gray-800">Sélectionner des permissions</p>
+                          <div className="relative w-64">
+                            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <input 
+                              type="text" 
+                              placeholder="Rechercher..." 
+                              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3 max-h-72 overflow-y-auto p-1">
+                          {Object.entries(permissionCategories).map(([key, category]) => (
+                            <div key={key} className="border border-gray-100 rounded-lg overflow-hidden">
+                              <div className="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                                <div className="flex items-center">
+                                  {category.icon}
+                                  <span className="ml-2 font-medium text-gray-700">{category.title}</span>
+                                </div>
+                                <FiChevronRight className="text-gray-400" />
+                              </div>
+                              <div className="p-2 space-y-1">
+                                {category.items.map((item) => (
+                                  <label key={item.key} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3" />
+                                    <div>
+                                      <p className="text-sm text-gray-700">{item.name}</p>
+                                      <p className="text-xs text-gray-500">{key}:{item.key}</p>
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="flex justify-end mt-4 gap-2">
+                          <Button 
+                            variant="secondary" 
+                            size="sm"
+                            onClick={() => {
+                              const permissionsList = document.getElementById('permissions-list');
+                              if (permissionsList) {
+                                permissionsList.classList.add('hidden');
+                              }
+                            }}
+                          >
+                            Annuler
+                          </Button>
+                          <Button 
+                            variant="primary" 
+                            size="sm"
+                            onClick={() => {
+                              const permissionsList = document.getElementById('permissions-list');
+                              if (permissionsList) {
+                                permissionsList.classList.add('hidden');
+                                // Show the added permissions UI
+                                const addedPermissions = document.getElementById('added-permissions');
+                                if (addedPermissions) {
+                                  addedPermissions.classList.remove('hidden');
+                                }
+                              }
+                            }}
+                          >
+                            Ajouter la sélection
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* UI for when permissions are added (initially hidden) */}
+                    <div id="added-permissions" className="hidden">
+                      <div className="space-y-2">
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="p-1.5 bg-indigo-50 rounded mr-3">
+                              <FiMail className="w-4 h-4 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">Modèles : Email</p>
+                              <p className="text-xs text-gray-500">modeles:email</p>
+                            </div>
+                          </div>
+                          <button className="p-1.5 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50">
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="p-1.5 bg-indigo-50 rounded mr-3">
+                              <FiPhoneCall className="w-4 h-4 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">PBX : Journal d&apos;appels</p>
+                              <p className="text-xs text-gray-500">pbx:journal-appels</p>
+                            </div>
+                          </div>
+                          <button className="p-1.5 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50">
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Empty state when no permissions added */}
+                    <div id="empty-permissions" className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <div className="text-center text-gray-500 py-6">
+                        <FiLock className="mx-auto w-10 h-10 mb-2 text-gray-300" />
+                        <p className="text-sm mb-1">Aucune permission supplémentaire</p>
+                        <p className="text-xs">Cliquez sur &quot;Ajouter&quot; pour attribuer des permissions supplémentaires</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Step 3: Notifications section (initially hidden) */}
+                <div id="step-3-content" className="hidden">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                      <FiMail className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-800">Notifications</h4>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-4">Configuration des notifications pour cet utilisateur</p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center">
+                          <FiMail className="w-5 h-5 text-gray-400 mr-3" />
+                          <span className="text-sm text-gray-700">Notifications par email</span>
+                        </div>
+                        <div className="w-14 h-8 flex items-center bg-indigo-500 rounded-full px-1 duration-300 ease-in-out cursor-pointer">
+                          <motion.div 
+                            initial={false}
+                            animate={{ 
+                              x: 24,
+                              backgroundColor: "#FFFFFF" 
+                            }}
+                            className="bg-white w-6 h-6 rounded-full shadow-md"
+                          ></motion.div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center">
+                          <FiMessageSquare className="w-5 h-5 text-gray-400 mr-3" />
+                          <span className="text-sm text-gray-700">Notifications SMS</span>
+                        </div>
+                        <div className="w-14 h-8 flex items-center bg-gray-200 rounded-full px-1 duration-300 ease-in-out cursor-pointer">
+                          <motion.div 
+                            initial={false}
+                            animate={{ 
+                              x: 0,
+                              backgroundColor: "#FFFFFF" 
+                            }}
+                            className="bg-white w-6 h-6 rounded-full shadow-md"
+                          ></motion.div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center">
+                          <FiSmartphone className="w-5 h-5 text-gray-400 mr-3" />
+                          <span className="text-sm text-gray-700">Notifications application</span>
+                        </div>
+                        <div className="w-14 h-8 flex items-center bg-indigo-500 rounded-full px-1 duration-300 ease-in-out cursor-pointer">
+                          <motion.div 
+                            initial={false}
+                            animate={{ 
+                              x: 24,
+                              backgroundColor: "#FFFFFF" 
+                            }}
+                            className="bg-white w-6 h-6 rounded-full shadow-md"
+                          ></motion.div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8">
+                    <div className="flex items-center mb-4">
+                      <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                        <FiMessageSquare className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-800">Préférences des notifications</h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                        <h5 className="font-medium text-gray-800 mb-2">Fréquence</h5>
+                        <div className="space-y-2">
+                          <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="radio" name="frequency" className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 mr-3" defaultChecked />
+                            <span className="text-sm text-gray-700">Immédiat</span>
+                          </label>
+                          <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="radio" name="frequency" className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 mr-3" />
+                            <span className="text-sm text-gray-700">Résumé quotidien</span>
+                          </label>
+                          <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="radio" name="frequency" className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 mr-3" />
+                            <span className="text-sm text-gray-700">Résumé hebdomadaire</span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                        <h5 className="font-medium text-gray-800 mb-2">Événements à notifier</h5>
+                        <div className="space-y-2">
+                          <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="checkbox" className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3" defaultChecked />
+                            <span className="text-sm text-gray-700">Connexions à la plateforme</span>
+                          </label>
+                          <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="checkbox" className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3" defaultChecked />
+                            <span className="text-sm text-gray-700">Activités importantes</span>
+                          </label>
+                          <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="checkbox" className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3" />
+                            <span className="text-sm text-gray-700">Mises à jour du système</span>
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Modal footer */}
-              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowAddUserModal(false)}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={saveNewUser}
-                >
-                  Créer l&apos;utilisateur
-                </Button>
+              {/* Modal footer with progression buttons */}
+              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 px-6 py-4 flex justify-between items-center">
+                <div id="step-indicator" className="flex items-center text-sm">
+                  <span className="text-indigo-600 font-medium">Étape 1/3:</span>
+                  <span className="ml-1 text-gray-600">Informations personnelles</span>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="secondary"
+                    className="hidden back-button"
+                    onClick={() => {
+                      // Handle back navigation between steps
+                      const currentStep = parseInt(document.getElementById('step-indicator')?.querySelector('span')?.textContent?.split('/')[0].replace('Étape ', '') || "1");
+                      if (currentStep > 1) {
+                        navigateStep(currentStep - 1);
+                      }
+                    }}
+                  >
+                    <FiChevronLeft className="mr-1 w-4 h-4" />
+                    <span>Précédent</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowAddUserModal(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="next-button"
+                    onClick={() => {
+                      // Handle forward navigation between steps
+                      const currentStep = parseInt(document.getElementById('step-indicator')?.querySelector('span')?.textContent?.split('/')[0].replace('Étape ', '') || "1");
+                      if (currentStep < 3) {
+                        navigateStep(currentStep + 1);
+                      } else {
+                        // Final step, save user
+                        saveNewUser();
+                      }
+                    }}
+                  >
+                    <span>Suivant</span>
+                    <FiChevronRight className="ml-1 w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </motion.div>
   );
 }

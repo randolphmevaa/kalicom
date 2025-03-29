@@ -3,17 +3,13 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiHash, 
-  FiEdit,
   FiSave,
   FiX,
   FiInfo,
   FiFileText,
-  // FiSettings,
   FiBox,
   FiUsers,
-  // FiCreditCard,
-  FiGrid,
-  // FiCheck
+  FiGrid
 } from 'react-icons/fi';
 
 // Interface for form data
@@ -65,9 +61,6 @@ interface AutreFormDataType {
 export default function Numerotation() {
   // State for active tab
   const [activeTab, setActiveTab] = useState<'vente' | 'autre'>('vente');
-  
-  // State for edit mode
-  const [editMode, setEditMode] = useState<boolean>(false);
   
   // State for Vente form data
   const [venteFormData, setVenteFormData] = useState<VenteFormDataType>({
@@ -132,11 +125,6 @@ export default function Numerotation() {
     { value: 'auto', label: 'Auto-généré' }
   ];
   
-  // Toggle edit mode
-  const toggleEditMode = (): void => {
-    setEditMode(!editMode);
-  };
-  
   // Handle input changes for Vente form
   const handleVenteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value, type } = e.target;
@@ -165,9 +153,8 @@ export default function Numerotation() {
     // Here you would typically send the data to your backend
     console.log('Vente Form submitted:', venteFormData);
     console.log('Autre Form submitted:', autreFormData);
-    // Show success message and exit edit mode
+    // Show success message
     alert('Paramètres de numérotation mis à jour avec succès!');
-    setEditMode(false);
   };
   
   // Handle form reset
@@ -215,34 +202,38 @@ export default function Numerotation() {
         referenceReglementCode: 'REG',
         referenceReglementUseCounter: true
       });
-      
-      setEditMode(false);
     }
   };
   
-  // Input field styling based on edit mode
+  // Input field styling - always editable now
   const getInputClass = (): string => {
-    return `w-full p-3 border ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+    return `w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`;
   };
   
-  // Prefix input field styling
+  // Prefix input field styling - always editable now
   const getPrefixInputClass = (): string => {
-    return `w-24 p-3 border ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-l-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+    return `w-24 p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`;
   };
   
-  // Number input field styling
+  // Number input field styling - always editable now
   const getNumberInputClass = (): string => {
-    return `w-32 p-3 border-t border-b border-r ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-r-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+    return `w-32 p-3 border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`;
   };
   
-  // Select field styling based on edit mode
+  // Select field styling - always editable now
   const getSelectClass = (): string => {
-    return `w-full p-3 border ${editMode ? 'border-gray-300' : 'border-gray-100 bg-gray-50'} rounded-lg ${editMode ? 'focus:ring-2 focus:ring-indigo-500 focus:border-transparent' : ''} text-black`;
+    return `w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`;
   };
   
   // Checkbox field styling
   const getCheckboxContainerClass = (): string => {
-    return `flex items-center space-x-2 ${!editMode ? 'opacity-75' : ''}`;
+    return `flex items-center space-x-2`;
+  };
+
+  // Animation variants for header
+  const headerVariants = {
+    initial: { opacity: 0, y: -20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
 
   return (
@@ -252,52 +243,58 @@ export default function Numerotation() {
       className="pt-20 min-h-screen bg-gray-50"
     >
       <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 pb-16">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-xl">
-          <div>
-            <motion.h1
-              initial={{ y: -20 }}
-              animate={{ y: 0 }}
-              className="text-3xl font-bold text-indigo-700 drop-shadow-md"
-            >
-              Numérotation
-            </motion.h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Paramètres de numérotation des documents et compteurs
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            {!editMode ? (
-              <button 
-                onClick={toggleEditMode}
-                className="p-2 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors duration-200"
-              >
-                <FiEdit className="w-6 h-6 text-indigo-600" />
-              </button>
-            ) : (
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <FiEdit className="w-6 h-6 text-amber-600" />
-              </div>
-            )}
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <FiHash className="w-6 h-6 text-indigo-600" />
-            </div>
-          </div>
-        </div>
+        {/* New Header with gradient styling */}
+        <motion.div
+          variants={headerVariants}
+          initial="initial"
+          animate="animate"
+          className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
+        >
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-white/70 to-indigo-400/10 rounded-3xl pointer-events-none" />
 
-        {/* Edit Mode Banner */}
-        {editMode && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg text-amber-800 flex justify-between items-center"
-          >
-            <div className="flex items-center">
-              <FiInfo className="h-5 w-5 mr-2" />
-              <span>Mode édition activé. Vous pouvez modifier les paramètres de numérotation.</span>
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <FiHash className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-800 to-indigo-500">
+                    Numérotation
+                  </h1>
+                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Paramètres de numérotation des documents et compteurs. Définissez les règles de numérotation pour vos documents de vente et autres éléments.
+                </p>
+              </div>
             </div>
-          </motion.div>
-        )}
+            
+            {/* Quick tip */}
+            <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiInfo className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Tous les champs sont directement modifiables. N&apos;oubliez pas d&apos;enregistrer vos modifications en cliquant sur le bouton &quot;Enregistrer les modifications&quot;.
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Main Form */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -355,7 +352,6 @@ export default function Numerotation() {
                       value={venteFormData.serie}
                       onChange={handleVenteInputChange}
                       className={getSelectClass()}
-                      disabled={!editMode}
                     >
                       {serieOptions.map(option => (
                         <option key={option.value} value={option.value}>
@@ -385,7 +381,6 @@ export default function Numerotation() {
                         value={venteFormData.methodeNumeration}
                         onChange={handleVenteInputChange}
                         className={getSelectClass()}
-                        disabled={!editMode}
                       >
                         {methodeNumerationOptions.map(option => (
                           <option key={option.value} value={option.value}>
@@ -410,7 +405,6 @@ export default function Numerotation() {
                               value={venteFormData.facturePrefix}
                               onChange={handleVenteInputChange}
                               className={getPrefixInputClass()}
-                              disabled={!editMode}
                               maxLength={5}
                               placeholder="Préfixe"
                             />
@@ -420,7 +414,6 @@ export default function Numerotation() {
                               value={venteFormData.factureNumber}
                               onChange={handleVenteInputChange}
                               className={getNumberInputClass()}
-                              disabled={!editMode}
                               placeholder="Numéro"
                             />
                           </div>
@@ -432,7 +425,6 @@ export default function Numerotation() {
                               checked={venteFormData.factureUseCounter}
                               onChange={handleVenteInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="factureUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -454,7 +446,6 @@ export default function Numerotation() {
                               value={venteFormData.avoirPrefix}
                               onChange={handleVenteInputChange}
                               className={getPrefixInputClass()}
-                              disabled={!editMode}
                               maxLength={5}
                               placeholder="Préfixe"
                             />
@@ -464,7 +455,6 @@ export default function Numerotation() {
                               value={venteFormData.avoirNumber}
                               onChange={handleVenteInputChange}
                               className={getNumberInputClass()}
-                              disabled={!editMode}
                               placeholder="Numéro"
                             />
                           </div>
@@ -476,7 +466,6 @@ export default function Numerotation() {
                               checked={venteFormData.avoirUseCounter}
                               onChange={handleVenteInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="avoirUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -498,7 +487,6 @@ export default function Numerotation() {
                               value={venteFormData.factureAcomptePrefix}
                               onChange={handleVenteInputChange}
                               className={getPrefixInputClass()}
-                              disabled={!editMode}
                               maxLength={5}
                               placeholder="Préfixe"
                             />
@@ -508,7 +496,6 @@ export default function Numerotation() {
                               value={venteFormData.factureAcompteNumber}
                               onChange={handleVenteInputChange}
                               className={getNumberInputClass()}
-                              disabled={!editMode}
                               placeholder="Numéro"
                             />
                           </div>
@@ -520,7 +507,6 @@ export default function Numerotation() {
                               checked={venteFormData.factureAcompteUseCounter}
                               onChange={handleVenteInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="factureAcompteUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -542,7 +528,6 @@ export default function Numerotation() {
                               value={venteFormData.avoirAcomptePrefix}
                               onChange={handleVenteInputChange}
                               className={getPrefixInputClass()}
-                              disabled={!editMode}
                               maxLength={5}
                               placeholder="Préfixe"
                             />
@@ -552,7 +537,6 @@ export default function Numerotation() {
                               value={venteFormData.avoirAcompteNumber}
                               onChange={handleVenteInputChange}
                               className={getNumberInputClass()}
-                              disabled={!editMode}
                               placeholder="Numéro"
                             />
                           </div>
@@ -564,7 +548,6 @@ export default function Numerotation() {
                               checked={venteFormData.avoirAcompteUseCounter}
                               onChange={handleVenteInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="avoirAcompteUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -595,7 +578,6 @@ export default function Numerotation() {
                             value={venteFormData.devisPrefix}
                             onChange={handleVenteInputChange}
                             className={getPrefixInputClass()}
-                            disabled={!editMode}
                             maxLength={5}
                             placeholder="Préfixe"
                           />
@@ -605,7 +587,6 @@ export default function Numerotation() {
                             value={venteFormData.devisNumber}
                             onChange={handleVenteInputChange}
                             className={getNumberInputClass()}
-                            disabled={!editMode}
                             placeholder="Numéro"
                           />
                         </div>
@@ -617,7 +598,6 @@ export default function Numerotation() {
                             checked={venteFormData.devisUseCounter}
                             onChange={handleVenteInputChange}
                             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            disabled={!editMode}
                           />
                           <label htmlFor="devisUseCounter" className="text-sm text-gray-700">
                             Utiliser le compteur
@@ -636,7 +616,6 @@ export default function Numerotation() {
                       checked={venteFormData.afficherOngletFactures}
                       onChange={handleVenteInputChange}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                      disabled={!editMode}
                     />
                     <label htmlFor="afficherOngletFactures" className="text-sm text-gray-700">
                       Afficher l&apos;onglet Factures/Avoirs/Acomptes
@@ -666,7 +645,6 @@ export default function Numerotation() {
                           value={autreFormData.articlesMethode}
                           onChange={handleAutreInputChange}
                           className={getSelectClass()}
-                          disabled={!editMode}
                         >
                           {methodeCodificationOptions.map(option => (
                             <option key={option.value} value={option.value}>
@@ -687,7 +665,6 @@ export default function Numerotation() {
                           value={autreFormData.articlesCode}
                           onChange={handleAutreInputChange}
                           className={getInputClass()}
-                          disabled={!editMode}
                           maxLength={5}
                         />
                       </div>
@@ -703,7 +680,6 @@ export default function Numerotation() {
                           value={autreFormData.articlesLongueur}
                           onChange={handleAutreInputChange}
                           className={getInputClass()}
-                          disabled={!editMode}
                           min="1"
                           max="10"
                         />
@@ -729,7 +705,6 @@ export default function Numerotation() {
                           value={autreFormData.clientsMethode}
                           onChange={handleAutreInputChange}
                           className={getSelectClass()}
-                          disabled={!editMode}
                         >
                           {methodeCodificationOptions.map(option => (
                             <option key={option.value} value={option.value}>
@@ -750,7 +725,6 @@ export default function Numerotation() {
                           value={autreFormData.clientsCode}
                           onChange={handleAutreInputChange}
                           className={getInputClass()}
-                          disabled={!editMode}
                           maxLength={5}
                         />
                       </div>
@@ -766,7 +740,6 @@ export default function Numerotation() {
                           value={autreFormData.clientsLongueur}
                           onChange={handleAutreInputChange}
                           className={getInputClass()}
-                          disabled={!editMode}
                           min="1"
                           max="10"
                         />
@@ -794,7 +767,6 @@ export default function Numerotation() {
                             value={autreFormData.famillesArticlesCode}
                             onChange={handleAutreInputChange}
                             className={`${getInputClass()} max-w-xs`}
-                            disabled={!editMode}
                             maxLength={5}
                           />
                           <div className={getCheckboxContainerClass()}>
@@ -805,7 +777,6 @@ export default function Numerotation() {
                               checked={autreFormData.famillesArticlesUseCounter}
                               onChange={handleAutreInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="famillesArticlesUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -826,7 +797,6 @@ export default function Numerotation() {
                             value={autreFormData.famillesClientsCode}
                             onChange={handleAutreInputChange}
                             className={`${getInputClass()} max-w-xs`}
-                            disabled={!editMode}
                             maxLength={5}
                           />
                           <div className={getCheckboxContainerClass()}>
@@ -837,7 +807,6 @@ export default function Numerotation() {
                               checked={autreFormData.famillesClientsUseCounter}
                               onChange={handleAutreInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="famillesClientsUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -858,7 +827,6 @@ export default function Numerotation() {
                             value={autreFormData.ecoContributionCode}
                             onChange={handleAutreInputChange}
                             className={`${getInputClass()} max-w-xs`}
-                            disabled={!editMode}
                             maxLength={5}
                           />
                           <div className={getCheckboxContainerClass()}>
@@ -869,7 +837,6 @@ export default function Numerotation() {
                               checked={autreFormData.ecoContributionUseCounter}
                               onChange={handleAutreInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="ecoContributionUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -890,7 +857,6 @@ export default function Numerotation() {
                             value={autreFormData.intervenantsCode}
                             onChange={handleAutreInputChange}
                             className={`${getInputClass()} max-w-xs`}
-                            disabled={!editMode}
                             maxLength={5}
                           />
                           <div className={getCheckboxContainerClass()}>
@@ -901,7 +867,6 @@ export default function Numerotation() {
                               checked={autreFormData.intervenantsUseCounter}
                               onChange={handleAutreInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="intervenantsUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -922,7 +887,6 @@ export default function Numerotation() {
                             value={autreFormData.referenceReglementCode}
                             onChange={handleAutreInputChange}
                             className={`${getInputClass()} max-w-xs`}
-                            disabled={!editMode}
                             maxLength={5}
                           />
                           <div className={getCheckboxContainerClass()}>
@@ -933,7 +897,6 @@ export default function Numerotation() {
                               checked={autreFormData.referenceReglementUseCounter}
                               onChange={handleAutreInputChange}
                               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              disabled={!editMode}
                             />
                             <label htmlFor="referenceReglementUseCounter" className="text-sm text-gray-700">
                               Utiliser le compteur
@@ -966,31 +929,29 @@ export default function Numerotation() {
               </div>
             </div>
             
-            {/* Form Actions */}
-            {editMode && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex justify-end space-x-4 p-6 bg-gray-50 border-t border-gray-200"
+            {/* Form Actions - now always visible */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-end space-x-4 p-6 bg-gray-50 border-t border-gray-200"
+            >
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
               >
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center space-x-2"
-                >
-                  <FiX className="w-5 h-5" />
-                  <span>Annuler</span>
-                </button>
-                
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2"
-                >
-                  <FiSave className="w-5 h-5" />
-                  <span>Enregistrer les modifications</span>
-                </button>
-              </motion.div>
-            )}
+                <FiX className="w-5 h-5" />
+                <span>Annuler</span>
+              </button>
+              
+              <button
+                type="submit"
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2"
+              >
+                <FiSave className="w-5 h-5" />
+                <span>Enregistrer les modifications</span>
+              </button>
+            </motion.div>
           </form>
         </div>
       </div>
