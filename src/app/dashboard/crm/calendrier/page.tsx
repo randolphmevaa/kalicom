@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import _ from 'lodash';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiClock, 
@@ -42,7 +43,9 @@ import {
   FiBold,
   FiMapPin,
   FiNavigation,
-  FiCommand
+  FiCommand,
+  FiArrowLeft,
+  FiMenu
 } from 'react-icons/fi';
 
 // Define a proper type for attachments
@@ -424,53 +427,25 @@ const WeatherIndicator: React.FC<WeatherIndicatorProps> = ({ condition = 'clear'
   );
 };
 
-// Enhanced CircleStat component with improved visuals
-// const CircleStat: React.FC<CircleStatProps> = ({ icon, color, size = 'md', pulse = false, onClick }) => {
-//   const sizeClasses: CircleSizeClassesType = {
-//     sm: { container: 'w-12 h-12', icon: 'w-5 h-5' },
-//     md: { container: 'w-16 h-16', icon: 'w-6 h-6' },
-//     lg: { container: 'w-20 h-20', icon: 'w-8 h-8' },
-//   };
+// Interface for address properties returned by the API
+export interface AddressProperties {
+  label: string;
+  name: string;
+  city?: string;
+  postcode?: string;
+}
 
-//   return (
-//     <motion.div
-//       whileHover={{ scale: 1.08, rotate: 3 }}
-//       whileTap={{ scale: 0.95 }}
-//       onClick={onClick}
-//       className={`relative ${sizeClasses[size].container} rounded-full flex items-center justify-center ${
-//         onClick ? 'cursor-pointer' : ''
-//       }`}
-//       style={{
-//         backgroundColor: `${color}15`,
-//         border: `2px solid ${color}50`,
-//         boxShadow: `0 4px 12px ${color}25`,
-//         transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-//       }}
-//     >
-//       <div 
-//         className={`${sizeClasses[size].icon} flex items-center justify-center relative z-10`} 
-//         style={{ color }}
-//       >
-//         {icon}
-//       </div>
-      
-//       {/* Enhanced visual effects */}
-//       <div 
-//         className="absolute inset-0 rounded-full opacity-20" 
-//         style={{ 
-//           background: `radial-gradient(circle at 30% 30%, ${color}, transparent 70%)` 
-//         }}
-//       ></div>
-      
-//       {pulse && (
-//         <span
-//           className="absolute inset-0 rounded-full animate-ping opacity-30 duration-1000"
-//           style={{ backgroundColor: color, animationDuration: '3s' }}
-//         ></span>
-//       )}
-//     </motion.div>
-//   );
-// };
+// Interface for address features returned by the API
+export interface AddressFeature {
+  properties: AddressProperties;
+  // Add other properties if needed (geometry, etc.)
+}
+
+// Interface for the address suggestion response
+export interface AddressSuggestionResponse {
+  features: AddressFeature[];
+  // Add other response properties if needed
+}
 
 // Enhanced Event Modal with premium UI/UX features
 const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onSave, onDelete, mode = 'view' }) => {
@@ -497,7 +472,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onSave,
       contact: 1,
       priority: 'medium',
       description: '',
-      location: 'Bureau',
+      location: '',
       allDay: false,
       isRecurring: false,
       recurrencePattern: 'none', // none, daily, weekly, monthly, yearly
@@ -518,6 +493,65 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onSave,
   // const [contextMenuPosition, setContextMenuPosition] = useState<PositionData | null>(null);
   // const [contextMenuEvent, setContextMenuEvent] = useState<EventType | null>(null);
   // const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  // First, inside the EventModal component, add these new state variables near other state definitions:
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressFeature[]>([]);
+const [isLoadingAddresses, setIsLoadingAddresses] = useState<boolean>(false);
+const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+
+  // Add proper type for the query parameter
+const fetchAddressSuggestions = async (query: string): Promise<void> => {
+  if (!query || query.length < 3) {
+    setAddressSuggestions([]);
+    return;
+  }
+  
+  setIsLoadingAddresses(true);
+  try {
+    const response = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`);
+    const data: AddressSuggestionResponse = await response.json();
+    setAddressSuggestions(data.features || []);
+  } catch (error) {
+    console.error('Error fetching address suggestions:', error);
+    setAddressSuggestions([]);
+  } finally {
+    setIsLoadingAddresses(false);
+  }
+};
+
+// Properly type the debounced function
+const debouncedFetchAddresses = useCallback(
+  _.debounce((query: string) => {
+    fetchAddressSuggestions(query);
+  }, 300),
+  []
+);
+
+// Add type for the event parameter
+const handleLocationInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const value = e.target.value;
+  
+  // Update form data
+  handleInputChange(e);
+  
+  // Fetch suggestions
+  if (isEditMode) {
+    debouncedFetchAddresses(value);
+    setShowSuggestions(true);
+  }
+};
+
+// Add type for the suggestion parameter
+const handleSelectAddress = (suggestion: AddressFeature): void => {
+  const selectedAddress = suggestion.properties.label;
+  
+  setFormData({
+    ...formData,
+    location: selectedAddress
+  });
+  
+  setShowSuggestions(false);
+  setAddressSuggestions([]);
+};
 
   useEffect(() => {
     if (event) {
@@ -957,7 +991,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onSave,
                         </div>
                       </div>
                       
-                      {/* Location with map icon */}
+                      {/* Location with map icon and suggestions */}
                       <div>
                         <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                           Lieu
@@ -979,11 +1013,58 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onSave,
                             id="location"
                             name="location"
                             value={formData.location}
-                            onChange={handleInputChange}
+                            onChange={handleLocationInputChange}
+                            onFocus={() => isEditMode && setShowSuggestions(true)}
+                            onBlur={() => {
+                              // Delay hiding suggestions to allow clicking on them
+                              setTimeout(() => setShowSuggestions(false), 200);
+                            }}
                             disabled={!isEditMode}
                             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-50 text-gray-500"
-                            placeholder="Adresse ou lieu de l'événement"
+                            placeholder="Ajouter un lieu"
                           />
+                          
+                          {/* Loading indicator */}
+                          {isLoadingAddresses && (
+                            <motion.div 
+                              animate={{ rotate: 360 }}
+                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                              className="absolute right-3 top-1/2 -translate-y-1/2"
+                            >
+                              <FiRefreshCw className="w-4 h-4 text-indigo-400" />
+                            </motion.div>
+                          )}
+                          
+                          {/* Address suggestions dropdown */}
+                          {showSuggestions && addressSuggestions.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto"
+                            >
+                              {addressSuggestions.map((suggestion, index) => (
+                                <motion.div
+                                  key={index}
+                                  whileHover={{ backgroundColor: "#f3f4f6" }}
+                                  className="px-3 py-2 cursor-pointer hover:bg-gray-50 text-sm text-gray-700 border-b border-gray-100 last:border-0"
+                                  onClick={() => handleSelectAddress(suggestion)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <FiMapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                    <div>
+                                      <div className="font-medium">{suggestion.properties.name}</div>
+                                      {suggestion.properties.city && (
+                                        <div className="text-xs text-gray-500">
+                                          {suggestion.properties.postcode} {suggestion.properties.city}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          )}
                         </div>
                       </div>
                       
@@ -1505,6 +1586,11 @@ const Calendar = () => {
   const dayTimeGridRef = useRef<HTMLDivElement>(null);
   const dragGhostRef = useRef<HTMLDivElement>(null);
   const selectionBoxRef = useRef<HTMLDivElement>(null);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
   
   // Screen size detection
   const [ , setIsMobile] = useState<boolean>(false);
@@ -1981,7 +2067,7 @@ const Calendar = () => {
         contact: 1,
         priority: 'medium',
         description: '',
-        location: 'Bureau',
+        location: '',
         allDay: false
       };
       
@@ -2152,7 +2238,7 @@ const Calendar = () => {
     
     setResizingEvent(event);
     setResizeType(type); // 'start' or 'end'
-    setResizeInitialTime(type === 'start' ? event.start : event.end);
+    setResizeInitialTime(type === 'start' ? new Date(event.start) : new Date(event.end));
     setIsResizing(true);
     
     // Store initial mouse position
@@ -2187,31 +2273,52 @@ const Calendar = () => {
         // Visual feedback during resize
         const eventElement = document.getElementById(`event-${resizingEvent.id}`);
         if (eventElement) {
-          const { top, height } = calculateEventPosition(
-            updatedEvent,
-            new Date(new Date().setHours(8, 0, 0, 0)),
-            new Date(new Date().setHours(21, 0, 0, 0))
-          );
-          
-          eventElement.style.top = `${top}%`;
-          eventElement.style.height = `${height}%`;
-          eventElement.style.transition = 'none'; // Disable transitions during resize
+          // Get proper reference to day container
+          const dayContainer = currentView === 'day' 
+            ? dayTimeGridRef.current 
+            : weekTimeGridRef.current;
+            
+          if (dayContainer) {
+            const { top, height } = calculateEventPosition(
+              updatedEvent,
+              new Date(new Date().setHours(8, 0, 0, 0)),
+              new Date(new Date().setHours(21, 0, 0, 0))
+            );
+            
+            eventElement.style.top = `${top}%`;
+            eventElement.style.height = `${height}%`;
+            eventElement.style.transition = 'none'; // Disable transitions during resize
+          }
         }
       }
     };
     
-    const handleMouseUp = () => {
-      if (isResizing && resizingEvent) {
+    const handleMouseUp = (e: MouseEvent) => {
+      if (isResizing && resizingEvent && resizeInitialTime) {
         // Finalize the resize
         const updatedEvent = { ...resizingEvent };
         
-        // Apply the final time changes
+        // Apply the final time changes - properly calculate the delta
+        const finalMouseY = e.clientY;
+        const deltaY = finalMouseY - initialY;
+        const deltaMinutes = Math.round(deltaY / 2);
+        
         if (resizeType === 'start') {
-          const newStart = new Date(updatedEvent.start);
-          updatedEvent.start = newStart;
+          const newStart = new Date(resizeInitialTime);
+          newStart.setMinutes(newStart.getMinutes() + deltaMinutes);
+          
+          // Ensure start time doesn't go past end time
+          if (newStart < new Date(resizingEvent.end)) {
+            updatedEvent.start = newStart;
+          }
         } else {
-          const newEnd = new Date(updatedEvent.end);
-          updatedEvent.end = newEnd;
+          const newEnd = new Date(resizeInitialTime);
+          newEnd.setMinutes(newEnd.getMinutes() + deltaMinutes);
+          
+          // Ensure end time doesn't go before start time
+          if (newEnd > new Date(resizingEvent.start)) {
+            updatedEvent.end = newEnd;
+          }
         }
         
         // Update the event in the events array
@@ -2550,7 +2657,7 @@ const Calendar = () => {
                     <h1 className="text-3xl font-bold text-indigo-900 drop-shadow-sm">
                       Calendrier
                     </h1>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 text-gray-500">
                       <WeatherIndicator condition="clear" temperature={22} />
                       <span className="text-xs text-gray-500 border-l border-gray-300 pl-2">
                         Paris, FR
@@ -2564,6 +2671,21 @@ const Calendar = () => {
               </div>
               
               <div className="flex flex-wrap items-center gap-3">
+                {/* Add sidebar toggle button */}
+                <Tooltip content={sidebarVisible ? "Masquer le panneau" : "Afficher le panneau"} position="bottom">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={toggleSidebar}
+                    className="p-3 rounded-xl transition-all shadow-md bg-white text-gray-700 hover:bg-gray-50"
+                    style={{
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.2)'
+                    }}
+                  >
+                    {sidebarVisible ? <FiArrowLeft className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
+                  </motion.button>
+                </Tooltip>
+
                 <Tooltip content="État de synchronisation" position="bottom">
                   <motion.div 
                     whileHover={{ scale: 1.05, y: -2 }}
@@ -2769,13 +2891,14 @@ const Calendar = () => {
         </motion.div>
 
         {/* Calendar and Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="flex relative">
           {/* Calendar */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="lg:col-span-3 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+            className={`bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden ${sidebarVisible ? 'w-3/4' : 'w-full'}`}
+            style={{ transition: 'width 0.3s ease-in-out' }}
             ref={calendarRef}
           >
             {/* Month View with enhanced drag-and-drop and multi-select */}
@@ -3149,7 +3272,7 @@ const Calendar = () => {
             {/* Day View */}
             {currentView === 'day' && (
               <div className="h-[800px] flex flex-col">
-                <div className="grid grid-cols-2 border-b border-gray-100">
+                <div className="grid grid-cols-2 relative divide-x divide-gray-100" ref={dayTimeGridRef}>
                   <div className="py-4 text-center text-sm font-medium text-gray-600 border-r border-gray-100">
                     Heures
                   </div>
@@ -3228,8 +3351,9 @@ const Calendar = () => {
                         );
                         
                         return (
-                          <div
+                          <motion.div
                             key={`event-${eventIndex}-${event.id}`}
+                            id={`event-${event.id}`}
                             className="absolute left-0 right-0 mx-1 rounded-md px-2 py-1 overflow-hidden shadow-sm hover:shadow-md cursor-pointer z-20"
                             style={{
                               ...getEventStyle(event),
@@ -3241,7 +3365,37 @@ const Calendar = () => {
                               e.stopPropagation();
                               handleEventClick(event);
                             }}
+                            onMouseDown={(e) => {
+                              if (e.button === 0) {
+                                // Only middle area for drag
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const relativeY = e.clientY - rect.top;
+                                const percentage = relativeY / rect.height * 100;
+                                
+                                if (percentage < 15) {
+                                  // Top area - resize start time
+                                  handleResizeStart(event, 'start', e);
+                                } else if (percentage > 85) {
+                                  // Bottom area - resize end time
+                                  handleResizeStart(event, 'end', e);
+                                } else {
+                                  // Middle area - drag the whole event
+                                  e.stopPropagation();
+                                  handleDragStart(event, e);
+                                }
+                              }
+                            }}
+                            onContextMenu={(e) => handleContextMenu(event, e)}
+                            draggable="true"
+                            whileHover={{
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                              scale: 1.01
+                            }}
                           >
+                            {/* Resize handles */}
+                            <div className="absolute top-0 left-0 right-0 h-2 bg-transparent cursor-ns-resize hover:bg-indigo-200/50"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-2 bg-transparent cursor-ns-resize hover:bg-indigo-200/50"></div>
+                            
                             <div className="text-xs font-semibold" style={{ color: eventCategories[event.category]?.color || '#4F46E5' }}>
                               {formatTime(event.start)} - {formatTime(event.end)}
                             </div>
@@ -3251,7 +3405,7 @@ const Calendar = () => {
                             <div className="text-xs text-gray-500 truncate">
                               {event.location}
                             </div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -3262,184 +3416,190 @@ const Calendar = () => {
           </motion.div>
           
           {/* Sidebar */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Search and filters */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
-              <div className="relative mb-4">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Rechercher..." 
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                  value={filter.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
-              
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FiTag className="text-indigo-500" />
-                  Types d&apos;événements
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(eventCategories).map(([id, category]) => (
-                    <button
-                      key={id}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
-                        filter.categories.includes(id) 
-                          ? `bg-${id === 'call' ? 'green' : id === 'meeting' ? 'indigo' : id === 'task' ? 'amber' : 'purple'}-100 text-${id === 'call' ? 'green' : id === 'meeting' ? 'indigo' : id === 'task' ? 'amber' : 'purple'}-700` 
-                          : 'bg-gray-100 text-gray-500'
-                      }`}
-                      style={{
-                        backgroundColor: filter.categories.includes(id) ? `${category.color}15` : '',
-                        color: filter.categories.includes(id) ? category.color : ''
-                      }}
-                      onClick={() => handleCategoryToggle(id)}
-                    >
-                      {category.icon}
-                      {category.name}
-                    </button>
-                  ))}
+          <AnimatePresence>
+          {sidebarVisible && (
+            <motion.div 
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="w-1/4 ml-6 space-y-6"
+            >
+              {/* Search and filters */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+                <div className="relative mb-4">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Rechercher..." 
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    value={filter.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                  />
                 </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FiAlertCircle className="text-indigo-500" />
-                  Priorité
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {priorities.map((priority) => (
-                    <button
-                      key={priority.id}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                        filter.priority.includes(priority.id) 
-                          ? `bg-${priority.id === 'high' ? 'red' : priority.id === 'medium' ? 'amber' : 'green'}-100 text-${priority.id === 'high' ? 'red' : priority.id === 'medium' ? 'amber' : 'green'}-700` 
-                          : 'bg-gray-100 text-gray-500'
-                      }`}
-                      style={{
-                        backgroundColor: filter.priority.includes(priority.id) ? `${priority.color}15` : '',
-                        color: filter.priority.includes(priority.id) ? priority.color : ''
-                      }}
-                      onClick={() => handlePriorityToggle(priority.id)}
-                    >
-                      {priority.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            {/* Upcoming events */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <FiClock className="text-indigo-500" />
-                  Événements à venir
-                </h3>
-                <span className="text-xs text-gray-500">7 prochains jours</span>
-              </div>
-              
-              <div className="space-y-3">
-                {upcomingEvents.length === 0 ? (
-                  <div className="text-center py-6">
-                    <div className="w-16 h-16 mx-auto bg-indigo-50 rounded-full flex items-center justify-center mb-3">
-                      <FiCalendar className="w-8 h-8 text-indigo-300" />
-                    </div>
-                    <p className="text-sm text-gray-500">Aucun événement à venir</p>
-                  </div>
-                ) : (
-                  upcomingEvents.map((event, index) => {
-                    const eventDay = new Date(event.start).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
-                    const isToday = isSameDay(new Date(event.start), new Date());
-                    
-                    return (
-                      <motion.div 
-                        key={`upcoming-${index}-${event.id}`}
-                        whileHover={{ x: 5 }}
-                        className="p-3 rounded-lg border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => handleEventClick(event)}
+                
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <FiTag className="text-indigo-500" />
+                    Types d&apos;événements
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(eventCategories).map(([id, category]) => (
+                      <button
+                        key={id}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+                          filter.categories.includes(id) 
+                            ? `bg-${id === 'call' ? 'green' : id === 'meeting' ? 'indigo' : id === 'task' ? 'amber' : 'purple'}-100 text-${id === 'call' ? 'green' : id === 'meeting' ? 'indigo' : id === 'task' ? 'amber' : 'purple'}-700` 
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                        style={{
+                          backgroundColor: filter.categories.includes(id) ? `${category.color}15` : '',
+                          color: filter.categories.includes(id) ? category.color : ''
+                        }}
+                        onClick={() => handleCategoryToggle(id)}
                       >
-                        <div className="flex justify-between items-start mb-1">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded" style={{ backgroundColor: `${eventCategories[event.category].color}15` }}>
-                              {eventCategories[event.category].icon}
+                        {category.icon}
+                        {category.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <FiAlertCircle className="text-indigo-500" />
+                    Priorité
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {priorities.map((priority) => (
+                      <button
+                        key={priority.id}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                          filter.priority.includes(priority.id) 
+                            ? `bg-${priority.id === 'high' ? 'red' : priority.id === 'medium' ? 'amber' : 'green'}-100 text-${priority.id === 'high' ? 'red' : priority.id === 'medium' ? 'amber' : 'green'}-700` 
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                        style={{
+                          backgroundColor: filter.priority.includes(priority.id) ? `${priority.color}15` : '',
+                          color: filter.priority.includes(priority.id) ? priority.color : ''
+                        }}
+                        onClick={() => handlePriorityToggle(priority.id)}
+                      >
+                        {priority.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Upcoming events */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <FiClock className="text-indigo-500" />
+                    Événements à venir
+                  </h3>
+                  <span className="text-xs text-gray-500">7 prochains jours</span>
+                </div>
+                
+                <div className="space-y-3">
+                  {upcomingEvents.length === 0 ? (
+                    <div className="text-center py-6">
+                      <div className="w-16 h-16 mx-auto bg-indigo-50 rounded-full flex items-center justify-center mb-3">
+                        <FiCalendar className="w-8 h-8 text-indigo-300" />
+                      </div>
+                      <p className="text-sm text-gray-500">Aucun événement à venir</p>
+                    </div>
+                  ) : (
+                    upcomingEvents.map((event, index) => {
+                      const eventDay = new Date(event.start).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+                      const isToday = isSameDay(new Date(event.start), new Date());
+                      
+                      return (
+                        <motion.div 
+                          key={`upcoming-${index}-${event.id}`}
+                          whileHover={{ x: 5 }}
+                          className="p-3 rounded-lg border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer"
+                          onClick={() => handleEventClick(event)}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded" style={{ backgroundColor: `${eventCategories[event.category].color}15` }}>
+                                {eventCategories[event.category].icon}
+                              </div>
+                              <span className="text-xs font-semibold" style={{ color: eventCategories[event.category]?.color || '#4F46E5' }}>
+                                {eventCategories[event.category].name}
+                              </span>
                             </div>
-                            <span className="text-xs font-semibold" style={{ color: eventCategories[event.category]?.color || '#4F46E5' }}>
-                              {eventCategories[event.category].name}
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              isToday ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {isToday ? "Aujourd'hui" : eventDay}
                             </span>
                           </div>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            isToday ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {isToday ? "Aujourd'hui" : eventDay}
-                          </span>
-                        </div>
-                        <h4 className="text-sm font-medium text-gray-800 mb-1 line-clamp-1">
-                          {event.title}
-                        </h4>
-                        <div className="flex justify-between items-center text-xs text-gray-500">
-                          <span>{getDisplayTimeForEvent(event)}</span>
-                          <span className={`px-1.5 py-0.5 rounded-full ${
-                            event.priority === 'high' ? 'bg-red-100 text-red-700' : 
-                            event.priority === 'medium' ? 'bg-amber-100 text-amber-700' : 
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {priorities.find(p => p.id === event.priority)?.name || 'Normal'}
-                          </span>
-                        </div>
-                      </motion.div>
-                    );
-                  })
+                          <h4 className="text-sm font-medium text-gray-800 mb-1 line-clamp-1">
+                            {event.title}
+                          </h4>
+                          <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>{getDisplayTimeForEvent(event)}</span>
+                            <span className={`px-1.5 py-0.5 rounded-full ${
+                              event.priority === 'high' ? 'bg-red-100 text-red-700' : 
+                              event.priority === 'medium' ? 'bg-amber-100 text-amber-700' : 
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {priorities.find(p => p.id === event.priority)?.name || 'Normal'}
+                            </span>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
+                </div>
+                
+                {upcomingEvents.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                    <motion.button
+                      whileHover={{ x: 5 }}
+                      whileTap={{ x: -2 }}
+                      className="text-xs text-indigo-600 font-medium flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
+                    >
+                      Voir tous les événements <FiChevronRight className="w-3 h-3" />
+                    </motion.button>
+                  </div>
                 )}
               </div>
               
-              {upcomingEvents.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                  <motion.button
-                    whileHover={{ x: 5 }}
-                    whileTap={{ x: -2 }}
-                    className="text-xs text-indigo-600 font-medium flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
-                  >
-                    Voir tous les événements <FiChevronRight className="w-3 h-3" />
-                  </motion.button>
+              {/* Quick Add */}
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg p-4 text-white">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FiPlusCircle className="text-indigo-200" />
+                  Créer rapidement
+                </h3>
+                
+                <div className="space-y-2">
+                  {Object.entries(eventCategories).map(([id, category]) => (
+                    <motion.button
+                      key={`quick-${id}`}
+                      whileHover={{ x: 5 }}
+                      whileTap={{ x: -2 }}
+                      className="w-full p-2 rounded-lg bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors flex items-center gap-2 text-sm"
+                      onClick={() => openModal('create', null, { 
+                        date: new Date(),
+                        defaultCategory: id
+                      })}
+                    >
+                      <div className="p-1.5 rounded-md" style={{ backgroundColor: `${category.color}20` }}>
+                        {category.icon}
+                      </div>
+                      {category.name}
+                    </motion.button>
+                  ))}
                 </div>
-              )}
-            </div>
-            
-            {/* Quick Add */}
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg p-4 text-white">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <FiPlusCircle className="text-indigo-200" />
-                Créer rapidement
-              </h3>
-              
-              <div className="space-y-2">
-                {Object.entries(eventCategories).map(([id, category]) => (
-                  <motion.button
-                    key={`quick-${id}`}
-                    whileHover={{ x: 5 }}
-                    whileTap={{ x: -2 }}
-                    className="w-full p-2 rounded-lg bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors flex items-center gap-2 text-sm"
-                    onClick={() => openModal('create', null, { 
-                      date: new Date(),
-                      defaultCategory: id
-                    })}
-                  >
-                    <div className="p-1.5 rounded-md" style={{ backgroundColor: `${category.color}20` }}>
-                      {category.icon}
-                    </div>
-                    {category.name}
-                  </motion.button>
-                ))}
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+          
         </div>
         
         {/* Event Modal */}
