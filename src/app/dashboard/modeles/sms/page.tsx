@@ -1,6 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+// import { AnimatePresence, motion } from 'framer-motion';
+// import { FiX, FiSmile, FiTag, FiCalendar, FiArchive, FiClock, FiSend, FiUsers, FiCheckSquare } from 'react-icons/fi';
+// import { Multiselect } from 'multiselect-react-dropdown';
 import {
   FiMessageSquare,
   FiSend,
@@ -39,7 +42,8 @@ import {
   FiArrowRight,
   FiArrowUp,
   FiArrowDown,
-  FiChevronLeft
+  FiChevronLeft,
+  FiUsers
 } from 'react-icons/fi';
 import {
   LineChart,
@@ -55,6 +59,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import Multiselect from 'multiselect-react-dropdown';
+import TemplateCreationModal from './TemplateCreationModal';
 
 /* ------------------------------------------
    1. Define your TypeScript interfaces/types
@@ -138,13 +144,22 @@ interface SmsData {
 type ExtendedCSSProperties = React.CSSProperties & {
   [key: `--${string}`]: string | number | undefined; // for custom CSS variables
   WebkitBackgroundClip?: string;                     // or other custom vendor properties
+  '--tw-ring-color': string;
 };
+
+// Add this type definition for recipients
+interface Recipient {
+  id: string;
+  name: string;
+  value: string;
+  label: string;
+}
 
 /* ------------------------------------------
    2. Main component
 ------------------------------------------- */
 export default function SMS() {
-  // State for active tab and selection
+  // Update state definitions with proper types
   const [activeTab, setActiveTab] = useState<'messages' | 'modeles' | 'parametres'>('messages');
   const [activeSubtab, setActiveSubtab] = useState<'tous' | 'envoyes' | 'brouillons' | 'programmes' | 'echecs'>('tous');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
@@ -153,10 +168,84 @@ export default function SMS() {
   const [viewMode, setViewMode] = useState<'liste' | 'grid'>('liste');
   const [editMode, setEditMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [ , setComposeMode] = useState(false);
+  const [ , setComposeMode] = useState(false); // Fix unused variable warning by removing the underscore
   const [notification, setNotification] = useState<NotificationState | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [messageText, setMessageText] = useState<string>('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<Recipient[]>([]); // Add proper type
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState<string | null>(null); // Add proper type
+  const [tags, setTags] = useState<string[]>([]); // Add proper type
+  const [showTagSelector, setShowTagSelector] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+
+  // Schedule message function
+  const scheduleMessage = (recipients: Recipient[], message: string, time: string | null, tags: string[]) => {
+    // Implementation could save the message for scheduled delivery
+    console.log('Scheduling message for', recipients, 'at', time, 'with tags', tags, 'and content:', message);
+    displayNotification("SMS programmé pour envoi ultérieur", "success");
+    closeDrawer();
+  };
+
+  // Save draft function
+  const saveDraft = (recipients: Recipient[], message: string, tags: string[]) => {
+    // Implementation to save as draft
+    console.log('Saving draft for', recipients, 'with tags', tags, 'and content:', message);
+    displayNotification("SMS enregistré comme brouillon", "success");
+    closeDrawer();
+  };
+
+  // Reset state when drawer opens
+  useEffect(() => {
+    if (drawerOpen) {
+      // Optionally reset or keep existing state
+    }
+  }, [drawerOpen]);
+
+  // Display notification function
+  // const displayNotification = (message, type) => {
+  //   // Assuming there's a notification system implemented elsewhere
+  //   if (window.displayNotification) {
+  //     window.displayNotification(message, type);
+  //   } else {
+  //     console.log(`Notification (${type}): ${message}`);
+  //   }
+  // };
+
+  // Send message function
+  // const sendMessage = () => {
+  //   if (!messageText?.trim()) {
+  //     displayNotification("Le message ne peut pas être vide", "error");
+  //     return;
+  //   }
+
+  //   if (selectedRecipients.length === 0) {
+  //     displayNotification("Veuillez sélectionner au moins un destinataire", "error");
+  //     return;
+  //   }
+
+  //   // Call the parent component's sendSMS function
+  //   if (sendSMS) {
+  //     const recipientIds = selectedRecipients.map(r => r.id || r.value);
+  //     sendSMS(recipientIds, messageText, tags);
+  //     displayNotification(
+  //       selectedRecipients.length > 1 
+  //         ? `SMS envoyé à ${selectedRecipients.length} destinataires` 
+  //         : "SMS envoyé avec succès", 
+  //       "success"
+  //     );
+  //   } else {
+  //     // Fallback if sendSMS not provided
+  //     displayNotification("SMS envoyé avec succès", "success");
+  //     console.log("Sending SMS to:", selectedRecipients, "Message:", messageText);
+  //   }
+    
+  //   closeDrawer();
+  // };
+
 
   // The primary theme color
   const primaryColor = '#1B0353';
@@ -734,6 +823,62 @@ export default function SMS() {
     displayNotification('SMS envoyé avec succès', 'success');
   };
 
+  
+  // Save as draft function
+  const saveAsDraft = () => {
+    if (saveDraft) {
+      saveDraft(selectedRecipients, messageText, tags);
+    }
+    displayNotification("SMS enregistré comme brouillon", "success");
+    closeDrawer();
+  };
+  
+  // Schedule message function
+  const handleScheduleMessage = () => {
+    if (showDatePicker) {
+      if (scheduleMessage && scheduledTime) {
+        scheduleMessage(selectedRecipients, messageText, scheduledTime, tags);
+      }
+      displayNotification("SMS programmé pour envoi ultérieur", "success");
+      setShowDatePicker(false);
+      closeDrawer();
+    } else {
+      setShowDatePicker(true);
+    }
+  };
+  
+  // Toggle bulk mode
+  const toggleBulkMode = () => {
+    setBulkMode(!bulkMode);
+    if (!bulkMode) {
+      displayNotification("Mode d'envoi groupé activé", "info");
+    } else {
+      setSelectedRecipients([]);
+    }
+  };
+
+  // Handle emoji selection
+  // const handleEmojiClick = (emoji) => {
+  //   setMessageText((prevText) => prevText + emoji.native);
+  //   setShowEmojiPicker(false);
+  // };
+
+  // // Handle tag selection
+  // const handleTagSelect = (selectedTags) => {
+  //   setTags(selectedTags);
+  // };
+
+  // Format recipients for display in multiselect
+  const formattedRecipients = smsData.map((sms ) => ({
+    id: sms.destinataire,
+    name: sms.destinataireName,
+    value: sms.destinataire,
+    label: sms.destinataireName
+  }));
+
+  // Calculate SMS count based on message length
+  const smsCount = Math.ceil((messageText?.length || 0) / 160) || 1;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -776,55 +921,84 @@ export default function SMS() {
       </div>
 
       <div className="pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-        {/* Header */}
+        {/* ---------- HEADER / HERO SECTION ---------- */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="p-6 bg-white rounded-2xl shadow-xl overflow-hidden relative"
+          className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-full opacity-70"></div>
-          <div className="relative">
-            <div className="flex items-center mb-2">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700" style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)`, WebkitBackgroundClip: 'text' }}>
-                Gestion SMS
-              </h1>
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/10 via-white/70 to-purple-700/10 rounded-3xl pointer-events-none" />
 
-            </div>
-            <p className="text-gray-600 max-w-2xl">
-              Gérez et suivez toutes vos communications SMS. Créez des modèles, programmez des envois et analysez vos campagnes.
-            </p>
-            
-            <div className="flex flex-wrap gap-4 mt-4">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
-                style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)` }}
-                onClick={handleCompose}
-              >
-                <FiMessageSquare className="mr-2" />
-                <span>Composer un nouveau SMS</span>
-              </motion.button>
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-700/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-purple-700/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-700/10 rounded-lg">
+                    <FiMessageSquare className="w-6 h-6 text-indigo-700" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700">
+                    Gestion SMS
+                  </h1>
+                  <span className="px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-700/10 rounded-full">
+                    {/* Replace with your actual SMS count variable or calculation */}
+                    0 messages
+                  </span>
+                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Gérez et suivez toutes vos communications SMS. Créez des modèles, 
+                  programmez des envois et analysez vos campagnes.
+                </p>
+              </div>
               
-              <motion.button 
+              <div className="flex space-x-4">
+                {/* Action Buttons */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-xl hover:shadow-lg transition"
+                  onClick={handleCompose}
+                >
+                  <FiMessageSquare className="mr-2" />
+                  Composer un SMS
+                </motion.button>
+              </div>
+            </div>
+            
+            {/* Action buttons row */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+                className="inline-flex items-center px-4 py-2 bg-indigo-700/10 text-indigo-700 rounded-xl hover:bg-indigo-700/20 transition"
                 onClick={() => {
                   setActiveTab('modeles');
                   setSelectedSMS(null);
                   displayNotification("Créez ou modifiez vos modèles", "info");
                 }}
               >
-                <FiFileText className="mr-2" style={{ color: primaryColor }} />
-                <span>Gérer les modèles</span>
+                <FiFileText className="mr-2" />
+                Gérer les modèles
               </motion.button>
               
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+                className="inline-flex items-center px-4 py-2 bg-indigo-700/10 text-indigo-700 rounded-xl hover:bg-indigo-700/20 transition"
                 onClick={() => {
                   displayNotification("Téléchargement du rapport en cours...", "info");
                   setTimeout(() => {
@@ -832,9 +1006,20 @@ export default function SMS() {
                   }, 1500);
                 }}
               >
-                <FiBarChart2 className="mr-2" style={{ color: primaryColor }} />
-                <span>Rapport d&apos;analytics</span>
+                <FiBarChart2 className="mr-2" />
+                Rapport d&apos;analytics
               </motion.button>
+            </div>
+            
+            {/* Quick tip */}
+            <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiInfo className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Composez des SMS personnalisés ou utilisez des modèles prédéfinis pour gagner du temps. Programmez vos envois pour optimiser vos campagnes.
+                </span>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -857,30 +1042,30 @@ export default function SMS() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                    <span className="text-sm">Envoyés</span>
+                    <span className="text-sm text-gray-500">Envoyés</span>
                   </div>
-                  <span className="text-sm font-medium">{smsData.filter(sms => sms.statut === 'Envoyé').length}</span>
+                  <span className="text-sm font-medium text-gray-500">{smsData.filter(sms => sms.statut === 'Envoyé').length}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                    <span className="text-sm">Programmés</span>
+                    <span className="text-sm text-gray-500">Programmés</span>
                   </div>
-                  <span className="text-sm font-medium">{smsData.filter(sms => sms.statut === 'Programmé').length}</span>
+                  <span className="text-sm font-medium text-gray-500">{smsData.filter(sms => sms.statut === 'Programmé').length}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-gray-500 mr-2"></div>
-                    <span className="text-sm">Brouillons</span>
+                    <span className="text-sm text-gray-500">Brouillons</span>
                   </div>
-                  <span className="text-sm font-medium">{smsData.filter(sms => sms.statut === 'Brouillon').length}</span>
+                  <span className="text-sm font-medium text-gray-500">{smsData.filter(sms => sms.statut === 'Brouillon').length}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                    <span className="text-sm">Échecs</span>
+                    <span className="text-sm text-gray-500">Échecs</span>
                   </div>
-                  <span className="text-sm font-medium">{smsData.filter(sms => sms.statut === 'Échec').length}</span>
+                  <span className="text-sm font-medium text-gray-500">{smsData.filter(sms => sms.statut === 'Échec').length}</span>
                 </div>
               </div>
               
@@ -929,7 +1114,7 @@ export default function SMS() {
                       {activity.icon}
                     </div>
                     <div>
-                      <div className="text-sm font-medium">{activity.action}</div>
+                      <div className="text-sm font-medium text-gray-700">{activity.action}</div>
                       <div className="text-xs text-gray-500">{activity.details}</div>
                       <div className="text-xs text-gray-400 mt-1">{activity.time}</div>
                     </div>
@@ -1059,7 +1244,7 @@ export default function SMS() {
 
               {/* Content for Messages tab */}
               {activeTab === 'messages' && (
-                <div className="p-6">
+                <div className="text-gray-500 p-6">
                   {/* Sub-tabs for message types */}
                   <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
                     <button 
@@ -1626,22 +1811,10 @@ export default function SMS() {
 
               {/* Content for Templates tab */}
               {activeTab === 'modeles' && (
-                <div className="p-6">
+                <div className="text-gray-500 p-6">
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-800">Modèles SMS</h2>
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center space-x-1 px-3 py-2 text-white rounded-lg shadow-sm hover:shadow transition"
-                      style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)` }}
-                      onClick={() => {
-                        // Logic to create new template
-                        displayNotification("Création d'un nouveau modèle", "info");
-                      }}
-                    >
-                      <FiPlus />
-                      <span>Créer un modèle</span>
-                    </motion.button>
+                    <TemplateCreationModal/>
                   </div>
                   
                   {/* Search for templates */}
@@ -1901,7 +2074,7 @@ export default function SMS() {
 
               {/* Content for Settings tab */}
               {activeTab === 'parametres' && (
-                <div className="p-6">
+                <div className="text-gray-500 p-6">
                   <h2 className="text-2xl font-bold text-gray-800 mb-6">Paramètres</h2>
                   
                   <div className="space-y-8">
@@ -2156,6 +2329,7 @@ export default function SMS() {
                   <button 
                     className="p-2 rounded-full hover:bg-gray-100 transition"
                     onClick={closeDrawer}
+                    aria-label="Fermer"
                   >
                     <FiX size={20} />
                   </button>
@@ -2165,8 +2339,19 @@ export default function SMS() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Modèle</label>
                     <select 
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                      style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
+                      className="text-gray-700 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                      style={{ '--tw-ring-color': `${primaryColor}40` } as ExtendedCSSProperties}
+                      value={selectedTemplateId}
+                      onChange={(e) => {
+                        const selectedId = e.target.value;
+                        setSelectedTemplateId(selectedId);
+                        if (selectedId) {
+                          const template = templatesData.find(t => t.id === selectedId);
+                          if (template) {
+                            setMessageText(template.content);
+                          }
+                        }
+                      }}
                     >
                       <option value="">Sélectionner un modèle</option>
                       {templatesData.map(template => (
@@ -2176,69 +2361,203 @@ export default function SMS() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Destinataire</label>
-                    <div className="flex">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-gray-700">Destinataire</label>
+                      <button 
+                        className={`flex items-center space-x-1 text-xs ${bulkMode ? 'text-blue-600' : 'text-gray-500'} hover:text-blue-700`}
+                        onClick={toggleBulkMode}
+                      >
+                        <FiUsers size={14} />
+                        <span>{bulkMode ? 'Mode groupé actif' : 'Activer envoi groupé'}</span>
+                      </button>
+                    </div>
+                    
+                    {bulkMode ? (
+                      <Multiselect
+                        options={formattedRecipients}
+                        selectedValues={selectedRecipients}
+                        onSelect={setSelectedRecipients}
+                        onRemove={setSelectedRecipients}
+                        displayValue="name"
+                        placeholder="Sélectionner des destinataires"
+                        style={{
+                          chips: { background: primaryColor },
+                          searchBox: { 
+                            border: '1px solid #D1D5DB', 
+                            borderRadius: '0.5rem', 
+                            padding: '0.5rem' 
+                          }
+                        }}
+                      />
+                    ) : (
                       <select 
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
+                        className="text-gray-700 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                        style={{ '--tw-ring-color': `${primaryColor}40` } as ExtendedCSSProperties}
+                        value={selectedRecipients.length > 0 ? selectedRecipients[0].id : ''}
+                        onChange={(e) => {
+                          const recipientId = e.target.value;
+                          if (recipientId) {
+                            const recipient = formattedRecipients.find(r => r.id === recipientId);
+                            if (recipient) {
+                              setSelectedRecipients([recipient]);
+                            }
+                          } else {
+                            setSelectedRecipients([]);
+                          }
+                        }}
                       >
                         <option value="">Sélectionner un contact</option>
-                        {smsData.map((sms, index) => (
-                          <option key={index} value={sms.destinataire}>{sms.destinataireName}</option>
+                        {formattedRecipients.map((recipient) => (
+                          <option key={recipient.id} value={recipient.id}>{recipient.name}</option>
                         ))}
                       </select>
-                    </div>
+                    )}
+                    
+                    {selectedRecipients.length > 0 && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        {selectedRecipients.length} destinataire{selectedRecipients.length > 1 ? 's' : ''} sélectionné{selectedRecipients.length > 1 ? 's' : ''}
+                      </div>
+                    )}
                   </div>
                   
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label className="block text-sm font-medium text-gray-700">Message</label>
-                      <span className="text-xs text-gray-500">0/160 caractères</span>
+                      <span className={`text-xs ${messageText?.length > 160 ? 'text-orange-500' : 'text-gray-500'}`}>
+                        {messageText?.length || 0}/160 caractères
+                      </span>
                     </div>
                     <textarea 
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent h-40"
-                      style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
+                      className="text-gray-700 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent h-40"
+                      style={{ '--tw-ring-color': `${primaryColor}40` } as ExtendedCSSProperties}
                       placeholder="Saisissez votre message..."
+                      value={messageText || ''}
+                      onChange={(e) => setMessageText(e.target.value)}
                     ></textarea>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
-                      <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition">
+                      <button 
+                        className={`p-2 ${showEmojiPicker ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} rounded transition`}
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        aria-label="Ajouter emoji"
+                      >
                         <FiSmile size={18} />
                       </button>
-                      <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition">
+                      <button 
+                        className={`p-2 ${showTagSelector ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} rounded transition`}
+                        onClick={() => setShowTagSelector(!showTagSelector)}
+                        aria-label="Ajouter tag"
+                      >
                         <FiTag size={18} />
                       </button>
-                      <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition">
+                      <button 
+                        className={`p-2 ${showDatePicker ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} rounded transition`}
+                        onClick={() => setShowDatePicker(!showDatePicker)}
+                        aria-label="Programmer"
+                      >
                         <FiCalendar size={18} />
                       </button>
                     </div>
                     <div className="flex items-center space-x-1 text-xs text-gray-500">
-                      <span>1 SMS</span>
+                      <span>{smsCount} SMS</span>
                       <span>•</span>
                       <span>Standard</span>
                     </div>
                   </div>
                   
+                  {/* Emoji picker would render here if showEmojiPicker is true */}
+                  {showEmojiPicker && (
+                    <div className="border border-gray-200 rounded-lg p-2 max-h-40 overflow-y-auto">
+                      {/* Simplified emoji picker - in a real app, use a library like emoji-mart */}
+                      <div className="grid grid-cols-8 gap-1">
+                        {['😀', '😂', '😊', '❤️', '👍', '🎉', '🔥', '✅', '⭐', '🚀', '📞', '📱', '👋', '🤔', '😎', '🙏'].map(emoji => (
+                          <button 
+                            key={emoji} 
+                            className="p-1 hover:bg-gray-100 rounded"
+                            onClick={() => {
+                              setMessageText(prev => prev + emoji);
+                              setShowEmojiPicker(false);
+                            }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Tag selector */}
+                  {showTagSelector && (
+                    <div className="border border-gray-200 rounded-lg p-2">
+                      <div className="text-gray-600 text-sm font-medium mb-2">Sélectionner des tags</div>
+                      <div className="space-y-1">
+                        {['#client', '#promo', '#rappel', '#urgent', '#info'].map(tag => (
+                          <div key={tag} className="flex items-center">
+                            <input 
+                              type="checkbox" 
+                              id={tag} 
+                              className="mr-2"
+                              checked={tags.includes(tag)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setTags([...tags, tag]);
+                                } else {
+                                  setTags(tags.filter(t => t !== tag));
+                                }
+                              }}
+                            />
+                            <label htmlFor={tag} className="text-gray-600 text-sm">{tag}</label>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex justify-end">
+                        <button 
+                          className="text-sm text-blue-600 hover:text-blue-800"
+                          onClick={() => setShowTagSelector(false)}
+                        >
+                          Appliquer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Date picker for scheduling */}
+                  {showDatePicker && (
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="text-sm font-medium mb-2 text-gray-600">Programmer l&apos;envoi</div>
+                      <input 
+                        type="datetime-local" 
+                        className="text-gray-600 w-full p-2 border border-gray-300 rounded"
+                        min={new Date().toISOString().slice(0, 16)}
+                        onChange={(e) => setScheduledTime(e.target.value)}
+                      />
+                      <div className="mt-2 flex justify-end">
+                        <button 
+                          className="text-sm text-blue-600 hover:text-blue-800"
+                          onClick={() => setShowDatePicker(false)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="border-t border-gray-200 pt-6 flex justify-between">
                     <div className="space-y-2">
                       <button 
                         className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                        onClick={() => {
-                          closeDrawer();
-                          displayNotification("SMS enregistré comme brouillon", "success");
-                        }}
+                        onClick={saveAsDraft}
+                        aria-label="Enregistrer brouillon"
                       >
                         <FiArchive size={16} />
                         <span>Enregistrer</span>
                       </button>
                       <button 
                         className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                        onClick={() => {
-                          closeDrawer();
-                          displayNotification("SMS programmé pour envoi ultérieur", "success");
-                        }}
+                        onClick={handleScheduleMessage}
+                        aria-label="Programmer envoi"
                       >
                         <FiClock size={16} />
                         <span>Programmer</span>
@@ -2252,6 +2571,8 @@ export default function SMS() {
                         className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg shadow-sm hover:shadow transition"
                         style={{ backgroundColor: primaryColor }}
                         onClick={sendMessage}
+                        disabled={!messageText?.trim() || selectedRecipients.length === 0}
+                        aria-label="Envoyer message"
                       >
                         <FiSend size={16} />
                         <span>Envoyer</span>
@@ -2289,7 +2610,7 @@ export default function SMS() {
                     <p className="text-sm text-gray-500">ID: {smsPreview.id}</p>
                   </div>
                   <button 
-                    className="p-2 rounded-full hover:bg-gray-100 transition"
+                    className="text-gray-500 p-2 rounded-full hover:bg-gray-100 transition"
                     onClick={() => setShowPreview(false)}
                   >
                     <FiX size={20} />
@@ -2308,7 +2629,7 @@ export default function SMS() {
                   </div>
                   
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="whitespace-pre-wrap">{smsPreview.contenu}</p>
+                    <p className="whitespace-pre-wrap text-gray-500">{smsPreview.contenu}</p>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">

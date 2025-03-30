@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import TemplateCreationModal from './TemplateCreationModal';
 import {
   FiMail,
   FiSend,
@@ -35,6 +36,7 @@ import {
 
 } from 'react-icons/fi';
 import { LineChart, Line, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import EmailComposeDrawer from './EmailComposeDrawer';
 
 type NotificationType = 'success' | 'warning' | 'error' | 'info';
 
@@ -49,6 +51,30 @@ type ExtendedCSSProperties = React.CSSProperties & {
   WebkitBackgroundClip?: string;                     // or other custom vendor properties
 };
 
+// Template section structure
+interface TemplateSection {
+  id: string;
+  name: string;
+  content: string;
+}
+
+// Complete email template structure
+interface EmailTemplate {
+  id: string;
+  nom: string;
+  description: string;
+  dateCreation: string;
+  derniereMaj: string;
+  isDefault: boolean;
+  category: string;
+  htmlContent: string;
+  subject: string;
+  sections: TemplateSection[];
+  variables: string[];
+  usageCount: number;
+  color: string;
+}
+
 export default function Email() {
   // Theme color
   const primaryColor = '#1B0353';
@@ -62,9 +88,10 @@ export default function Email() {
   const [viewMode, setViewMode] = useState('liste');
   const [editMode, setEditMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [composeMode, setComposeMode] = useState(false);
+  const [ , setComposeMode] = useState(false);
   const [notification, setNotification] = useState<NotificationPayload | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Filter states
@@ -479,6 +506,8 @@ export default function Email() {
     }
   ];
 
+
+
   // Filter options
   const statusOptions = ['Tous', 'Envoyé', 'Brouillon', 'Programmé'];
   const categoryOptions = ['Tous', 'Commercial', 'Comptabilité', 'Marketing', 'Support', 'Autre'];
@@ -594,6 +623,13 @@ export default function Email() {
     displayNotification("Modèle dupliqué avec succès", "success");
   };
 
+  // Update your handleCreateTemplate function with proper type annotation
+const handleCreateTemplate = (newTemplate: EmailTemplate) => {
+  setTemplatesData([...templatesData, newTemplate]);
+  setShowTemplateModal(false);
+  displayNotification("Modèle créé avec succès", "success");
+};
+
   // Delete template
   const deleteTemplate = (id: string) => {
     setTemplatesData(templatesData.filter(template => template.id !== id));
@@ -665,11 +701,11 @@ export default function Email() {
   };
   
   // Send email
-  const sendEmail = () => {
-    // Implement send logic here
-    closeDrawer();
-    displayNotification("Email envoyé avec succès", "success");
-  };
+  // const sendEmail = () => {
+  //   // Implement send logic here
+  //   closeDrawer();
+  //   displayNotification("Email envoyé avec succès", "success");
+  // };
 
   return (
     <motion.div
@@ -703,55 +739,84 @@ export default function Email() {
       </div>
 
       <div className="pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-        {/* Header */}
+        {/* ---------- HEADER / HERO SECTION ---------- */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="p-6 bg-white rounded-2xl shadow-xl overflow-hidden relative"
+          className="relative mb-8 overflow-hidden backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl border border-gray-100"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-full opacity-70"></div>
-          <div className="relative">
-            <div className="flex items-center mb-2">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700" style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)`, WebkitBackgroundClip: 'text' }}>
-                Gestion Emails
-              </h1>
+          {/* Background gradient with pattern */}
+          <div 
+            className="absolute inset-0 opacity-5 mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/10 via-white/70 to-purple-700/10 rounded-3xl pointer-events-none" />
 
-            </div>
-            <p className="text-gray-600 max-w-2xl">
-              Gérez et suivez votre communication par email. Créez des modèles personnalisés, automatisez vos envois et analysez les performances.
-            </p>
-            
-            <div className="flex flex-wrap gap-4 mt-4">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
-                style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)` }}
-                onClick={handleCompose}
-              >
-                <FiMail className="mr-2" />
-                <span>Composer un nouvel email</span>
-              </motion.button>
+          {/* Blurred circles for decoration */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-700/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-purple-700/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="relative p-8 z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+              <div className="max-w-2xl">
+                {/* Title with decorative elements */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-700/10 rounded-lg">
+                    <FiMail className="w-6 h-6 text-indigo-700" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700">
+                    Gestion Emails
+                  </h1>
+                  <span className="px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-700/10 rounded-full">
+                    {/* Replace with your actual email count variable or calculation */}
+                    0 emails
+                  </span>
+                </div>
+                
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Gérez et suivez votre communication par email. Créez des modèles personnalisés, 
+                  automatisez vos envois et analysez les performances.
+                </p>
+              </div>
               
-              <motion.button 
+              <div className="flex space-x-4">
+                {/* Action Buttons */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-xl hover:shadow-lg transition"
+                  onClick={handleCompose}
+                >
+                  <FiMail className="mr-2" />
+                  Composer un email
+                </motion.button>
+              </div>
+            </div>
+            
+            {/* Action buttons row */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+                className="inline-flex items-center px-4 py-2 bg-indigo-700/10 text-indigo-700 rounded-xl hover:bg-indigo-700/20 transition"
                 onClick={() => {
                   setActiveTab('modeles');
                   setSelectedEmail(null);
                   displayNotification("Créez ou modifiez vos modèles", "info");
                 }}
               >
-                <FiFileText className="mr-2" style={{ color: primaryColor }} />
-                <span>Gérer les modèles</span>
+                <FiFileText className="mr-2" />
+                Gérer les modèles
               </motion.button>
               
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+                className="inline-flex items-center px-4 py-2 bg-indigo-700/10 text-indigo-700 rounded-xl hover:bg-indigo-700/20 transition"
                 onClick={() => {
                   displayNotification("Téléchargement du rapport en cours...", "info");
                   setTimeout(() => {
@@ -759,9 +824,20 @@ export default function Email() {
                   }, 1500);
                 }}
               >
-                <FiBarChart2 className="mr-2" style={{ color: primaryColor }} />
-                <span>Rapport d&apos;analytics</span>
+                <FiBarChart2 className="mr-2" />
+                Rapport d&apos;analytics
               </motion.button>
+            </div>
+            
+            {/* Quick tip */}
+            <div className="mt-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <FiInfo className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-amber-700">Astuce :</span>{' '}
+                <span className="text-amber-700">
+                  Utilisez des modèles personnalisés pour standardiser votre communication. Suivez les taux d&apos;ouverture et de clic pour optimiser vos campagnes.
+                </span>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -776,7 +852,7 @@ export default function Email() {
             className="lg:col-span-1 space-y-6"
           >
             {/* Status Overview */}
-            <div className="bg-white rounded-2xl shadow-md p-6 overflow-hidden">
+            <div className="text-gray-500 bg-white rounded-2xl shadow-md p-6 overflow-hidden">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-gray-800">Statut des emails</h3>
               </div>
@@ -839,7 +915,7 @@ export default function Email() {
             </div>
             
             {/* Recent Activities */}
-            <div className="bg-white rounded-2xl shadow-md p-6 overflow-hidden">
+            <div className="text-gray-500 bg-white rounded-2xl shadow-md p-6 overflow-hidden">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-gray-800">Activité récente</h3>
                 <button className="text-xs hover:text-indigo-800 transition" style={{ color: primaryColor }}>
@@ -881,7 +957,7 @@ export default function Email() {
                   className="w-full p-3 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm hover:bg-blue-100 transition text-left flex items-center"
                   onClick={() => {
                     setActiveTab('modeles');
-                    displayNotification("Créez un nouveau modèle", "info");
+                    setShowTemplateModal(true); // Update this line
                   }}
                 >
                   <FiFileText className="mr-3" />
@@ -921,7 +997,7 @@ export default function Email() {
             className="lg:col-span-3 space-y-6"
           >
             {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+            <div className="text-gray-500 bg-white rounded-2xl shadow-md overflow-hidden">
               <div className="flex border-b">
                 <button
                   className={`flex-1 py-4 px-6 text-center font-medium transition flex items-center justify-center ${
@@ -1544,8 +1620,7 @@ export default function Email() {
                       className="flex items-center space-x-1 px-3 py-2 text-white rounded-lg shadow-sm hover:shadow transition"
                       style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)` }}
                       onClick={() => {
-                        // Logic to create new template
-                        displayNotification("Création d'un nouveau modèle", "info");
+                        setShowTemplateModal(true); // Update this line
                       }}
                     >
                       <FiPlus />
@@ -1973,8 +2048,8 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
               className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
+              <div className="text-gray-500 p-6 border-b">
+                <div className="text-gray-500 flex justify-between items-center">
                   <h3 className="text-xl font-bold text-gray-800">Détails de l&apos;email</h3>
                   <button 
                     onClick={() => setShowPreview(false)}
@@ -1991,7 +2066,7 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
                       <span className="text-lg">{emailPreview.avatar}</span>
                     </div>
                     <div>
-                      <p className="font-medium">{emailPreview.destinataireName}</p>
+                      <p className="font-medium text-gray-500">{emailPreview.destinataireName}</p>
                       <p className="text-sm text-gray-500">{emailPreview.destinataire}</p>
                     </div>
                   </div>
@@ -2002,14 +2077,14 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
                 
                 <div className="mb-6">
                   <div className="text-sm font-medium text-gray-700 mb-1">Objet:</div>
-                  <div className="px-3 py-2 bg-gray-50 rounded-lg">
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-gray-500 ">
                     {emailPreview.subject}
                   </div>
                 </div>
                 
                 <div className="mb-6">
                   <div className="text-sm font-medium text-gray-700 mb-1">Contenu:</div>
-                  <div className="px-3 py-2 bg-gray-50 rounded-lg whitespace-pre-line">
+                  <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg whitespace-pre-line">
                     {emailPreview.contenu}
                   </div>
                 </div>
@@ -2017,25 +2092,25 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Date d&apos;envoi:</div>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg text-sm">
                       {emailPreview.dateEnvoi || "Non envoyé"}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Date d&apos;ouverture:</div>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg text-sm">
                       {emailPreview.dateOuverture || "Non ouvert"}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Catégorie:</div>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg text-sm">
                       {emailPreview.category}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Créé par:</div>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg text-sm">
                       {emailPreview.createdBy}
                     </div>
                   </div>
@@ -2044,7 +2119,7 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
                 {emailPreview.documentRef && (
                   <div className="mb-6">
                     <div className="text-sm font-medium text-gray-700 mb-1">Document lié:</div>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg flex items-center">
+                    <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg flex items-center">
                       <FiFileText className="text-gray-500 mr-2" />
                       <span>{emailPreview.documentType} {emailPreview.documentRef}</span>
                     </div>
@@ -2054,7 +2129,7 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
                 {emailPreview.pieceJointe && (
                   <div className="mb-6">
                     <div className="text-sm font-medium text-gray-700 mb-1">Pièces jointes:</div>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg flex items-center">
+                    <div className="text-gray-500 px-3 py-2 bg-gray-50 rounded-lg flex items-center">
                       <FiPaperclip className="text-gray-500 mr-2" />
                       <span>{emailPreview.documentType} {emailPreview.documentRef}.pdf</span>
                       <button className="ml-auto text-indigo-700 text-sm hover:underline">
@@ -2091,170 +2166,12 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
       </AnimatePresence>
       
       {/* Compose/Edit Email Drawer */}
-      <AnimatePresence>
-        {drawerOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={closeDrawer}
-          >
-            <motion.div 
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30 }}
-              className="absolute right-0 top-0 bottom-0 w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex flex-col h-full">
-                <div className="p-6 border-b flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {composeMode ? 'Composer un email' : 'Modifier l\'email'}
-                  </h3>
-                  <button 
-                    onClick={closeDrawer}
-                    className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
-                  >
-                    <FiX />
-                  </button>
-                </div>
-                
-                <div className="p-6 flex-1 overflow-y-auto">
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Modèle</label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
-                      >
-                        <option value="">Sélectionner un modèle</option>
-                        {templatesData.map(template => (
-                          <option key={template.id} value={template.id}>{template.nom}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Destinataire</label>
-                      <input 
-                        type="email" 
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
-                        placeholder="email@exemple.com"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Objet</label>
-                      <input 
-                        type="text" 
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
-                        placeholder="Objet de l'email"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Contenu</label>
-                      <textarea 
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
-                        rows={10}
-                        placeholder="Contenu de l'email..."
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Variables</label>
-                      <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
-                        <span className="px-2 py-1 bg-gray-200 text-gray-800 rounded-lg text-sm cursor-pointer hover:bg-gray-300">
-                          [CLIENT_NOM]
-                        </span>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-800 rounded-lg text-sm cursor-pointer hover:bg-gray-300">
-                          [REF_DEVIS]
-                        </span>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-800 rounded-lg text-sm cursor-pointer hover:bg-gray-300">
-                          [MONTANT]
-                        </span>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-800 rounded-lg text-sm cursor-pointer hover:bg-gray-300">
-                          [DATE_VALIDITE]
-                        </span>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-800 rounded-lg text-sm cursor-pointer hover:bg-gray-300">
-                          [EXPEDITEUR_NOM]
-                        </span>
-                        <span className="px-2 py-1 border border-dashed border-gray-300 text-gray-500 rounded-lg text-sm cursor-pointer">
-                          + Ajouter une variable
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Pièces jointes</label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                        <FiPaperclip className="mx-auto mb-2 text-gray-400" size={24} />
-                        <p className="text-sm text-gray-500">Glissez-déposez des fichiers ici ou</p>
-                        <button className="mt-2 px-3 py-1 text-sm font-medium" style={{ color: primaryColor }}>
-                          Parcourir vos fichiers
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Planification</label>
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="checkbox" 
-                          id="schedule" 
-                          className="rounded text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <label htmlFor="schedule" className="text-sm text-gray-700">Planifier l&apos;envoi</label>
-                      </div>
-                      <div className="mt-2">
-                        <input 
-                          type="datetime-local" 
-                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                          style={{ '--tw-ring-color': `${primaryColor}40` }as ExtendedCSSProperties}
-                          disabled
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-6 border-t flex justify-end space-x-2">
-                  <button 
-                    onClick={closeDrawer}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    className="px-4 py-2 border text-white rounded-lg transition"
-                    style={{ backgroundColor: primaryColor }}
-                    onClick={() => {
-                      displayNotification("Email enregistré comme brouillon", "success");
-                      closeDrawer();
-                    }}
-                  >
-                    Enregistrer comme brouillon
-                  </button>
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 text-white rounded-lg shadow-sm hover:shadow transition"
-                    style={{ background: `linear-gradient(to right, ${primaryColor}, #4F0F9F)` }}
-                    onClick={sendEmail}
-                  >
-                    Envoyer maintenant
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {drawerOpen && (
+        <EmailComposeDrawer 
+          isOpen={drawerOpen} 
+          onClose={closeDrawer} 
+        />
+      )}
       
       {/* Notification */}
       <AnimatePresence>
@@ -2280,6 +2197,13 @@ className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg ho
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Template Creation Modal */}
+      <TemplateCreationModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onSave={handleCreateTemplate}
+        primaryColor={primaryColor}
+      />
     </motion.div>
   );
 }

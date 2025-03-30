@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { FaEuroSign } from "react-icons/fa";
 import {
   FiBox,
   FiSearch,
@@ -9,7 +10,7 @@ import {
   FiEdit,
   FiTrash2,
   FiEye,
-  FiDollarSign,
+  // FiDollarSign,
   FiBarChart2,
   FiTag,
   FiPackage,
@@ -491,7 +492,7 @@ export default function Produits() {
       id: "revenue",
       name: "Revenu mensuel",
       value: "46 853 €",
-      icon: <FiDollarSign className="h-6 w-6 text-emerald-600" />,
+      icon: <FaEuroSign className="h-6 w-6 text-emerald-600" />,
       change: "+8%",
       changeType: "increase",
     },
@@ -754,9 +755,7 @@ const handleSaveProduct = (productData: Product) => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() =>
-                  displaySuccessMessage("Formulaire d'ajout de produit ouvert")
-                }
+                onClick={handleAddProduct}
                 className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-[#1B0353] to-[#3B0A87] text-white rounded-xl hover:from-[#2A0570] hover:to-[#4B0DA7] transition shadow-md"
                 // onClick={handleAddProduct}Z
               >
@@ -1044,7 +1043,7 @@ const handleSaveProduct = (productData: Product) => {
                   <span>Modifier catégorie</span>
                 </button>
                 <button className="px-3 py-2 text-sm bg-[#1B0353] text-white rounded-lg hover:bg-[#2A0570] transition flex items-center space-x-1 shadow-sm">
-                  <FiDollarSign />
+                  <FaEuroSign />
                   <span>Modifier prix</span>
                 </button>
                 <button
@@ -1364,7 +1363,7 @@ const handleSaveProduct = (productData: Product) => {
                                 Changer catégorie
                               </button>
                               <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                <FiDollarSign className="mr-2" />
+                                <FaEuroSign className="mr-2" />
                                 Modifier prix
                               </button>
                               <button className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">

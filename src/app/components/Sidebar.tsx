@@ -6,7 +6,7 @@ import { FaGoogleDrive } from "react-icons/fa6";
 import { PiToolbox } from "react-icons/pi";
 import { RiWhatsappFill } from "react-icons/ri";
 import { BiLogoGmail } from "react-icons/bi";
-import { IoHomeOutline } from "react-icons/io5";
+// import { IoHomeOutline } from "react-icons/io5";
 import { IoApps } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import Link from 'next/link';
@@ -69,9 +69,9 @@ export type MenuSection = {
 const sections: Record<string, MenuSection> = {
   acceuil: {
     title: 'Acceuil',
-    icon: <IoHomeOutline size={20} className="text-white" />,
+    icon: <FiHome size={20} className="text-white" />,
     items: [
-      { name: 'Acceuil', href: '/dashboard/acceuil', icon: <IoHomeOutline size={20} className="text-white" /> },
+      { name: 'Acceuil', href: '/dashboard/acceuil', icon: <FiHome size={20} className="text-white" /> },
     ],
   },
   pbx: {

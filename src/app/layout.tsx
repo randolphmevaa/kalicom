@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 const fontHeader = localFont({
   src: [
     {
-      path: "./fonts/font2.woff2",
+      path: "./fonts/dsindigo-semibold.woff2",
       // weight: "700", // Uncomment/adjust if your font has weight variants
       style: "normal",
     },
@@ -32,7 +32,7 @@ const fontHeader = localFont({
 const fontBody = localFont({
   src: [
     {
-      path: "./fonts/font1.woff2",
+      path: "./fonts/dsindigo-regular.woff2",
       weight: "400",
       style: "normal",
     },
