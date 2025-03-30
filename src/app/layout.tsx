@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import { NavigationProvider } from "./components/NavLoading";
+// import { NavigationProvider } from "./components/NavLoading";
 
 // Import Google Fonts
 const geistSans = Geist({
@@ -84,9 +84,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${fontHeader.variable} ${fontBody.variable} antialiased`}
       >
-        <NavigationProvider>
+        {/* <NavigationProvider> */}
           {children}
-        </NavigationProvider>
+        {/* </NavigationProvider> */}
       </body>
     </html>
   );
