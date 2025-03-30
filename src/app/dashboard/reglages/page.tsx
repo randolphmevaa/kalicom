@@ -5,7 +5,6 @@ import {
   FiSettings,
   // FiSliders,
   FiGlobe,
-  FiDollarSign,
   FiServer,
   FiDatabase,
   FiLock,
@@ -36,6 +35,7 @@ import {
   // FiGrid,
   FiUser
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 export default function Reglages() {
   // State for active tab and section
@@ -319,7 +319,7 @@ export default function Reglages() {
                     onClick={() => setActiveSectionHandler('taxes')}
                   >
                     <div className="flex items-center">
-                      <FiDollarSign className="mr-2" />
+                      <FaEuroSign className="mr-2" />
                       <span>Taxes</span>
                     </div>
                   </button>

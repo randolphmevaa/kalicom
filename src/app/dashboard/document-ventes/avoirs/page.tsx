@@ -13,7 +13,6 @@ import {
   FiEye,
   FiDownload,
   FiSend,
-  FiDollarSign,
   FiClock,
   FiUser,
   // FiCalendar,
@@ -25,7 +24,9 @@ import {
   // FiPercent,
   // FiCheck,
   // FiX
+
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 export default function Avoirs() {
   // State for filters and search
@@ -146,7 +147,7 @@ export default function Avoirs() {
 
   // Statistics
   const statistics = [
-    { title: "Total avoirs", value: "7 103,00 €", icon: <FiDollarSign className="text-red-500" /> },
+    { title: "Total avoirs", value: "7 103,00 €", icon: <FaEuroSign className="text-red-500" /> },
     { title: "En attente", value: "499,00 €", icon: <FiClock className="text-amber-500" /> },
     { title: "Émis", value: "2 709,00 €", icon: <FiFileText className="text-blue-500" /> },
     { title: "Traités", value: "2 645,00 €", icon: <FiCheckCircle className="text-green-500" /> }

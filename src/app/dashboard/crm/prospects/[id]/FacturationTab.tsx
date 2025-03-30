@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiPercent, 
-  FiDollarSign, 
   FiTruck, 
   FiCheckSquare,
   FiEdit
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // Interfaces needed for the component
 interface Prospect {
@@ -162,7 +162,7 @@ const FacturationTab: React.FC<FacturationProps> = ({ prospect, loading }) => {
         className="bg-white rounded-2xl overflow-hidden shadow-lg border border-orange-100 hover:shadow-xl transition-shadow duration-300"
       >
         <SectionHeader 
-          icon={FiDollarSign} 
+          icon={FaEuroSign} 
           title="Facturation et remise" 
           subtitle="Paramètres de facturation et remises applicables" 
           color="bg-orange-500" 

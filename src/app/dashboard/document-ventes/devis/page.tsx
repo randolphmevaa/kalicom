@@ -12,7 +12,6 @@ import {
   FiEye,
   FiDownload,
   FiSend,
-  FiDollarSign,
   FiClock,
   FiUser,
   FiRefreshCw,
@@ -28,6 +27,7 @@ import {
   FiSliders,
 } from 'react-icons/fi';
 import CreateQuoteModal from './CreateQuoteModal';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // --------------------------------------------------------
 // 1) Define your data interfaces
@@ -302,7 +302,7 @@ export default function Devis() {
     {
       title: 'Total devis',
       value: '72 530,00 €',
-      icon: <FiDollarSign className="text-green-500" />,
+      icon: <FaEuroSign className="text-green-500" />,
       trend: '+15.7%',
       trendUp: true,
     },

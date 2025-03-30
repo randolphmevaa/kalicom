@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { 
   FiCalendar, 
   FiClock, 
-  FiDollarSign,
   FiAlertTriangle,
   FiLock,
   FiEdit,
@@ -11,6 +10,7 @@ import {
   FiCreditCard
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // Interfaces needed for the component
 interface Prospect {
@@ -316,7 +316,7 @@ const ReglementsSolvabiliteTab: React.FC<ReglementsSolvabiliteProps> = ({ prospe
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-green-50 rounded-xl p-4 border border-green-100">
               <div className="flex items-start">
-                <FiDollarSign className="text-green-500 w-5 h-5 mr-3 mt-0.5" />
+                <FaEuroSign className="text-green-500 w-5 h-5 mr-3 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-medium text-green-800">Calcul de l&apos;encours</h4>
                   <p className="text-sm text-green-700 mt-1">

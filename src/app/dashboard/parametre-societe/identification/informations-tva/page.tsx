@@ -6,12 +6,12 @@ import {
   FiX,
   FiInfo,
   FiPercent,
-  FiDollarSign,
   FiGlobe,
   FiSettings,
   FiAlertCircle,
   FiCheck
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // Define types for form data
 interface FormDataType {
@@ -236,7 +236,7 @@ export default function InformationsTVA() {
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center">
                 <div className="p-2 bg-indigo-100 rounded-lg mr-4">
-                  <FiDollarSign className="w-5 h-5 text-indigo-600" />
+                  <FaEuroSign className="w-5 h-5 text-indigo-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">Paramètres de TVA</h2>
               </div>

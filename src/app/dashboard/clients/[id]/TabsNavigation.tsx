@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiHome,
-  FiDollarSign,
   FiCreditCard,
   FiBriefcase,
   FiFileText,
@@ -11,6 +10,7 @@ import {
   FiChevronLeft,
   FiCheck
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // Tab interface
 interface TabItem {
@@ -39,7 +39,7 @@ const TabsNavigation: React.FC<TabsNavigationProps> = ({ activeTab, setActiveTab
     {
       id: 'facturation',
       label: 'Facturation',
-      icon: <FiDollarSign className="w-5 h-5" />,
+      icon: <FaEuroSign className="w-5 h-5" />,
       completed: true
     },
     {

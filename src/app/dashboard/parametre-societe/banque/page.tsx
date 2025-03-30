@@ -2,7 +2,6 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  FiDollarSign, 
   FiEdit,
   FiTrash2,
   FiPlus,
@@ -19,6 +18,7 @@ import {
   FiMail,
   FiGlobe
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // Define types for bank data
 interface BankType {
@@ -360,7 +360,7 @@ export default function Banque() {
                 {/* Title with decorative elements */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-indigo-100 rounded-lg">
-                    <FiDollarSign className="w-6 h-6 text-indigo-600" />
+                    <FaEuroSign className="w-6 h-6 text-indigo-600" />
                   </div>
                   <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-800 to-indigo-500">
                     Banque

@@ -31,7 +31,6 @@ import {
   FiCloudSnow,
   FiSun,
   FiWind,
-  FiDollarSign,
   FiShoppingBag,
   FiFileText,
   FiTrendingUp,
@@ -40,6 +39,8 @@ import {
   FiPieChart,
   FiSend
 } from 'react-icons/fi';
+// import 
+import { FaEuroSign } from 'react-icons/fa6';
 
 import ClientOverview from './ClientOverview';
 import FacturationTab from './FacturationTab';
@@ -971,7 +972,7 @@ const ClientDetailPage: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-white/10 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <FiDollarSign className="text-white/80" size={16} />
+                      <FaEuroSign className="text-white/80" size={16} />
                       <span className="text-white/70 text-sm">Valeur totale</span>
                     </div>
                     <p className="text-xl font-bold text-white">{client.valeurTotale}</p>
@@ -1568,7 +1569,7 @@ const ClientDetailPage: React.FC = () => {
                             {method.type === 'Carte bancaire' ? (
                               <FiCreditCard className="text-blue-600 w-5 h-5" />
                             ) : (
-                              <FiDollarSign className="text-green-600 w-5 h-5" />
+                              <FaEuroSign className="text-green-600 w-5 h-5" />
                             )}
                           </div>
                           <div>

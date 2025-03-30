@@ -13,7 +13,6 @@ import {
   FiEye,
   FiDownload,
   FiSend,
-  FiDollarSign,
   FiClock,
   FiUser,
   FiRefreshCw,
@@ -22,6 +21,7 @@ import {
   FiCheckCircle,
   FiInfo
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 // Define an interface for a deposit credit note
 interface DepositCreditNote {
@@ -135,7 +135,7 @@ const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   // Statistics
   const statistics = [
-    { title: "Total avoirs d'acompte", value: "4 950,00 €", icon: <FiDollarSign className="text-red-500" /> },
+    { title: "Total avoirs d'acompte", value: "4 950,00 €", icon: <FaEuroSign className="text-red-500" /> },
     { title: "En attente", value: "500,00 €", icon: <FiClock className="text-amber-500" /> },
     { title: "Émis", value: "1 900,00 €", icon: <FiInfo className="text-blue-500" /> },
     { title: "Traités", value: "1 800,00 €", icon: <FiCheckCircle className="text-green-500" /> }

@@ -1,8 +1,9 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-// import "leaflet/dist/leaflet.css";
+import { NavigationProvider } from "./components/NavLoading";
 
 // Import Google Fonts
 const geistSans = Geist({
@@ -20,7 +21,6 @@ const fontHeader = localFont({
   src: [
     {
       path: "./fonts/dsindigo-semibold.woff2",
-      // weight: "700", // Uncomment/adjust if your font has weight variants
       style: "normal",
     },
   ],
@@ -72,7 +72,6 @@ export const metadata: Metadata = {
       "Artboard 4.svg",
     ],
   },
-  // Optionally, add other metadata fields like authors, publisher, etc.
 };
 
 export default function RootLayout({
@@ -85,7 +84,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${fontHeader.variable} ${fontBody.variable} antialiased`}
       >
-        {children}
+        <NavigationProvider>
+          {children}
+        </NavigationProvider>
       </body>
     </html>
   );

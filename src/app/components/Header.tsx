@@ -161,7 +161,7 @@ export default function Header({ sidebarWidth }: HeaderProps) {
                   placeholder="Rechercher appels, contacts..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="bg-transparent outline-none w-full placeholder-gray-400 text-sm"
+                  className="text-gray-600 bg-transparent outline-none w-full placeholder-gray-400 text-sm"
                 />
               </motion.div>
             </div>

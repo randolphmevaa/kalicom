@@ -32,7 +32,6 @@ import {
   FiArrowUpRight,
   FiArrowDownRight,
   FiFlag,
-  FiDollarSign,
   FiUsers,
   FiBarChart2,
   // FiAlertCircle,
@@ -45,6 +44,7 @@ import {
 } from 'react-icons/fi';
 // import { useState } from 'react';
 import EventsComponent from './EventsComponent';
+import { FaEuroSign } from 'react-icons/fa6';
 
 
 const prospectData = [
@@ -401,7 +401,7 @@ export default function CRMTableauDeBord() {
                 className="bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-gray-100 shadow-md flex items-center gap-4 group hover:border-amber-200 transition-all duration-300"
               >
                 <div className="p-3 bg-gradient-to-br from-amber-100 to-amber-50 rounded-lg shadow-sm group-hover:shadow-md transition-all duration-300">
-                  <FiDollarSign className="w-5 h-5 text-amber-600" />
+                  <FaEuroSign className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 group-hover:text-amber-600 transition-colors">Chiffre d&apos;affaires</div>

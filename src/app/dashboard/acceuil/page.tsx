@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { FaEuroSign } from 'react-icons/fa6';
 import {
   BarChart,
   Bar,
@@ -20,7 +21,7 @@ import {
   FiPhoneCall,
   FiTarget,
   FiCalendar,
-  FiDollarSign,
+
   FiRefreshCw,
   FiSettings,
   FiDownload,
@@ -69,6 +70,7 @@ import {
   FiX,
   FiSend,
 } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
 
 // Define TypeScript interfaces for our data
 interface ProspectDataItem {
@@ -307,7 +309,8 @@ interface QuickActionCardProps {
 }
 
 // Enhanced Quick Action Card with fancy animations
-const QuickActionCard = ({ icon, title, color, description, onClick, pulse = false }: QuickActionCardProps) => {
+const QuickActionCard = ({ icon, title, color, description, onClick, pulse = false, href }: QuickActionCardProps) => {
+  const router = useRouter();
   const controls = useAnimation();
 
   const pulseAnimation = async () => {
@@ -333,6 +336,15 @@ const QuickActionCard = ({ icon, title, color, description, onClick, pulse = fal
     }
   }, [pulse]);
 
+  // Add a new handler that combines the original onClick with navigation
+  const handleClick = () => {
+    // Execute the original onClick if provided
+    if (onClick) onClick();
+    
+    // Navigate to the href
+    router.push(href);
+  };
+
   return (
     <motion.div
       whileHover={{ 
@@ -340,7 +352,7 @@ const QuickActionCard = ({ icon, title, color, description, onClick, pulse = fal
         boxShadow: `0 20px 30px -10px ${color}20`,
       }}
       whileTap={{ scale: 0.98 }}
-      onClick={onClick}
+      onClick={handleClick} // Use the new handler instead of just onClick
       animate={controls}
       className="bg-white p-5 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-xl"
       style={{ 
@@ -1271,6 +1283,8 @@ export default function AccueilDashboard() {
   const [notifications, setNotifications] = useState(notificationsData);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [isSearchActive ] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
   
   // Calculate summary statistics
   const totalCalls = callData.reduce((sum, item) => sum + item.appels, 0);
@@ -1283,14 +1297,31 @@ export default function AccueilDashboard() {
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
   // Refresh handler with improved animation
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    
-    // Simulate refresh delay
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1200);
-  };
+  // Refresh handler with improved animation
+const handleRefresh = () => {
+  setIsRefreshing(true);
+  
+  // Refresh the stats data (update the values)
+  // For this example, we'll use random increments
+  // const refreshedProspects = totalProspects + Math.floor(Math.random() * 10);
+  const refreshedClients = prospectData[prospectData.length-1].clients + Math.floor(Math.random() * 5);
+  // const refreshedTickets = Math.max(5, totalTickets + Math.floor(Math.random() * 7) - 3);
+  // const refreshedMessages = Math.max(3, chatMessages.length + Math.floor(Math.random() * 5) - 2);
+  
+  // Update the stats (you would need to modify your state here)
+  // This is a simplified example
+  const updatedProspectData = [...prospectData];
+  updatedProspectData[updatedProspectData.length-1].clients = refreshedClients;
+  
+  // Update your state variables (adjust these to match your actual state variables)
+  // setProspectData(updatedProspectData);
+  // Update other stats as needed
+  
+  // Simulate refresh delay
+  setTimeout(() => {
+    setIsRefreshing(false);
+  }, 1200);
+};
 
   // Mark notification as read
   const markNotificationAsRead = (id: number) => {
@@ -1394,12 +1425,23 @@ export default function AccueilDashboard() {
                         Bienvenue sur votre Tableau de Bord
                         </motion.h1>
                         <motion.p 
-                        className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5, duration: 0.5 }}
-                        >
-                        Dimanche, 23 Mars 2025 | Dernière connexion: il y a 2 heures
+                          className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5, duration: 0.5 }}
+                          >
+                          {new Date().toLocaleDateString('fr-FR', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          }).charAt(0).toUpperCase() + 
+                          new Date().toLocaleDateString('fr-FR', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          }).slice(1)} | Dernière connexion: il y a 2 heures
                         </motion.p>
                     </div>
                     </motion.div>
@@ -1516,6 +1558,7 @@ export default function AccueilDashboard() {
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => window.location.href = '/dashboard/reglages'}
                         className={`p-3 rounded-xl transition-all shadow-md ${
                         darkMode 
                             ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
@@ -1590,7 +1633,7 @@ export default function AccueilDashboard() {
                       badgeColor: "#EF4444"
                     },
                     { 
-                      icon: <FiDollarSign />, 
+                      icon: <FaEuroSign />, 
                       label: "CA mensuel", 
                       value: "45K€", 
                       color: "#0EA5E9",
@@ -1671,31 +1714,151 @@ export default function AccueilDashboard() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
-                    <motion.button
+                <div className="relative">
+                  <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
+                    onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
                     className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border shadow-sm hover:shadow transition-all ${
-                        darkMode 
-                        ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700' 
-                        : 'bg-white/80 text-gray-600 border-gray-200 hover:bg-white hover:text-indigo-600'
+                      darkMode 
+                      ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700' 
+                      : 'bg-white/80 text-gray-600 border-gray-200 hover:bg-white hover:text-indigo-600'
                     }`}
-                    >
+                  >
                     <FiDownload className="w-3.5 h-3.5" />
                     Exporter les données
-                    </motion.button>
+                  </motion.button>
+                  
+                  {exportDropdownOpen && (
+                    <div 
+                      className={`fixed mt-2 w-40 rounded-md ${
+                        darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                      } shadow-lg focus:outline-none z-50`}
+                      style={{
+                        top: 'auto',
+                        left: 'auto',
+                        transform: 'translateY(0)',
+                        maxHeight: '300px',
+                        overflow: 'auto'
+                      }}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            // Create and download PDF
+                            const dummyLink = document.createElement('a');
+                            dummyLink.href = 'data:application/pdf;charset=utf-8,';
+                            dummyLink.download = `tableau-de-bord_${new Date().toISOString().split('T')[0]}.pdf`;
+                            document.body.appendChild(dummyLink);
+                            dummyLink.click();
+                            document.body.removeChild(dummyLink);
+                            setExportDropdownOpen(false);
+                          }}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          Exporter en PDF
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Create and download CSV
+                            const dummyLink = document.createElement('a');
+                            dummyLink.href = 'data:text/csv;charset=utf-8,';
+                            dummyLink.download = `tableau-de-bord_${new Date().toISOString().split('T')[0]}.csv`;
+                            document.body.appendChild(dummyLink);
+                            dummyLink.click();
+                            document.body.removeChild(dummyLink);
+                            setExportDropdownOpen(false);
+                          }}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          Exporter en CSV
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                     
-                    <motion.button
+                <div className="relative">
+                  <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
+                    onClick={() => setActionDropdownOpen(!actionDropdownOpen)}
                     className={`flex items-center gap-2 px-4 py-2 text-xs font-medium text-white rounded-lg shadow-sm hover:shadow-md transition-all ${
-                        darkMode 
-                        ? 'bg-gradient-to-r from-indigo-700 to-[#004AC8]' 
-                        : 'bg-gradient-to-r from-indigo-600 to-[#004AC8]'
+                      darkMode 
+                      ? 'bg-gradient-to-r from-indigo-700 to-[#004AC8]' 
+                      : 'bg-gradient-to-r from-indigo-600 to-[#004AC8]'
                     }`}
-                    >
+                  >
                     <FiPlus className="w-3.5 h-3.5" />
                     Nouvelle action
-                    </motion.button>
+                  </motion.button>
+                  
+                  {actionDropdownOpen && (
+                    <div 
+                      className={`fixed mt-2 w-56 rounded-md ${
+                        darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                      } shadow-lg focus:outline-none z-50`}
+                      style={{
+                        top: 'auto',
+                        left: 'auto',
+                        transform: 'translateY(0)',
+                        maxHeight: '300px',
+                        overflow: 'auto'
+                      }}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            window.location.href = '/dashboard/crm/prospects';
+                            setActionDropdownOpen(false);
+                          }}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          Nouveau prospect
+                        </button>
+                        <button
+                          onClick={() => {
+                            window.location.href = '/dashboard/clients';
+                            setActionDropdownOpen(false);
+                          }}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          Nouveau client
+                        </button>
+                        <button
+                          onClick={() => {
+                            window.location.href = '/dashboard/support-tickets';
+                            setActionDropdownOpen(false);
+                          }}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          Nouveau ticket
+                        </button>
+                        <button
+                          onClick={() => {
+                            window.location.href = '/dashboard/crm/calendrier';
+                            setActionDropdownOpen(false);
+                          }}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          Nouvel événement
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 </div>
                 </div>
             </div>
@@ -1714,7 +1877,7 @@ export default function AccueilDashboard() {
                 color="#4F46E5"
                 onClick={() => console.log('New Prospect')}
                 pulse={true}
-                href="/prospects/nouveau"
+                href="/dashboard/crm/prospects"
               />
               <QuickActionCard
                 icon={<FiUsers className="w-6 h-6" />}
@@ -1722,7 +1885,7 @@ export default function AccueilDashboard() {
                 description="Ajouter un client"
                 color="#10B981"
                 onClick={() => console.log('New Client')}
-                href="/clients/nouveau"
+                href="/dashboard/clients"
               />
               <QuickActionCard
                 icon={<FiPhoneCall className="w-6 h-6" />}
@@ -1730,7 +1893,7 @@ export default function AccueilDashboard() {
                 description="Contacter un contact"
                 color="#004AC8"
                 onClick={() => console.log('Make Call')}
-                href="/appels/nouveau"
+                href="/dashboard/pbx/poste-de-travail"
               />
               <QuickActionCard
                 icon={<FiHeadphones className="w-6 h-6" />}
@@ -1739,7 +1902,7 @@ export default function AccueilDashboard() {
                 color="#8B5CF6"
                 onClick={() => console.log('New Ticket')}
                 pulse={openTickets > 5}
-                href="/tickets/nouveau"
+                href="/dashboard/support-tickets"
               />
               <QuickActionCard
                 icon={<FiCalendar className="w-6 h-6" />}
@@ -1747,7 +1910,7 @@ export default function AccueilDashboard() {
                 description="Gérer le calendrier"
                 color="#F59E0B"
                 onClick={() => console.log('Schedule')}
-                href="/calendrier"
+                href="/dashboard/crm/calendrier"
               />
               <QuickActionCard
                 icon={<FiMessageSquare className="w-6 h-6" />}
@@ -1756,7 +1919,7 @@ export default function AccueilDashboard() {
                 color="#EF4444"
                 onClick={() => console.log('Send Message')}
                 pulse={unreadMessages > 0}
-                href="/messages/nouveau"
+                href="/dashboard/crm/chat"
               />
               <QuickActionCard
                 icon={<FiFileText className="w-6 h-6" />}
@@ -1764,15 +1927,15 @@ export default function AccueilDashboard() {
                 description="Facturation client"
                 color="#6366F1"
                 onClick={() => console.log('Create Invoice')}
-                href="/factures/nouvelle"
+                href="/dashboard/document-ventes/factures"
               />
               <QuickActionCard
-                icon={<FiDollarSign className="w-6 h-6" />}
+                icon={<FaEuroSign className="w-6 h-6" />}
                 title="Créer devis"
                 description="Proposer une offre"
                 color="#475569"
                 onClick={() => console.log('Create Quote')}
-                href="/devis/nouveau"
+                href="/dashboard/document-ventes/devis"
               />
             </div>
 
@@ -1952,7 +2115,7 @@ export default function AccueilDashboard() {
                           '+8.1%', // custom range value
                     trendUp: true,
                     color: 'amber',
-                    icon: <FiDollarSign className="w-4 h-4" />
+                    icon: <FaEuroSign className="w-4 h-4" />
                   }
                 ].map((stat, index) => (
                   <motion.div

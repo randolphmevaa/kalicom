@@ -13,7 +13,6 @@ import {
   FiEye,
   FiDownload,
   FiSend,
-  FiDollarSign,
   FiClock,
   FiUser,
   // FiCalendar,
@@ -27,6 +26,7 @@ import {
   FiX,
   FiInfo
 } from 'react-icons/fi';
+import { FaEuroSign } from 'react-icons/fa6';
 
 export default function FacturesAcompte() {
   // State for filters and search
@@ -166,7 +166,7 @@ export default function FacturesAcompte() {
 
   // Statistics
   const statistics = [
-    { title: "Total acomptes", value: "19 575,00 €", icon: <FiDollarSign className="text-green-500" /> },
+    { title: "Total acomptes", value: "19 575,00 €", icon: <FaEuroSign className="text-green-500" /> },
     { title: "En attente", value: "2 500,00 €", icon: <FiClock className="text-amber-500" /> },
     { title: "En retard", value: "3 000,00 €", icon: <FiX className="text-red-500" /> },
     { title: "Acomptes payés", value: "13 200,00 €", icon: <FiCheck className="text-blue-500" /> }

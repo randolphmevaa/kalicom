@@ -14,7 +14,6 @@ import {
   FiEye,
   FiDownload,
   FiSend,
-  FiDollarSign,
   FiClock,
   FiUser,
   FiRefreshCw,
@@ -29,7 +28,7 @@ import {
   FiX,
   FiSliders,
 } from 'react-icons/fi';
-
+import { FaEuroSign } from 'react-icons/fa6';
 // --------------------------------------------------------
 // 1) Define your data interfaces
 // --------------------------------------------------------
@@ -324,7 +323,7 @@ export default function Factures() {
     {
       title: 'Total facturé',
       value: '72 530,00 €',
-      icon: <FiDollarSign className="text-green-500" />,
+      icon: <FaEuroSign className="text-green-500" />,
       trend: '+12.4%',
       trendUp: true,
     },
