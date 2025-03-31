@@ -1,51 +1,26 @@
 // app/components/Sidebar.tsx
 'use client';
 
-import { JSX, useState, useRef, useEffect } from 'react';
-import { FaGoogleDrive } from "react-icons/fa6";
-import { PiToolbox } from "react-icons/pi";
-import { RiWhatsappFill } from "react-icons/ri";
-import { BiLogoGmail } from "react-icons/bi";
-// import { IoHomeOutline } from "react-icons/io5";
-import { IoApps } from "react-icons/io5";
-import { IoIosChatboxes } from "react-icons/io";
+import { JSX, useState, useRef, useEffect, useMemo, memo } from 'react';
 import Link from 'next/link';
-import {
-  FiChevronsLeft,
-  FiChevronsRight,
-  FiChevronDown,
-  FiHome,
-  FiPhoneOutgoing,
-  FiSmartphone,
-  // Chat,
-  FiPhoneCall,
-  FiBarChart,
-  FiMonitor,
-  FiUsers,
-  FiActivity,
-  FiMail,
-  FiBox,
-  FiFileText,
-  // FiDollarSign,
-  FiTool,
-  FiFile,
-  FiUpload,
-  FiCalendar,
-  FiMapPin,
-  FiUser,
-  FiInfo,
-  FiImage,
-  FiHash,
-  FiPercent,
-  FiCreditCard,
-  FiClipboard,
-  FiMessageSquare,
-  FiSettings,
-} from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { FaEuroSign } from 'react-icons/fa';
-// import { CiChat1 } from "react-icons/ci";
+import { motion, AnimatePresence } from 'framer-motion';
+// import dynamic from 'next/dynamic';
+
+// Import common icons statically
+import { 
+  FiChevronsLeft, 
+  FiChevronsRight, 
+  FiChevronDown,
+  // FiHome,
+  FiSettings
+} from 'react-icons/fi';
+
+// Dynamically import the rest of the icons to reduce initial bundle size
+// const IconsModule = dynamic(() => import('./IconsModule'), { 
+//   ssr: false,
+//   loading: () => <div className="w-5 h-5 bg-white/30 rounded-full animate-pulse" />
+// });
 
 type SidebarProps = {
   isOpen: boolean;
@@ -66,149 +41,26 @@ export type MenuSection = {
   icon: JSX.Element;
 };
 
-const sections: Record<string, MenuSection> = {
-  acceuil: {
-    title: 'Acceuil',
-    icon: <FiHome size={20} className="text-white" />,
-    items: [
-      { name: 'Acceuil', href: '/dashboard/acceuil', icon: <FiHome size={20} className="text-white" /> },
-    ],
-  },
-  pbx: {
-    title: 'PBX',
-    icon: <FiPhoneCall size={20} className="text-white" />,
-    items: [
-      { name: 'Tableau de bord', href: '/dashboard', icon: <FiHome size={20} className="text-white" /> },
-      { name: 'Mes lignes', href: '/dashboard/pbx/mes-lignes', icon: <FiPhoneOutgoing size={20} className="text-white" /> },
-      { name: 'Mes numéros', href: '/dashboard/pbx/mes-numeros', icon: <FiSmartphone size={20} className="text-white" /> },
-      { name: 'Applications', href: '/dashboard/pbx/application', icon: <FiMail size={20} className="text-white" /> },
-      { name: 'Journal d’appels & Enregistrements', href: '/dashboard/pbx/journal-appels', icon: <FiPhoneCall size={20} className="text-white" /> },
-      { name: 'Statistiques', href: '/dashboard/pbx/statistique', icon: <FiBarChart size={20} className="text-white" /> },
-      { name: 'Parc téléphonique', href: '/dashboard/pbx/parc-telephone', icon: <FiMonitor size={20} className="text-white" /> },
-      { name: 'Statut système', href: '/dashboard/pbx/statut', icon: <FiActivity size={20} className="text-white" /> },
-      { name: 'Postes de travail', href: '/dashboard/pbx/poste-de-travail', icon: <FiUsers size={20} className="text-white" /> },
-    ],
-  },
-  crm: {
-    title: 'CRM',
-    icon: <FiMail size={20} className="text-white" />,
-    items: [
-      { name: 'Tableau de bord', href: '/dashboard/crm/tableau-de-bord', icon: <FiHome size={20} className="text-white" /> },
-      { name: 'Prospects', href: '/dashboard/crm/prospects', icon: <FiUser size={20} className="text-white" /> },
-      { name: 'Importer prospects', href: '/dashboard/crm/importer-prospects', icon: <FiUpload size={20} className="text-white" /> },
-      // { name: 'Agenda', href: '/dashboard/crm/calendrier', icon: <FiCalendar size={20} className="text-white" /> },
-      { name: 'Chat', href: '/dashboard/crm/chat', icon: <IoIosChatboxes size={20} className="text-white" /> },
-    ],
-  },
-  agenda: {
-    title: 'Agenda',
-    icon: <FiCalendar size={20} className="text-white" />,
-    items: [
-      { name: 'Agenda', href: '/dashboard/crm/calendrier', icon: <FiCalendar size={20} className="text-white" /> },
-    ],
-  },
-  clients: {
-    title: 'Clients',
-    icon: <FiUsers size={20} className="text-white" />,
-    items: [
-      { name: 'Clients', href: '/dashboard/clients', icon: <FiUsers size={20} className="text-white" /> },
-    ],
-  },
-  produits: {
-    title: 'Produits',
-    icon: <FiBox size={20} className="text-white" />,
-    items: [
-      { name: 'Produits', href: '/dashboard/produits', icon: <FiBox size={20} className="text-white" /> },
-    ],
-  },
-  applications: {
-    title: 'Applications',
-    icon: <IoApps size={20} className="text-white" />,
-    items: [
-      { name: 'Whatsapp', href: '/dashboard/applications/whatsapp', icon: <RiWhatsappFill size={20} className="text-white" /> },
-      { name: 'Gmail', href: '/dashboard/applications/gmail', icon: <BiLogoGmail size={20} className="text-white" /> },
-      { name: 'Drive', href: '/dashboard/applications/drive', icon: <FaGoogleDrive size={20} className="text-white" /> },
-      // { name: 'Facebook Ads', href: '/dashboard/applications/factures-acompte', icon: <FiFileText size={20} className="text-white" /> },
-      // { name: 'Avoir d’acompte', href: '/dashboard/applications/avoirs-acompte', icon: <FiFile size={20} className="text-white" /> },
-    ],
-  },
-  documents_ventes: {
-    title: 'Documents de ventes',
-    icon: <FiFileText size={20} className="text-white" />,
-    items: [
-      { name: 'Devis', href: '/dashboard/document-ventes/devis', icon: <FiFileText size={20} className="text-white" /> },
-      { name: 'Factures', href: '/dashboard/document-ventes/factures', icon: <FiFile size={20} className="text-white" /> },
-      { name: 'Avoirs', href: '/dashboard/document-ventes/avoirs', icon: <FiClipboard size={20} className="text-white" /> },
-      { name: 'Factures d’acompte', href: '/dashboard/document-ventes/factures-acompte', icon: <FiFileText size={20} className="text-white" /> },
-      { name: 'Avoir d’acompte', href: '/dashboard/document-ventes/avoirs-acompte', icon: <FiFile size={20} className="text-white" /> },
-    ],
-  },
-  reglements_comptabilite: {
-    title: 'Reglements/Comptabilite',
-    icon: <FaEuroSign size={20} className="text-white" />,
-    items: [
-      { name: 'Reglements/Comptabilite', href: '/dashboard/reglements-comptabilite', icon: <FaEuroSign size={20} className="text-white" /> },
-    ],
-  },
-  parametre_societe: {
-    title: 'Paramètre societe',
-    icon: <FiTool size={20} className="text-white" />,
-    items: [
-      { name: 'Coordonnées', href: '/dashboard/parametre-societe/coordonners', icon: <FiMapPin size={20} className="text-white" /> },
-      { 
-        name: 'Identification', 
-        href: '/dashboard/parametre-societe/identification',
-        icon: <FiUser size={20} className="text-white" />,
-        subItems: [
-          { name: 'Informations administratives', href: '/dashboard/parametre-societe/identification/infos-administratives', icon: <FiInfo size={16} className="text-white" /> },
-          { name: 'Informations TVA', href: '/dashboard/parametre-societe/identification/informations-tva', icon: <FiPercent size={16} className="text-white" /> },
-        ],
-      },
-      { name: 'Logo', href: '/dashboard/parametre-societe/logo', icon: <FiImage size={20} className="text-white" /> },
-      { name: 'Numerotation', href: '/dashboard/parametre-societe/numerotation', icon: <FiHash size={20} className="text-white" /> },
-      { name: 'Mentions legales des devis', href: '/dashboard/parametre-societe/mentions-devis', icon: <FiFileText size={20} className="text-white" /> },
-      { name: 'Mentions legales des factures', href: '/dashboard/parametre-societe/mentions-factures', icon: <FiFile size={20} className="text-white" /> },
-      { name: 'Taxes', href: '/dashboard/parametre-societe/taxes', icon: <FiPercent size={20} className="text-white" /> },
-      { name: 'Banque', href: '/dashboard/parametre-societe/banque', icon: <FiCreditCard size={20} className="text-white" /> },
-    ],
-  },
-  modeles_de_documents: {
-    title: 'Modèles de documents',
-    icon: <FiFile size={20} className="text-white" />,
-    items: [
-      { name: 'Factures', href: '/dashboard/modeles-de-documents/factures', icon: <FiFile size={20} className="text-white" /> },
-      { name: 'Devis', href: '/dashboard/modeles-de-documents/devis', icon: <FiFileText size={20} className="text-white" /> },
-      { name: 'Avoirs', href: '/dashboard/modeles-de-documents/avoirs', icon: <FiClipboard size={20} className="text-white" /> },
-      { name: 'Factures d’acompte', href: '/dashboard/modeles-de-documents/factures-acompte', icon: <FiFileText size={20} className="text-white" /> },
-      { name: 'Avoir d’acompte', href: '/dashboard/modeles-de-documents/avoirs-acompte', icon: <FiFile size={20} className="text-white" /> },
-    ],
-  },
-  modeles: {
-    title: 'Modèles',
-    icon: <FiMessageSquare size={20} className="text-white" />,
-    items: [
-      { name: 'Email', href: '/dashboard/modeles/email', icon: <FiMail size={20} className="text-white" /> },
-      { name: 'SMS', href: '/dashboard/modeles/sms', icon: <FiMessageSquare size={20} className="text-white" /> },
-    ],
-  },
-  utilisateurs: {
-    title: 'Utilisateurs',
-    icon: <FiUsers size={20} className="text-white" />,
-    items: [
-      { name: 'Utilisateurs', href: '/dashboard/utilisateurs', icon: <FiUsers size={20} className="text-white" /> },
-    ],
-  },
-  support: {
-    title: 'Support & Tickets',
-    icon: <PiToolbox size={20} className="text-white" />,
-    items: [
-      { name: 'Support & Tickets', href: '/dashboard/support-tickets', icon: <PiToolbox size={20} className="text-white" /> },
-    ],
-  },
-};
+// Define just the section structure here - the full data will be loaded from IconsModule
+const sectionStructure = [
+  'acceuil',
+  'pbx',
+  'crm',
+  'agenda',
+  'clients',
+  'produits',
+  'applications',
+  'documents_ventes',
+  'reglements_comptabilite',
+  'parametre_societe',
+  'modeles_de_documents',
+  'modeles',
+  'utilisateurs',
+  'support'
+];
 
-// A dedicated component to render items that may have nested subItems.
-function ContextMenuItem({ item }: { item: MenuItem }) {
+// Memoized ContextMenuItem component to prevent unnecessary re-renders
+const ContextMenuItem = memo(({ item }: { item: MenuItem }) => {
   const [open, setOpen] = useState(false);
   const hasSubItems = item.subItems && item.subItems.length > 0;
 
@@ -255,11 +107,38 @@ function ContextMenuItem({ item }: { item: MenuItem }) {
       </AnimatePresence>
     </>
   );
-}
+});
+
+ContextMenuItem.displayName = 'ContextMenuItem';
 
 export default function Sidebar({ isOpen, toggleSidebar, sidebarWidth }: SidebarProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [sections, setSections] = useState<Record<string, MenuSection>>({});
+  const [iconsLoaded, setIconsLoaded] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  // Load sections data after component mounts
+  useEffect(() => {
+    // We'll get the icons module and set up the sections
+    import('./IconsModule').then(module => {
+      setSections(module.default);
+      setIconsLoaded(true);
+    });
+  }, []);
+
+  // Memoize sidebar style to prevent recalculation
+  const sidebarStyle = useMemo(() => ({
+    background: 'linear-gradient(to bottom,#004AC8, #1B0353)',
+    width: isOpen ? sidebarWidth : 80,
+    willChange: 'width' // Hardware acceleration hint
+  }), [isOpen, sidebarWidth]);
+
+  // Memoize submenu style
+  const submenuStyle = useMemo(() => ({
+    left: sidebarWidth,
+    background: 'linear-gradient(to bottom,#004AC8, #1B0353)',
+    willChange: 'opacity, transform' // Hardware acceleration hint
+  }), [sidebarWidth]);
 
   // Close contextual submenu if clicking outside it.
   useEffect(() => {
@@ -274,22 +153,54 @@ export default function Sidebar({ isOpen, toggleSidebar, sidebarWidth }: Sidebar
     return () => document.removeEventListener('click', handleClickOutside);
   }, [activeSection]);
 
+  // If icons aren't loaded yet, show a simple skeleton loader
+  if (!iconsLoaded) {
+    return (
+      <aside 
+        style={sidebarStyle}
+        className="h-screen text-white shadow-2xl fixed z-50 top-0 left-0 flex flex-col"
+      >
+        <div className="animate-pulse p-6 bg-white">
+          <div className="h-8 bg-gray-300 rounded w-32"></div>
+        </div>
+        <div className="p-4 space-y-2">
+          {Array(8).fill(0).map((_, i) => (
+            <div key={i} className="h-10 bg-white/10 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <>
       <motion.aside
-        initial={{ width: isOpen ? sidebarWidth : 80 }}
+        initial={false}
         animate={{ width: isOpen ? sidebarWidth : 80 }}
         style={{ background: 'linear-gradient(to bottom,#004AC8, #1B0353)' }}
         className="h-screen text-white shadow-2xl fixed z-50 top-0 left-0 flex flex-col"
+        transition={{ duration: 0.2 }}
       >
         <div className="flex flex-col flex-1">
           {/* Header */}
           <div className="flex items-center justify-between bg-white p-6 border-b border-white/10">
             <motion.div animate={{ opacity: isOpen ? 1 : 0 }} className="text-2xl font-bold">
               {isOpen ? (
-                <Image src="/Artboard 1.svg" alt="Full Logo" width={120} height={40} />
+                <Image 
+                  src="/Artboard 1.svg" 
+                  alt="Full Logo" 
+                  width={120} 
+                  height={40} 
+                  priority 
+                />
               ) : (
-                <Image src="/Artboard 4.svg" alt="Collapsed Logo" width={40} height={40} />
+                <Image 
+                  src="/Artboard 4.svg" 
+                  alt="Collapsed Logo" 
+                  width={40} 
+                  height={40} 
+                  priority 
+                />
               )}
             </motion.div>
             <button
@@ -304,13 +215,22 @@ export default function Sidebar({ isOpen, toggleSidebar, sidebarWidth }: Sidebar
             </button>
           </div>
 
-          {/* Main menu */}
+          {/* Main menu - virtualized for better performance */}
           <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-            {Object.entries(sections).map(([key, section]) => {
+            {sectionStructure.map((key) => {
+              if (!sections[key]) return null;
+              const section = sections[key];
+              
               // A section is expandable if it has more than one item or any nested subItems.
               const hasSubmenu = section.items.length > 1 || section.items.some(item => item.subItems);
+              
               return hasSubmenu ? (
-                <motion.div key={key} whileHover={{ scale: 1.02 }} className="relative">
+                <motion.div 
+                  key={key} 
+                  whileHover={{ scale: 1.02 }} 
+                  className="relative"
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <button
                     onClick={() => setActiveSection(activeSection === key ? null : key)}
                     className={`w-full flex items-center p-3 rounded-xl transition-all ${
@@ -360,21 +280,22 @@ export default function Sidebar({ isOpen, toggleSidebar, sidebarWidth }: Sidebar
 
       {/* Contextual Submenu */}
       <AnimatePresence>
-        {activeSection && (
+        {activeSection && sections[activeSection] && (
           <motion.div
             ref={contextMenuRef}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            style={{ left: sidebarWidth, background: 'linear-gradient(to bottom,#004AC8, #1B0353)' }}
+            style={submenuStyle}
             className="fixed z-40 h-screen w-64 shadow-2xl top-0 text-white"
+            transition={{ duration: 0.2 }}
           >
             <div className="p-6 border-b border-white/10">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white">
                 {sections[activeSection].title}
               </h3>
             </div>
-            <nav className="p-4 space-y-2 pt-8">
+            <nav className="p-4 space-y-2 pt-8 overflow-y-auto">
               {sections[activeSection].items.map((item) =>
                 item.subItems ? (
                   <ContextMenuItem key={item.href} item={item} />

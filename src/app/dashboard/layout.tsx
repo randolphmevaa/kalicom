@@ -7,7 +7,15 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 
 // Use dynamic imports with no SSR for faster client-side rendering
-const Sidebar = dynamic(() => import("../components/Sidebar"), { ssr: false });
+const Sidebar = dynamic(
+  () => import('../components/Sidebar'),
+  { 
+    ssr: false, 
+    loading: () => (
+      <div className="h-screen w-20 bg-gradient-to-b from-[#004AC8] to-[#1B0353] fixed" />
+    )
+  }
+);
 const Header = dynamic(() => import('../components/Header'), { ssr: false });
 
 // Simple loading component
