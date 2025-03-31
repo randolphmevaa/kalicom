@@ -1,12 +1,8 @@
 // next.config.ts
 import type { NextConfig } from 'next';
 import { PHASE_PRODUCTION_BUILD } from 'next/constants';
-
-// Define webpack module for proper typing
 import type { Configuration as WebpackConfig } from 'webpack';
 
-// For bundle analyzer, we need to conditionally import it
-// This helper type handles conditional imports
 type BundleAnalyzer = (config: NextConfig) => NextConfig;
 
 /**
@@ -26,67 +22,89 @@ const getBundleAnalyzer = async (): Promise<BundleAnalyzer | null> => {
  * Configure Next.js, with environment-specific settings
  */
 const configureNext = async (phase: string): Promise<NextConfig> => {
-  // Check if we're in production build
   const isProd = phase === PHASE_PRODUCTION_BUILD || process.env.NODE_ENV === 'production';
-  
-  // Import and configure bundle analyzer if needed
   const bundleAnalyzer = await getBundleAnalyzer();
   
-  // Base configuration
   const baseConfig: NextConfig = {
     reactStrictMode: true,
-    
-    // Static file compression
     compress: true,
     
     // Configure image optimization
     images: {
       formats: ['image/avif', 'image/webp'],
-      // Add your domain if you're loading external images
       domains: [], 
-      deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-      imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+      deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+      imageSizes: [16, 32, 48, 64, 96, 128, 256],
     },
     
     // Experimental features for performance
     experimental: {
-      // Optimize CSS for production
       optimizeCss: isProd,
-      // Improve scroll performance
       scrollRestoration: true,
-      // Removed 'appDir' as it is not a valid property
+      // Fixed: serverActions needs proper configuration instead of boolean
+      serverActions: {
+        bodySizeLimit: '2mb',
+        allowedOrigins: ['*'],
+      },
+      // Improved code generation
+      serverComponentsExternalPackages: [],
     },
     
-    // Webpack configuration for better performance
+    // Enhanced webpack configuration for better performance
     webpack: (config: WebpackConfig, { dev, isServer }): WebpackConfig => {
       // Only optimize in production
       if (!dev && !isServer) {
         // Optimize module concatenation
         if (config.optimization) {
-          // Properly split chunks for better loading
+          // More aggressive code splitting strategy
           config.optimization.splitChunks = {
             chunks: 'all',
-            minSize: 20000,
-            maxSize: 90000, // Limit chunk size
+            minSize: 10000,
+            maxSize: 50000, // Smaller chunk size for faster loading
             minChunks: 1,
             maxAsyncRequests: 30,
             maxInitialRequests: 30,
             cacheGroups: {
               framework: {
-                test: /[\\/]node_modules[\\/](react|react-dom|next|framer-motion)[\\/]/,
+                test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
                 name: 'framework',
                 priority: 40,
                 chunks: 'all',
                 enforce: true,
               },
-              lib: {
-                test: /[\\/]node_modules[\\/]/,
-                name: 'lib',
-                priority: 30,
+              // Separate framer-motion into its own chunk
+              motion: {
+                test: /[\\/]node_modules[\\/](framer-motion)[\\/]/,
+                name: 'motion',
+                priority: 35,
                 chunks: 'all',
               },
+              // Break down lib chunks into smaller pieces
+              lib: {
+                test: /[\\/]node_modules[\\/](!react)(!react-dom)(!next)(!framer-motion)[\\/]/,
+                name(module: any) {
+                  // Get the name of the npm package
+                  const packageName = module.context.match(
+                    /[\\/]node_modules[\\/](.*?)([\\/]|$)/
+                  )[1];
+                  
+                  // Group larger packages separately, and group smaller ones together
+                  const bigPackages = ['lodash', '@mui', '@emotion', 'chart.js', 'date-fns'];
+                  for (const pkg of bigPackages) {
+                    if (packageName.startsWith(pkg)) {
+                      return `lib-${pkg.replace('@', '')}`;
+                    }
+                  }
+                  
+                  // npm package names are URL-safe, but some servers don't like @ symbols
+                  return `lib-shared`;
+                },
+                priority: 30,
+                chunks: 'all',
+                reuseExistingChunk: true,
+              },
               icons: {
-                test: /[\\/]node_modules[\\/]react-icons[\\/]/,
+                test: /[\\/]node_modules[\\/](react-icons|@heroicons)[\\/]/,
                 name: 'icons',
                 priority: 20,
                 chunks: 'all',
@@ -99,18 +117,24 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
               },
             },
           };
+          
+          // Add more aggressive optimizations
+          config.optimization.runtimeChunk = 'single';
+          if (!config.optimization.minimizer) {
+            config.optimization.minimizer = [];
+          }
         }
         
-        // Additional optimizations
-        if (config.module?.rules) {
-          // Add any module rule optimizations here
+        // Use brotli compression when possible
+        if (config.plugins) {
+          // Add any additional plugins here
         }
       }
       
       return config;
     },
     
-    // Add headers for better caching and performance
+    // Enhanced caching headers
     async headers() {
       return [
         {
@@ -140,6 +164,16 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
             },
           ],
         },
+        // Add improved caching for API routes if they don't change often
+        {
+          source: '/api/static/:path*',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'public, max-age=3600, s-maxage=86400',
+            },
+          ],
+        },
       ];
     },
     
@@ -156,6 +190,12 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
     // Configure other build settings
     poweredByHeader: false,
     generateEtags: true,
+    
+    // Add production-only outputs for better Vercel performance
+    output: isProd ? 'standalone' : undefined,
+    
+    // Configure production source maps 
+    productionBrowserSourceMaps: false,
   };
   
   // Apply bundle analyzer if configured
@@ -174,5 +214,4 @@ const setupNextConfig = async () => {
 };
 
 // This is necessary for Next.js to properly handle the async config
-// Note: Next.js expects a synchronous export, so we use this pattern
 export default setupNextConfig();

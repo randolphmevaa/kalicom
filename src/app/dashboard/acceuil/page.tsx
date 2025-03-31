@@ -6,8 +6,10 @@ import { FaEuroSign } from 'react-icons/fa6';
 import { QuickActionCard } from '@/app/components/dashboard/QuickActionCard';
 import { CircleStat } from '@/app/components/dashboard/CircleStat';
 const WeatherWidget = React.lazy(() => import('@/app/components/dashboard/WeatherWidget').then(module => ({ default: module.WeatherWidget })));
-import { TicketsSAVSection } from '@/app/components/dashboard/TicketsSAVSection';
+// import { TicketsSAVSection } from '@/app/components/dashboard/TicketsSAVSection';
+const TicketsSAVSection = React.lazy(() => import('@/app/components/dashboard/TicketsSAVSection'));
 const KalicomChatWidget = React.lazy(() => import('@/app/components/dashboard/KalicomChatWidget').then(module => ({ default: module.KalicomChatWidget })));
+const DashboardHeader = React.lazy(() => import('@/app/components/dashboard/DashboardHeader'));
 
 import {
   BarChart,
@@ -50,7 +52,7 @@ import {
 import React from 'react';
 import EventsSection from '@/app/components/dashboard/EventsSection';
 import ChatSection from '@/app/components/dashboard/ChatSection';
-const DashboardHeader = React.lazy(() => import('@/app/components/dashboard/DashboardHeader'));
+
 
 // Define TypeScript interfaces for our data
 interface ProspectDataItem {
@@ -394,6 +396,7 @@ export default function AccueilDashboard() {
     >
         <div className="max-w-7xl mx-auto space-y-8 px-4 md:px-6">
             {/* Premium Header with Blur Effects */}
+            <Suspense>
             <DashboardHeader 
               darkMode={darkMode}
               setDarkMode={setDarkMode}
@@ -404,6 +407,7 @@ export default function AccueilDashboard() {
               unreadMessages={unreadMessages}
               lastClientCount={prospectData[prospectData.length-1].clients}
             />
+            </Suspense>
 
             {/* Action rapide */}
             <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'} flex items-center gap-2`}>
