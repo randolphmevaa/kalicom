@@ -164,7 +164,7 @@ export default function LoginPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}
-      className="min-h-screen w-full flex flex-col md:flex-row overflow-hidden bg-gray-50"
+      className="text-gray-700 min-h-screen w-full flex flex-col md:flex-row overflow-hidden bg-gray-50"
     >
       {/* Language Selector */}
       <div className="absolute top-8 right-8 z-50">

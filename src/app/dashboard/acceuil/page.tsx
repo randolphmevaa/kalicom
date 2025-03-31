@@ -1,8 +1,19 @@
 'use client';
 
-import { useState, useEffect, useRef, ReactNode } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { useState, useEffect, useRef, ReactNode, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaEuroSign } from 'react-icons/fa6';
+import { QuickActionCard } from '@/app/components/dashboard/QuickActionCard';
+import { CircleStat } from '@/app/components/dashboard/CircleStat';
+// import { WeatherWidget } from '@/app/components/dashboard/WeatherWidget';
+const WeatherWidget = React.lazy(() => import('@/app/components/dashboard/WeatherWidget').then(module => ({ default: module.WeatherWidget })));
+// import { SystemHealthIndicator } from '@/app/components/dashboard/SystemHealthIndicator';
+// import { StatusBadge } from '@/app/components/dashboard/StatusBadge';
+// import { PriorityBadge } from '@/app/components/dashboard/PriorityBadge';
+// import { MessagePreview } from '@/app/components/dashboard/MessagePreview';
+// import { KalicomChatWidget } from '@/app/components/dashboard/KalicomChatWidget';
+const KalicomChatWidget = React.lazy(() => import('@/app/components/dashboard/KalicomChatWidget').then(module => ({ default: module.KalicomChatWidget })));
+
 import {
   BarChart,
   Bar,
@@ -58,7 +69,7 @@ import {
   FiMaximize2,
   FiMinimize2,
   FiTriangle,
-  FiMoreHorizontal,
+  // FiMoreHorizontal,
   FiMapPin,
   FiCheckSquare,
   FiEdit,
@@ -66,11 +77,12 @@ import {
   FiPlay,
   FiRotateCcw,
   FiUser,
-  FiMinimize,
-  FiX,
-  FiSend,
+  // FiMinimize,
+  // FiX,
+  // FiSend,
 } from 'react-icons/fi';
-import { useRouter } from 'next/navigation';
+import React from 'react';
+// import { useRouter } from 'next/navigation';
 
 // Define TypeScript interfaces for our data
 interface ProspectDataItem {
@@ -126,12 +138,12 @@ interface ChatMessage {
   isOnline: boolean;
 }
 
-interface KalicomChatMessage {
-  id: number;
-  sender: 'user' | 'support';
-  message: string;
-  timestamp: string;
-}
+// interface KalicomChatMessage {
+//   id: number;
+//   sender: 'user' | 'support';
+//   message: string;
+//   timestamp: string;
+// }
 
 interface ActivityData {
   id: number;
@@ -150,14 +162,6 @@ interface NotificationData {
   time: string;
   read: boolean;
   type: string;
-}
-
-interface WeatherData {
-  location: string;
-  temperature: number;
-  condition: string;
-  high: number;
-  low: number;
 }
 
 // Sample data imports from both dashboards
@@ -264,13 +268,13 @@ const chatMessages: ChatMessage[] = [
   { id: 5, user: 'Support Kalicom', avatar: '/api/placeholder/30/30', message: 'Bonjour, comment puis-je vous aider aujourd\'hui ?', time: '10:42', unread: true, isOnline: true },
 ];
 
-// Sample Kalicom chat messages for the widget
-const kalicomChatMessages: KalicomChatMessage[] = [
-  { id: 1, sender: 'support', message: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?', timestamp: '10:30' },
-  { id: 2, sender: 'user', message: 'Bonjour, j\'ai un problème avec la configuration de mon PBX.', timestamp: '10:31' },
-  { id: 3, sender: 'support', message: 'Je comprends. Pouvez-vous me donner plus de détails sur le problème que vous rencontrez ?', timestamp: '10:32' },
-  { id: 4, sender: 'user', message: 'Les appels ne sont pas correctement transférés entre les services.', timestamp: '10:33' },
-];
+// // Sample Kalicom chat messages for the widget
+// const kalicomChatMessages: KalicomChatMessage[] = [
+//   { id: 1, sender: 'support', message: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?', timestamp: '10:30' },
+//   { id: 2, sender: 'user', message: 'Bonjour, j\'ai un problème avec la configuration de mon PBX.', timestamp: '10:31' },
+//   { id: 3, sender: 'support', message: 'Je comprends. Pouvez-vous me donner plus de détails sur le problème que vous rencontrez ?', timestamp: '10:32' },
+//   { id: 4, sender: 'user', message: 'Les appels ne sont pas correctement transférés entre les services.', timestamp: '10:33' },
+// ];
 
 // Activities timeline for global feed
 const activitiesData: ActivityData[] = [
@@ -289,178 +293,12 @@ const notificationsData: NotificationData[] = [
 ];
 
 // Weather data for the location widget
-const weatherData: WeatherData = {
+const weatherData = {
   location: 'Paris',
   temperature: 18,
   condition: 'Partiellement nuageux',
   high: 21,
   low: 12
-};
-
-// Define interfaces for component props
-interface QuickActionCardProps {
-  icon: ReactNode;
-  title: string;
-  color: string;
-  description?: string;
-  onClick?: () => void;
-  pulse?: boolean;
-  href: string;
-}
-
-// Enhanced Quick Action Card with fancy animations
-const QuickActionCard = ({ icon, title, color, description, onClick, pulse = false, href }: QuickActionCardProps) => {
-  const router = useRouter();
-  const controls = useAnimation();
-
-  const pulseAnimation = async () => {
-    if (pulse) {
-      while (true) {
-        await controls.start({
-          boxShadow: `0 0 0 2px ${color}25, 0 8px 16px -2px ${color}20`,
-          scale: 1.02,
-          transition: { duration: 1.5, ease: "easeInOut" }
-        });
-        await controls.start({
-          boxShadow: `0 0 0 0px ${color}10, 0 4px 8px -2px ${color}10`,
-          scale: 1,
-          transition: { duration: 1.5, ease: "easeInOut" }
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (pulse) {
-      pulseAnimation();
-    }
-  }, [pulse]);
-
-  // Add a new handler that combines the original onClick with navigation
-  const handleClick = () => {
-    // Execute the original onClick if provided
-    if (onClick) onClick();
-    
-    // Navigate to the href
-    router.push(href);
-  };
-
-  return (
-    <motion.div
-      whileHover={{ 
-        y: -8, 
-        boxShadow: `0 20px 30px -10px ${color}20`,
-      }}
-      whileTap={{ scale: 0.98 }}
-      onClick={handleClick} // Use the new handler instead of just onClick
-      animate={controls}
-      className="bg-white p-5 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-xl"
-      style={{ 
-        boxShadow: `0 5px 15px -3px ${color}10`,
-        border: `1px solid ${color}15`,
-      }}
-    >
-      <div className="relative mb-3">
-        <div className={`p-3.5 rounded-xl w-14 h-14 flex items-center justify-center mb-3 bg-gradient-to-br`} style={{ 
-          background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
-          border: `1px solid ${color}20`,
-        }}>
-          <div className="text-xl" style={{ color }}>{icon}</div>
-        </div>
-        {pulse && (
-          <span 
-            className="absolute top-0 right-0 w-3 h-3 rounded-full animate-ping" 
-            style={{ background: color, animationDuration: '3s' }}
-          ></span>
-        )}
-      </div>
-      <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-      {description && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
-      )}
-    </motion.div>
-  );
-};
-
-// Interface for CircleStat component
-interface CircleStatProps {
-  icon: ReactNode;
-  color: string;
-  size?: 'sm' | 'md' | 'lg';
-  pulse?: boolean;
-  onClick?: () => void;
-  label?: string;
-  value?: string | number;
-}
-
-// Enhanced Circle Stat component with more sophisticated animations
-const CircleStat = ({ icon, color, size = 'md', pulse = false, onClick, label, value }: CircleStatProps) => {
-  // CircleStat implementation...
-  const sizeClasses = {
-    sm: { container: 'w-12 h-12', icon: 'w-5 h-5', label: 'text-xs' },
-    md: { container: 'w-16 h-16', icon: 'w-6 h-6', label: 'text-sm' },
-    lg: { container: 'w-20 h-20', icon: 'w-8 h-8', label: 'text-base' },
-  };
-
-  return (
-    <div className="relative flex flex-col items-center">
-      <motion.div
-        whileHover={{ scale: 1.08, rotate: 3 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onClick}
-        className={`relative ${sizeClasses[size].container} rounded-full flex items-center justify-center ${
-          onClick ? 'cursor-pointer' : ''
-        }`}
-        style={{
-          background: `linear-gradient(135deg, ${color}25 0%, ${color}05 100%)`,
-          boxShadow: `0 10px 15px -3px ${color}15, 0 4px 6px -2px ${color}10, 0 0 0 1px ${color}20 inset`,
-          transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        }}
-      >
-        {/* Blurred background circles for depth */}
-        <div className="absolute w-full h-full rounded-full opacity-40 blur-xl" style={{ 
-          background: `radial-gradient(circle, ${color}30 0%, transparent 70%)`,
-          top: '10%',
-          left: '10%',
-        }}></div>
-        
-        <div className={`${sizeClasses[size].icon} flex items-center justify-center relative z-10`} style={{ color }}>
-          {icon}
-        </div>
-        
-        {/* Gloss effect */}
-        <div className="absolute inset-0 rounded-full overflow-hidden">
-          <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[100%] opacity-10 bg-gradient-to-br from-white to-transparent"></div>
-        </div>
-        
-        {/* Subtle border */}
-        <div className="absolute inset-0 rounded-full border border-white/20"></div>
-        
-        {pulse && (
-          <>
-            <span
-              className="absolute inset-0 rounded-full animate-ping opacity-30 duration-1000"
-              style={{ backgroundColor: color, animationDuration: '3s' }}
-            ></span>
-            <span
-              className="absolute inset-0 rounded-full animate-pulse opacity-20 duration-700"
-              style={{ 
-                background: `radial-gradient(circle, ${color} 0%, transparent 70%)`, 
-                animationDuration: '2s' 
-              }}
-            ></span>
-          </>
-        )}
-      </motion.div>
-      
-      {label && value !== undefined && (
-        <div className="mt-2 text-center">
-          <div className={`font-medium text-gray-800 ${sizeClasses[size].label}`}>{value}</div>
-          <div className="text-xs text-gray-500">{label}</div>
-        </div>
-      )}
-    </div>
-  );
 };
 
 // Interface for SystemHealthIndicator component
@@ -895,383 +733,6 @@ const FiInfo = ({ className = "" }: FiInfoProps) => (
     <line x1="12" y1="8" x2="12.01" y2="8"></line>
   </svg>
 );
-
-// Interface for WeatherWidget component
-// interface WeatherWidgetProps {
-//   data: WeatherData;
-// }
-
-// Weather component
-// const WeatherWidget = ({ data }: WeatherWidgetProps) => (
-//   <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-//     <div className="flex items-center gap-3">
-//       <div className="p-2.5 bg-blue-500/10 rounded-lg text-blue-600">
-//         <FiSun className="w-5 h-5" />
-//       </div>
-//       <div>
-//         <div className="font-medium text-gray-800">{data.location}</div>
-//         <div className="text-xs text-gray-500">{data.condition}</div>
-//       </div>
-//     </div>
-//     <div className="text-right">
-//       <div className="text-2xl font-bold text-gray-800">{data.temperature}°C</div>
-//       <div className="text-xs text-gray-500">
-//         {data.high}° / {data.low}°
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// Kalicom Support Status Component
-// const KalicomSupportStatus = () => {
-//   const [isOnline, setIsOnline] = useState(false);
-  
-//   useEffect(() => {
-//     // Check if current time is between 9 AM and 8 PM
-//     const checkBusinessHours = () => {
-//       const now = new Date();
-//       const hours = now.getHours();
-//       setIsOnline(hours >= 9 && hours < 20);
-//     };
-    
-//     // Initial check
-//     checkBusinessHours();
-    
-//     // Update every minute
-//     const interval = setInterval(checkBusinessHours, 60000);
-    
-//     return () => clearInterval(interval);
-//   }, []);
-  
-//   return (
-//     <motion.div 
-//       whileHover={{ y: -5, x: 0 }}
-//       className="flex items-center justify-between p-3 rounded-xl border bg-white shadow-sm hover:shadow-md transition-all duration-300"
-//     >
-//       <div className="flex items-center gap-3">
-//         <div className="relative">
-//           <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
-//             <FiHeadphones className="w-4 h-4" />
-//           </div>
-//           <div className={`absolute -bottom-1 -right-1 w-3 h-3 ${isOnline ? 'bg-green-500' : 'bg-gray-400'} rounded-full border-2 border-white`}></div>
-//         </div>
-//         <div>
-//           <div className="text-sm font-semibold text-gray-800">Support Technique Kalicom</div>
-//           <div className="text-xs text-gray-500 flex items-center gap-1">
-//             <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-//             {isOnline ? 'En ligne (9H-20H)' : 'Hors ligne'}
-//           </div>
-//         </div>
-//       </div>
-//       <motion.button
-//         whileHover={{ scale: 1.05 }}
-//         whileTap={{ scale: 0.95 }}
-//         className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-//       >
-//         Contacter
-//       </motion.button>
-//     </motion.div>
-//   );
-// };
-
-
-// Improved Kalicom Chat Widget Component
-const KalicomChatWidget = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
-  const [messages, setMessages] = useState<KalicomChatMessage[]>(kalicomChatMessages);
-  const [isOnline, setIsOnline] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Check if current time is within business hours (9H to 20H)
-  const checkBusinessHours = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    return hours >= 9 && hours < 20;
-  };
-  
-  // Set initial online status and update it every minute
-  useEffect(() => {
-    const updateOnlineStatus = () => {
-      setIsOnline(checkBusinessHours());
-    };
-    
-    // Initial check
-    updateOnlineStatus();
-    
-    // Set up interval to check status every minute
-    const interval = setInterval(updateOnlineStatus, 60000);
-    
-    // Clean up interval on unmount
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [isOpen, messages]);
-  
-  const handleSendMessage = () => {
-    if (newMessage.trim() === '') return;
-    
-    const newMsg: KalicomChatMessage = {
-      id: messages.length + 1,
-      sender: 'user',
-      message: newMessage,
-      timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setMessages([...messages, newMsg]);
-    setNewMessage('');
-    
-    // Simulate response after a delay - different responses based on time
-    setTimeout(() => {
-      const responseMessage = isOnline 
-        ? "Merci pour votre message. Un technicien va vous répondre dans quelques instants."
-        : "Nous sommes actuellement fermés (heures d'ouverture: 9H-20H). Votre message sera traité dès l'ouverture de nos bureaux.";
-        
-      const responseMsg: KalicomChatMessage = {
-        id: messages.length + 2,
-        sender: 'support',
-        message: responseMessage,
-        timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      };
-      
-      setMessages(prevMessages => [...prevMessages, responseMsg]);
-    }, 1000);
-  };
-  
-  // Elegant entry animation for the chat button
-  const buttonVariants = {
-    hidden: { opacity: 0, scale: 0.8, y: 20 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 20
-      }
-    },
-    tap: { scale: 0.95 }
-  };
-  
-  // Window animations
-  const windowVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.9 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 25
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      y: 20, 
-      scale: 0.9,
-      transition: { duration: 0.2 }
-    }
-  };
-  
-  return (
-    <>
-      {/* Enhanced Chat button with pulsing effect when online */}
-      {!isOpen && (
-        <motion.div
-          className="fixed bottom-6 right-6 z-50"
-          initial="hidden"
-          animate="visible"
-          variants={buttonVariants}
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap="tap"
-            onClick={() => setIsOpen(true)}
-            className="p-4 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 flex items-center justify-center relative"
-          >
-            <FiMessageSquare className="w-6 h-6" />
-            
-            {/* Pulsing online indicator */}
-            {isOnline && (
-              <motion.span 
-                className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
-                animate={{ 
-                  boxShadow: ['0 0 0 0 rgba(16, 185, 129, 0.7)', '0 0 0 5px rgba(16, 185, 129, 0)'],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            )}
-          </motion.button>
-          
-
-        </motion.div>
-      )}
-      
-      {/* Enhanced Chat window with better animations */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed bottom-6 right-6 bg-white rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col border border-gray-200"
-            style={{
-              height: isMinimized ? '80px' : '500px',
-              width: isMinimized ? '300px' : '350px',
-            }}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={windowVariants}
-          >
-            {/* Header with dynamic online status */}
-            <div className={`p-4 text-white flex items-center justify-between ${isOnline ? 'bg-blue-600' : 'bg-gray-600'}`}>
-              <div className="flex items-center gap-3">
-                {/* Kalicom Logo - Import or reference your SVG */}
-                <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center overflow-hidden">
-                  {/* When you have the actual SVG file imported, use: */}
-                  {/* <img src="/path/to/Artboard 4.svg" alt="Kalicom" className="w-6 h-6" /> */}
-                  
-                  {/* For now, we'll use a fallback: */}
-                  <div className="text-blue-600 font-bold text-lg">K</div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold">Support Kalicom</h3>
-                  <div className="text-xs flex items-center gap-1">
-                    <span className={`w-2 h-2 ${isOnline ? 'bg-green-400' : 'bg-gray-400'} rounded-full`}></span>
-                    {isOnline ? 'En ligne (9H-20H)' : 'Hors ligne'}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <motion.button 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsMinimized(!isMinimized)} 
-                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
-                >
-                  {isMinimized ? <FiMaximize2 className="w-4 h-4" /> : <FiMinimize className="w-4 h-4" />}
-                </motion.button>
-                
-                <motion.button 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsOpen(false)} 
-                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
-                >
-                  <FiX className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </div>
-            
-            {/* Body with improved UI for messages */}
-            {!isMinimized && (
-              <>
-                {/* Messages with enhanced styling */}
-                <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-                  {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                      <div className={`p-3 rounded-full ${isOnline ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'} mb-3`}>
-                        <FiMessageSquare className="w-6 h-6" />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-800 mb-1">
-                        {isOnline ? 'Comment pouvons-nous vous aider?' : 'Support fermé'}
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        {isOnline 
-                          ? 'Notre équipe technique est disponible pour répondre à vos questions.' 
-                          : 'Heures d\'ouverture: 9H-20H. Laissez un message et nous vous répondrons dès que possible.'}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {messages.map((msg) => (
-                        <motion.div 
-                          key={msg.id} 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          {msg.sender === 'support' && (
-                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs mr-2 self-end mb-2">
-                              K
-                            </div>
-                          )}
-                          
-                          <div 
-                            className={`max-w-[80%] rounded-2xl p-3 ${
-                              msg.sender === 'user' 
-                                ? 'bg-blue-600 text-white rounded-tr-none' 
-                                : isOnline ? 'bg-gray-200 text-gray-800 rounded-tl-none' : 'bg-gray-200 text-gray-800 rounded-tl-none'
-                            }`}
-                          >
-                            <p className="text-sm">{msg.message}</p>
-                            <div className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'} text-right`}>
-                              {msg.timestamp}
-                            </div>
-                          </div>
-                          
-                          {msg.sender === 'user' && (
-                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs ml-2 self-end mb-2">
-                              <FiUser className="w-3 h-3" />
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Input with enhanced styling and animations */}
-                <div className="p-3 border-t bg-white">
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="text" 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder={isOnline ? "Écrivez votre message..." : "Laissez un message..."}
-                      className={`flex-1 py-2 px-4 border rounded-full text-sm focus:ring-2 focus:border-transparent ${
-                        isOnline 
-                          ? 'border-gray-300 focus:ring-blue-500' 
-                          : 'border-gray-300 focus:ring-gray-500'
-                      }`}
-                    />
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.05, rotate: 5 }}
-                      whileTap={{ scale: 0.95, rotate: 0 }}
-                      onClick={handleSendMessage}
-                      className={`p-2.5 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all ${
-                        isOnline ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'
-                      }`}
-                    >
-                      <FiSend className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                  
-                  {/* Business hours notice */}
-                  <div className="mt-2 text-center text-xs text-gray-500">
-                    {isOnline 
-                      ? "Support disponible 9H-20H, 7j/7" 
-                      : "Heures d'ouverture: 9H-20H, 7j/7"}
-                  </div>
-                </div>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
 
 // Main component
 export default function AccueilDashboard() {
@@ -2335,234 +1796,13 @@ const handleRefresh = () => {
             {/* Split into 2 cards: Weather and Activity Feed */}
             <div className="flex flex-col gap-6">
               {/* Enhanced iOS-inspired Weather Widget Card */}
-              <AnimatedCard 
-                className="flex flex-col overflow-hidden relative"
-                delay={0.15}
-                style={{
-                  borderRadius: '1.2rem',
-                  background: darkMode 
-                    ? 'linear-gradient(135deg, #1a1f35 0%, #2c3e67 100%)' 
-                    : 'linear-gradient(135deg, #b1d8f8 0%, #e2f1fd 100%)',
-                  boxShadow: darkMode 
-                    ? '0 12px 24px -8px rgba(0, 0, 0, 0.3)' 
-                    : '0 12px 24px -8px rgba(37, 99, 235, 0.15)',
-                  border: darkMode 
-                    ? '1px solid rgba(59, 130, 246, 0.2)' 
-                    : '1px solid rgba(219, 234, 254, 0.8)'
-                }}
-              >
-                {/* Subtle pattern overlay */}
-                <div className="absolute inset-0 opacity-10" 
-                  style={{ 
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'6\' height=\'6\' viewBox=\'0 0 6 6\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\' fill-rule=\'evenodd\'%3E%3Cpath d=\'M5 0h1L0 5v1H0V0h5z\'/%3E%3C/g%3E%3C/svg%3E")',
-                    backgroundSize: '6px 6px'
-                  }} 
+              <div className="w-full max-w-sm">
+                <WeatherWidget 
+                  data={weatherData} 
+                  darkMode={false} 
+                  onRefresh={() => console.log('Refreshing weather data')}
                 />
-
-                {/* Animated blur circles */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-30 blur-2xl bg-blue-400 animate-pulse-slow"></div>
-                <div className="absolute -bottom-20 -left-10 w-40 h-40 rounded-full opacity-20 blur-3xl bg-sky-300 animate-pulse-slow animation-delay-1000"></div>
-
-                {/* Header with redesigned style */}
-                <div className="p-4 flex justify-between items-center z-10">
-                  <div className="flex items-center gap-2">
-                    <motion.div 
-                      whileHover={{ rotateZ: 30, scale: 1.1 }}
-                      className={`p-2 rounded-full backdrop-blur-md ${
-                        darkMode ? 'bg-white/10' : 'bg-white/60'
-                      }`}
-                    >
-                      <FiSun className={`w-5 h-5 ${
-                        darkMode ? 'text-yellow-300' : 'text-yellow-500'
-                      }`} />
-                    </motion.div>
-                    <h3 className={`font-medium ${
-                      darkMode ? 'text-white/90' : 'text-gray-800'
-                    }`}>
-                      Météo
-                    </h3>
-                  </div>
-                  
-                  <div className={`text-xs px-2 py-1 rounded-full ${
-                    darkMode ? 'bg-white/10 text-white/80' : 'bg-white/70 text-gray-700'
-                  } backdrop-blur-md`}>
-                    Maintenant
-                  </div>
-                </div>
-                
-                {/* iOS-inspired weather display */}
-                <div className="px-5 pb-5 pt-2 flex flex-col">
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex-1">
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                        className="relative"
-                      >
-                        <h2 className={`text-4xl font-extralight ${
-                          darkMode ? 'text-white' : 'text-gray-800'
-                        }`}>
-                          {weatherData.temperature}°
-                          <span className={`text-sm font-medium align-top ${
-                            darkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}>C</span>
-                        </h2>
-                        <div className={`text-xs ${
-                          darkMode ? 'text-blue-300' : 'text-blue-600'
-                        }`}>
-                          {weatherData.high}° / {weatherData.low}°
-                        </div>
-                      </motion.div>
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className={`mt-1 text-sm ${
-                          darkMode ? 'text-white/80' : 'text-gray-700'
-                        }`}
-                      >
-                        {weatherData.condition}
-                      </motion.div>
-                    </div>
-                    
-                    <motion.div 
-                      className="flex-1 flex justify-end items-center"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.2, type: "spring" }}
-                    >
-                      <div className="relative">
-                        {weatherData.condition.toLowerCase().includes('nuag') ? (
-                          <div className="relative">
-                            <motion.div 
-                              animate={{ y: [0, -2, 0] }} 
-                              transition={{ repeat: Infinity, duration: 3 }}
-                              className="absolute -top-1 -left-8 text-5xl"
-                            >
-                              ☁️
-                            </motion.div>
-                            <motion.div 
-                              animate={{ y: [0, -3, 0] }} 
-                              transition={{ repeat: Infinity, duration: 2.5, delay: 0.5 }}
-                              className="text-6xl"
-                            >
-                              ⛅
-                            </motion.div>
-                          </div>
-                        ) : weatherData.condition.toLowerCase().includes('pluie') ? (
-                          <div className="relative">
-                            <div className="text-6xl">🌧️</div>
-                            <motion.div 
-                              animate={{ 
-                                y: [0, 20], 
-                                opacity: [1, 0]
-                              }} 
-                              transition={{ 
-                                repeat: Infinity, 
-                                duration: 1.5,
-                                staggerChildren: 0.2
-                              }}
-                              className="absolute top-8 left-4 text-blue-500 font-bold"
-                            >
-                              💧
-                            </motion.div>
-                          </div>
-                        ) : (
-                          <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                            className="text-6xl"
-                          >
-                            ☀️
-                          </motion.div>
-                        )}
-                      </div>
-                    </motion.div>
-                  </div>
-                  
-                  {/* Location bar with iOS-style */}
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className={`
-                      mt-2 flex items-center justify-between p-3 rounded-xl backdrop-blur-md
-                      ${darkMode ? 'bg-white/10' : 'bg-white/60'}
-                    `}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`
-                        p-1.5 rounded-full
-                        ${darkMode ? 'bg-blue-500/30 text-blue-300' : 'bg-blue-100 text-blue-600'}
-                      `}>
-                        <FiMapPin className="w-3 h-3" />
-                      </div>
-                      <span className={`text-sm font-medium ${darkMode ? 'text-white/90' : 'text-gray-700'}`}>
-                        {weatherData.location}
-                      </span>
-                    </div>
-                    
-                    <div className="flex gap-1">
-                      <motion.div 
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className={`
-                          p-1.5 rounded-full cursor-pointer
-                          ${darkMode ? 'bg-white/10 hover:bg-white/20 text-white/80' : 'bg-white/80 hover:bg-white text-gray-600'}
-                          transition-colors
-                        `}
-                      >
-                        <FiRefreshCw className="w-3 h-3" />
-                      </motion.div>
-                      <motion.div 
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className={`
-                          p-1.5 rounded-full cursor-pointer
-                          ${darkMode ? 'bg-white/10 hover:bg-white/20 text-white/80' : 'bg-white/80 hover:bg-white text-gray-600'}
-                          transition-colors
-                        `}
-                      >
-                        <FiMoreHorizontal className="w-3 h-3" />
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                  
-                  {/* Forecast bar */}
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className={`
-                      mt-3 rounded-xl overflow-hidden backdrop-blur-md
-                      ${darkMode ? 'bg-white/10' : 'bg-white/60'}
-                    `}
-                  >
-                    <div className="grid grid-cols-5 divide-x divide-opacity-20 divide-gray-400">
-                      {['8h', '12h', '16h', '20h', '00h'].map((time, index) => (
-                        <div key={index} className="p-2 text-center relative">
-                          <div className={`text-xs font-medium mb-1 ${darkMode ? 'text-white/70' : 'text-gray-600'}`}>
-                            {time}
-                          </div>
-                          <div className="text-lg mb-1">
-                            {index === 0 ? '☀️' : 
-                            index === 1 ? '⛅' : 
-                            index === 2 ? '☁️' : 
-                            index === 3 ? '🌥️' : '🌙️'}
-                          </div>
-                          <div className={`text-xs font-medium ${darkMode ? 'text-white/90' : 'text-gray-700'}`}>
-                            {Math.round(weatherData.temperature - 2 + index * 2)}°
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Glass reflection effect */}
-                <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
-              </AnimatedCard>
+              </div>
 
               {/* Activity Feed Card */}
               <AnimatedCard className="flex flex-col flex-1" delay={0.2}>
@@ -3967,7 +3207,9 @@ const handleRefresh = () => {
     </div>
     </div>
     {/* Add Kalicom Chat Widget */}
-    <KalicomChatWidget />
+    <Suspense fallback={<div className="skeleton-loader">Loading...</div>}>
+      <KalicomChatWidget />
+    </Suspense>
     </motion.div>
     );
 }
