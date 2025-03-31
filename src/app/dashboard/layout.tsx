@@ -1,55 +1,100 @@
 // app/dashboard/layout.tsx
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from "../components/Sidebar";
-import Header from '../components/Header';
+import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
+
+// Use dynamic imports with no SSR for faster client-side rendering
+const Sidebar = dynamic(() => import("../components/Sidebar"), { ssr: false });
+const Header = dynamic(() => import('../components/Header'), { ssr: false });
+
+// Simple loading component
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 bg-white bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="w-10 h-10 border-4 border-[#004AC8] border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Initialize with stored value for faster initial render
+  const initialSidebarState = typeof window !== 'undefined' 
+    ? localStorage.getItem('sidebarOpen') !== 'false' 
+    : true;
+  
+  const [sidebarOpen, setSidebarOpen] = useState(initialSidebarState);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
 
+  // Toggle sidebar with localStorage update
   const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
+    setSidebarOpen((prev) => {
+      const newState = !prev;
+      localStorage.setItem('sidebarOpen', String(newState));
+      return newState;
+    });
   };
 
-  // Check authentication on component mount
+  // Show navigation loading state between page transitions
   useEffect(() => {
-    const checkAuth = () => {
+    // When route changes, show navigation loading
+    setIsNavigating(true);
+    
+    // Short timeout for very fast navigation
+    const timeout = setTimeout(() => {
+      setIsNavigating(false);
+    }, 300);
+    
+    return () => clearTimeout(timeout);
+  }, [pathname]);
+
+  // Check authentication once on component mount - optimized
+  useEffect(() => {
+    // Create an AbortController to cancel fetch if component unmounts
+    const controller = new AbortController();
+    
+    const checkAuth = async () => {
       try {
-        // Get login info from localStorage
-        const proInfo = localStorage.getItem('proInfo');
+        // Get login info from localStorage - wrapped in try/catch for safety
+        let proInfo;
+        try {
+          proInfo = localStorage.getItem('proInfo');
+        } catch (e) {
+          console.error('Error accessing localStorage:', e);
+          setAuthError('Erreur d\'accès au stockage local');
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
         
         if (!proInfo) {
-          // No login info found, show access denied message
           setAuthError('Aucune information de connexion trouvée');
           setIsAuthenticated(false);
           setIsLoading(false);
           return;
         }
 
-        // Parse the login info
+        // Parse once - don't parse multiple times
         const userInfo = JSON.parse(proInfo);
         
         if (!userInfo || !userInfo.isLoggedIn) {
-          // User is not logged in, show access denied message
           setAuthError('Session non valide');
           setIsAuthenticated(false);
           setIsLoading(false);
           return;
         }
 
-        // Check if the login is expired (optional - you can set an expiration time)
-        const currentTime = new Date().getTime();
+        // Simple timestamp check
+        const currentTime = Date.now();
         const loginTime = userInfo.timestamp || 0;
-        const expirationTime = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        const expirationTime = 24 * 60 * 60 * 1000; // 24 hours
         
         if (currentTime - loginTime > expirationTime) {
-          // Login expired, clear localStorage and show access denied message
           localStorage.removeItem('proInfo');
           setAuthError('Votre session a expiré');
           setIsAuthenticated(false);
@@ -57,12 +102,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           return;
         }
 
-        // User is authenticated
+        // Cache the authenticated state in sessionStorage for faster subsequent checks
+        sessionStorage.setItem('isAuthenticated', 'true');
         setIsAuthenticated(true);
         setIsLoading(false);
       } catch (error) {
         console.error('Authentication error:', error);
-        // In case of any error, show access denied message
         localStorage.removeItem('proInfo');
         setAuthError('Erreur d\'authentification');
         setIsAuthenticated(false);
@@ -70,25 +115,35 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       }
     };
 
-    checkAuth();
+    // Try to get from session cache first (much faster)
+    const cachedAuth = sessionStorage.getItem('isAuthenticated');
+    if (cachedAuth === 'true') {
+      setIsAuthenticated(true);
+      setIsLoading(false);
+    } else {
+      checkAuth();
+    }
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
-  // Auto-redirect after 4 seconds if not authenticated
+  // Auto-redirect with reduced timer for faster UX
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       const redirectTimer = setTimeout(() => {
         router.push('/');
-      }, 4000);
+      }, 2000); // Reduced from 4000ms to 2000ms
 
-      // Clean up timer on unmount
       return () => clearTimeout(redirectTimer);
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Sidebar widths: open = 280px, closed = 80px
-  const sidebarWidth = sidebarOpen ? 280 : 80;
+  // Memoize the sidebar width to prevent recalculation on every render
+  const sidebarWidth = useMemo(() => sidebarOpen ? 280 : 80, [sidebarOpen]);
 
-  // Show loading state
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#e7eaf1]">
@@ -100,7 +155,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // If not authenticated, show access denied message and auto-redirect
+  // Not authenticated
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-[#EEF2FF] via-[#F5F8FF] to-[#FAFBFF]">
@@ -134,10 +189,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {authError || 'Veuillez vous connecter pour accéder à votre espace Kalicom PBX'}
           </p>
           
-          {/* Progress bar for auto-redirect */}
+          {/* Progress bar for auto-redirect - faster animation */}
           <div className="w-full h-1 bg-gray-100 rounded-full mb-6 overflow-hidden">
             <div className="h-full bg-[#004AC8] rounded-full" 
-                style={{ animation: 'countdown 4s linear forwards' }}></div>
+                style={{ animation: 'countdown 2s linear forwards' }}></div>
           </div>
           <style jsx>{`
             @keyframes countdown {
@@ -157,14 +212,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </svg>
           </button>
           
-          <p className="mt-4 text-xs text-gray-400">Redirection automatique dans 4 secondes...</p>
+          <p className="mt-4 text-xs text-gray-400">Redirection automatique dans 2 secondes...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#e7eaf1]">
+    <div className="flex h-screen bg-[#e7eaf1] overflow-hidden">
+      {/* Show navigation loading spinner if navigating between pages */}
+      {isNavigating && <LoadingSpinner />}
+      
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} sidebarWidth={sidebarWidth} />
       <div
         className="flex flex-col flex-1 transition-all duration-300"
