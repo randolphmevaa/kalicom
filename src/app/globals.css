@@ -61,3 +61,87 @@ h1, h2, h3, h4, h5, h6 {
   animation-delay: 1s;
 }
 
+/* styles.css */
+/* Base styles for client cards */
+.client-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(240, 240, 240, 1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.client-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 74, 200, 0.15);
+}
+
+/* Brand color gradients */
+.header-gradient {
+  background: linear-gradient(135deg, rgba(75, 178, 246, 0.95) 0%, rgba(0, 74, 200, 0.95) 60%, rgba(27, 3, 83, 0.95) 100%);
+}
+
+.card-header-gradient {
+  background: linear-gradient(120deg, #4BB2F6, #004AC8, #1B0353);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%);
+}
+
+.primary-button-gradient {
+  background: linear-gradient(to right, #004AC8, #1B0353);
+}
+
+.info-card {
+  background: linear-gradient(145deg, #f0f9ff, #e6f7ff);
+  box-shadow: 5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff;
+  border: 1px solid rgba(75, 178, 246, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 8px 8px 15px rgba(0,0,0,0.08), -8px -8px 15px #ffffff;
+}
+
+/* Avatar styles */
+.avatar {
+  background: linear-gradient(45deg, #4BB2F6, #004AC8, #1B0353);
+  box-shadow: 0 10px 15px -3px rgba(27, 3, 83, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Animation utilities */
+.hover-up {
+  transition: transform 0.2s ease;
+}
+
+.hover-up:hover {
+  transform: translateY(-5px);
+}
+
+.scale-on-hover {
+  transition: transform 0.2s ease;
+}
+
+.scale-on-hover:hover {
+  transform: scale(1.1);
+}
+
+/* Glassmorphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Tags */
+.tag {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
