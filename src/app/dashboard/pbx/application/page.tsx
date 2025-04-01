@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import {
@@ -20,6 +20,7 @@ import {
   FiInfo,
   FiLayers
 } from 'react-icons/fi';
+import { KalicomChatWidget } from '@/app/components/dashboard/KalicomChatWidget';
 
 // Breadcrumbs component
 const Breadcrumbs = ({ items }: { items: string[] }) => (
@@ -331,7 +332,7 @@ export default function Applications() {
       variants={containerVariants}
       className="pt-20 min-h-screen"
     >
-      <div className="max-w-7xl mx-auto space-y-8 px-4 md:px-0">
+      <div className="pt-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-12">
         {/* Breadcrumbs */}
         <Breadcrumbs items={['PBX', 'Applications']} />
 
@@ -509,6 +510,10 @@ export default function Applications() {
           })}
         </motion.div>
       </div>
+      {/* Chat Widget */}
+            <Suspense fallback={<div className="skeleton-loader">Loading...</div>}>
+              <KalicomChatWidget />
+            </Suspense>
     </motion.div>
   );
 }

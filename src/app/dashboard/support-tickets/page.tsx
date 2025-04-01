@@ -41,6 +41,7 @@ import {
   FiEdit
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
+import Image from 'next/image';
 
 // Define types for tickets and related entities
 interface Ticket {
@@ -599,7 +600,7 @@ export default function GestionTickets() {
                               <div className="mb-2">
                                 {ticket.assignedTo ? (
                                   <div className="flex items-center">
-                                    <img 
+                                    <Image
                                       src={technicians.find(t => t.id === ticket.assignedTo)?.avatar || '/api/placeholder/24/24'} 
                                       alt="Avatar" 
                                       className="w-6 h-6 rounded-full mr-1"
@@ -679,7 +680,7 @@ export default function GestionTickets() {
                                   <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
                                     <div className="flex items-center">
                                       {ticket.assignedTo ? (
-                                        <img 
+                                        <Image
                                           src={technicians.find(t => t.id === ticket.assignedTo)?.avatar || '/api/placeholder/24/24'} 
                                           alt="Avatar" 
                                           className="w-5 h-5 rounded-full"
@@ -1350,7 +1351,7 @@ export default function GestionTickets() {
                     </h3>
                     {selectedTicket.assignedTo ? (
                       <div className="flex items-center">
-                        <img 
+                        <Image
                           src={technicians.find(t => t.id === selectedTicket.assignedTo)?.avatar || '/api/placeholder/24/24'} 
                           alt="Avatar" 
                           className="w-6 h-6 rounded-full mr-2"

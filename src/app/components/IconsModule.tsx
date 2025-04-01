@@ -38,11 +38,11 @@ import type { MenuSection } from './Sidebar';
 
 // Define sections with their icons
 const sections: Record<string, MenuSection> = {
-  acceuil: {
-    title: 'Acceuil',
+  accueil: {
+    title: 'Accueil',
     icon: <FiHome size={20} className="text-white" />,
     items: [
-      { name: 'Acceuil', href: '/dashboard/acceuil', icon: <FiHome size={20} className="text-white" /> },
+      { name: 'Accueil', href: '/dashboard/accueil', icon: <FiHome size={20} className="text-white" /> },
     ],
   },
   pbx: {

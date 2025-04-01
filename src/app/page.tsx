@@ -140,6 +140,7 @@ export default function LoginPage() {
       // Redirect after animation completes
       setTimeout(() => {
         router.push('/dashboard/acceuil');
+        
       }, 1000);
       
     } catch {

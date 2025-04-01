@@ -63,6 +63,7 @@ import {
   FiMenu,
   FiPlay
 } from 'react-icons/fi';
+import Image from 'next/image';
 
 // Email type definitions
 interface IEmail {
@@ -1712,7 +1713,7 @@ const getColorHex = (color: string): string => {
                   }`}
                 >
                   <div className="relative">
-                    <img 
+                    <Image 
                       src={account.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(account.name)}&background=random`} 
                       alt={account.name} 
                       className="h-8 w-8 rounded-full object-cover"
@@ -1937,7 +1938,7 @@ const getColorHex = (color: string): string => {
                       className={`flex p-3 hover:bg-gray-50 cursor-pointer transition-colors ${!email.isRead ? 'bg-blue-50' : ''}`}
                     >
                       <div className="flex-shrink-0 mr-3">
-                        <img
+                        <Image
                           src={email.sender.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(email.sender.name)}&background=random`}
                           alt={email.sender.name}
                           className="h-10 w-10 rounded-full object-cover"
@@ -2045,7 +2046,7 @@ const getColorHex = (color: string): string => {
                     {emailThreads.map((email ) => (
                       <div key={email.id} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow-sm border ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                         <div className="flex items-start">
-                          <img
+                          <Image
                             src={email.sender.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(email.sender.name)}&background=random`}
                             alt={email.sender.name}
                             className="h-10 w-10 rounded-full object-cover mr-3"
@@ -2095,7 +2096,7 @@ const getColorHex = (color: string): string => {
                                       className={`flex items-center p-2 rounded-lg ${darkMode ? 'bg-gray-800 hover:bg-gray-900' : 'bg-gray-50 hover:bg-gray-100'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} cursor-pointer group`}
                                     >
                                       {attachment.type === 'image' && attachment.thumbnail ? (
-                                        <img 
+                                        <Image
                                           src={attachment.thumbnail} 
                                           alt={attachment.name}
                                           className="h-10 w-10 rounded object-cover mr-2"

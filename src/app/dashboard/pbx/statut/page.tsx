@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiRefreshCw,
@@ -30,6 +30,7 @@ import {
   FiAlertTriangle,
   FiMoreVertical
 } from 'react-icons/fi';
+import { KalicomChatWidget } from '@/app/components/dashboard/KalicomChatWidget';
 
 // ------------------ Sample Interfaces & Data ------------------
 
@@ -505,6 +506,10 @@ export default function StatutPage() {
           </div>
         </motion.div>
       </div>
+      {/* Chat Widget */}
+            <Suspense fallback={<div className="skeleton-loader">Loading...</div>}>
+              <KalicomChatWidget />
+            </Suspense>
     </motion.div>
   );
 }

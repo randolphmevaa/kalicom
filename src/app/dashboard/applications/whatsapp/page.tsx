@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
   FiSearch,
   FiMoreVertical,
@@ -512,7 +513,7 @@ const ContactProfile: React.FC<{ contact: IContact; conversation: IConversation;
           <div className="relative">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 mb-4 border-2 border-white shadow-md">
               {contact.profilePicture ? (
-                <img src={contact.profilePicture} alt={contact.name} className="w-full h-full object-cover" />
+                <Image src={contact.profilePicture} alt={contact.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gray-700 flex items-center justify-center text-white text-3xl font-bold">
                   {contact.name.charAt(0).toUpperCase()}
@@ -887,7 +888,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose, onAc
                 <div className="flex justify-center mb-4">
                   {qrReady ? (
                     <div className="border-2 border-indigo-500 rounded-lg p-2 bg-white">
-                      <img src="/api/placeholder/200/200" alt="QR Code" className="w-48 h-48 object-cover" />
+                      <Image src="/api/placeholder/200/200" alt="QR Code" className="w-48 h-48 object-cover" />
                     </div>
                   ) : (
                     <div className="w-48 h-48 flex items-center justify-center">
@@ -2273,7 +2274,7 @@ const WhatsAppBusinessInterface = () => {
                                   : 'ring-1 ring-gray-200'
                             }`}>
                               {conversation.contact.profilePicture ? (
-                                <img 
+                                <Image 
                                   src={conversation.contact.profilePicture} 
                                   alt={conversation.contact.name} 
                                   className="h-full w-full object-cover"
@@ -2424,7 +2425,7 @@ const WhatsAppBusinessInterface = () => {
                     <div className="relative mr-3">
                       <div className="w-10 h-10 rounded-full overflow-hidden">
                         {selectedConversation.contact.profilePicture ? (
-                          <img 
+                          <Image 
                             src={selectedConversation.contact.profilePicture} 
                             alt={selectedConversation.contact.name} 
                             className="w-full h-full object-cover"

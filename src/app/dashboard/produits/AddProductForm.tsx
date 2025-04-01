@@ -10,6 +10,7 @@ import {
 } from "react-icons/fi";
 import { FaEuroSign } from "react-icons/fa";
 import { Product } from "./types";
+import Image from "next/image";
 
 // Define product data structure
 interface ProductData {
@@ -893,7 +894,7 @@ const FormulaireProduitsAmelioré = ({ onClose, onSave, editProduct = null }: Fo
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50">
                 {imagePreview ? (
                   <div className="relative">
-                    <img 
+                    <Image
                       src={imagePreview} 
                       alt="Aperçu du produit" 
                       className="mx-auto max-h-80 object-contain rounded-lg mb-4 shadow-lg"

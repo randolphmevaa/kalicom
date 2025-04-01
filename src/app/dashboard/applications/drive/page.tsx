@@ -31,6 +31,7 @@ import {
   CheckIcon,
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
+import Image from "next/image";
 
 // Types for Drive integration
 const DriveInterface = () => {
@@ -1224,7 +1225,7 @@ const DriveInterface = () => {
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0">
                 {file.type === "image" && file.thumbnail ? (
-                  <img 
+                  <Image
                     src={file.thumbnail} 
                     alt={file.name} 
                     className="w-20 h-20 object-cover rounded"
@@ -1999,7 +2000,7 @@ const DriveInterface = () => {
                             {/* File/Folder Preview */}
                             <div className="h-32 flex items-center justify-center p-4">
                               {item.type === "image" && item.thumbnail ? (
-                                <img 
+                                <Image
                                   src={item.thumbnail} 
                                   alt={item.name} 
                                   className="max-h-full max-w-full object-contain rounded"

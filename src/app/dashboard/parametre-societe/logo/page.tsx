@@ -14,6 +14,7 @@ import {
   FiPlus,
   FiMinus
 } from 'react-icons/fi';
+import Image from 'next/image';
 
 export default function LogoManagement() {
   // State to track if a logo exists
@@ -203,7 +204,7 @@ export default function LogoManagement() {
                       style={{ maxWidth: `${previewSize}%`, maxHeight: `${previewSize}%` }}
                     >
                       {/* Display logo with appropriate sizing */}
-                      <img 
+                      <Image
                         src="/Artboard 1.svg" 
                         alt="Logo de l'entreprise"
                         className="max-w-full max-h-full object-contain" 

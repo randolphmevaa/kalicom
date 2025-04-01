@@ -43,7 +43,7 @@ export type MenuSection = {
 
 // Define just the section structure here - the full data will be loaded from IconsModule
 const sectionStructure = [
-  'acceuil',
+  'accueil',
   'pbx',
   'crm',
   'agenda',

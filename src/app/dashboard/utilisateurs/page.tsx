@@ -173,7 +173,7 @@ const Breadcrumbs = ({ items }: { items: string[] }) => (
           <span className="text-[#004AC8] font-medium">{item}</span>
         ) : (
           <Link 
-            href={item === 'Acceuil' ? '/dashboard/acceuil' : `/${item.toLowerCase()}`}
+            href={item === 'Accueil' ? '/dashboard/accueil' : `/${item.toLowerCase()}`}
             className="hover:text-[#004AC8] transition-colors duration-200"
           >
             {item}
@@ -1090,7 +1090,7 @@ const saveNewUser = () => {
     >
       <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6">
         {/* Breadcrumbs */}
-        <Breadcrumbs items={['Acceuil', 'Utilisateurs']} />
+        <Breadcrumbs items={['Accueil', 'Utilisateurs']} />
         
         {/* New Header/Hero section styled like Statistiques page */}
         <motion.div

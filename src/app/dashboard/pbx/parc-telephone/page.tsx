@@ -32,6 +32,8 @@ import {
   FiChevronsUp,
   FiChevronsDown,
   FiList,
+  FiHome,
+  FiChevronRight,
 } from 'react-icons/fi';
 
 /** Device interface */
@@ -170,6 +172,20 @@ const getDeviceIcon = (model?: string) => {
   if (model.includes('Softphone')) return FiLayers;
   return FiPhone;
 };
+
+// Breadcrumbs component
+const Breadcrumbs = ({ items }: { items: string[] }) => (
+  <div className="flex items-center text-sm text-gray-600 mb-6">
+    <FiHome className="mr-2 text-gray-500" />
+    {items.map((item, index) => (
+      <div key={index} className="flex items-center">
+        {index > 0 && <FiChevronRight className="mx-2 text-gray-400" />}
+        <span className={index === items.length - 1 ? "text-[#004AC8] font-medium" : ""}>{item}</span>
+      </div>
+    ))}
+  </div>
+);
+
 
 export default function ParcTelephonique() {
   // ------------------ States ------------------
@@ -579,7 +595,9 @@ export default function ParcTelephonique() {
       animate={{ opacity: 1 }}
       className="pt-20 min-h-screen pb-12"
     >
-      <div className="max-w-7xl mx-auto space-y-6 px-4 md:px-0">
+      <div className="pt-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-12">
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={['PBX', 'Statistiques']} />
         {/* ========== Header with Statistics ========== */}
         <div className="relative mb-8 overflow-hidden bg-white/80 rounded-3xl shadow-2xl border border-gray-100">
           <div className="absolute inset-0 bg-gradient-to-r from-[#004AC8]/10 to-[#4BB2F6]/10 rounded-3xl pointer-events-none" />

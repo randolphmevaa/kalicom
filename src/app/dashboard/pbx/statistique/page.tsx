@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import {
@@ -20,6 +20,7 @@ import {
   FiDownload
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
+import { KalicomChatWidget } from '@/app/components/dashboard/KalicomChatWidget';
 
 // Define types for Theme and Stats Card
 interface ThemeStyles {
@@ -518,6 +519,10 @@ export default function Statistiques() {
           })}
         </motion.div>
       </div>
+      {/* Chat Widget */}
+            <Suspense fallback={<div className="skeleton-loader">Loading...</div>}>
+              <KalicomChatWidget />
+            </Suspense>
     </motion.div>
   );
 }

@@ -68,7 +68,7 @@ const Breadcrumbs = ({ items }: { items: string[] }) => (
           <span className="text-[#004AC8] font-medium">{item}</span>
         ) : (
           <Link 
-            href={item === 'Acceuil' ? '/dashboard/acceuil' : `/${item.toLowerCase()}`}
+            href={item === 'Accueil' ? '/dashboard/accueil' : `/${item.toLowerCase()}`}
             className="hover:text-[#004AC8] transition-colors duration-200"
           >
             {item}
