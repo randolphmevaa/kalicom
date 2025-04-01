@@ -42,7 +42,7 @@ const sections: Record<string, MenuSection> = {
     title: 'Accueil',
     icon: <FiHome size={20} className="text-white" />,
     items: [
-      { name: 'Accueil', href: '/dashboard/accueil', icon: <FiHome size={20} className="text-white" /> },
+      { name: 'Accueil', href: '/dashboard/acceuil', icon: <FiHome size={20} className="text-white" /> },
     ],
   },
   pbx: {
