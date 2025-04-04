@@ -5,14 +5,10 @@ import {
   FiX, 
   FiSave, 
   FiTrash2, 
-  // FiUser, 
   FiSearch,
   FiChevronsRight,
-  // FiCalendar,
   FiPercent,
-  // FiPackage,
   FiFileText,
-  // FiClipboard,
   FiCheck,
   FiInfo
 } from 'react-icons/fi';
@@ -338,18 +334,16 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
     }, 1500);
   };
 
-  // Calculate totals when line items change
+  // Calculate totals when line items change - Fixed to prevent the infinite loop
   useEffect(() => {
-    // Calculate each line item's net amount
-    const updatedLineItems = lineItems.map(item => ({
+    // First compute the montantNetHT for each item without updating state
+    const itemsWithCalculatedAmounts = lineItems.map(item => ({
       ...item,
-      montantNetHT: calculateLineItemAmount(item)
+      calculatedAmount: calculateLineItemAmount(item)
     }));
     
-    setLineItems(updatedLineItems);
-    
     // Calculate totals
-    const totalBrutHT = updatedLineItems.reduce(
+    const totalBrutHT = itemsWithCalculatedAmounts.reduce(
       (sum, item) => {
         const quantity = typeof item.quantite === 'string' ? parseFloat(item.quantite) : item.quantite;
         return sum + (quantity * parseFloat(item.pvHT));
@@ -361,8 +355,8 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
     
     const totalNetHT = (parseFloat(totalBrutHT) - remiseGlobale).toFixed(2);
     
-    const totalTVA = updatedLineItems.reduce(
-      (sum, item) => sum + (parseFloat(item.montantNetHT) * parseFloat(item.tva) / 100), 
+    const totalTVA = itemsWithCalculatedAmounts.reduce(
+      (sum, item) => sum + (parseFloat(item.calculatedAmount) * parseFloat(item.tva) / 100), 
       0
     ).toFixed(2);
     
@@ -374,6 +368,7 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
     const acompte = parseFloat(totalTTC) * parseFloat(totals.pourcentageAcompte) / 100;
     const netAPayer = (parseFloat(totalTTC) - acompte).toFixed(2);
     
+    // Update totals without causing re-render loop
     setTotals(prev => ({
       ...prev,
       totalBrutHT,
@@ -382,7 +377,28 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
       netAPayer
     }));
     
-  }, [lineItems, totals.portHT, totals.tvaPort, totals.pourcentageRemise, totals.pourcentageAcompte]);
+    // Update lineItems with calculated montantNetHT values
+    const updatedLineItems = lineItems.map((item, index) => ({
+      ...item,
+      montantNetHT: itemsWithCalculatedAmounts[index].calculatedAmount
+    }));
+    
+    // Only update lineItems if they've actually changed to prevent loops
+    const hasLineItemsChanged = JSON.stringify(updatedLineItems) !== JSON.stringify(lineItems);
+    
+    if (hasLineItemsChanged) {
+      setLineItems(updatedLineItems);
+    }
+    
+  }, [
+    lineItems.map(item => item.pvHT).join(','), 
+    lineItems.map(item => item.quantite).join(','),
+    lineItems.map(item => item.remise).join(','),
+    totals.portHT, 
+    totals.tvaPort, 
+    totals.pourcentageRemise, 
+    totals.pourcentageAcompte
+  ]);
 
   // Handle client selection and populate fields
   const selectClient = (client: Client): void => {

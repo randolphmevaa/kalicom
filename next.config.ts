@@ -29,6 +29,9 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
     reactStrictMode: true,
     compress: true,
     
+    // Added: transpile react-icons to fix module resolution issues
+    transpilePackages: ['react-icons'],
+    
     // Configure image optimization
     images: {
       formats: ['image/avif', 'image/webp'],
@@ -48,10 +51,30 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
       },
       // Improved code generation
       serverComponentsExternalPackages: [],
+      // Removed: HMR optimizations as 'hmr' is not a valid property
     },
     
     // Enhanced webpack configuration for better performance
     webpack: (config: WebpackConfig, { dev, isServer }): WebpackConfig => {
+      // Add module alias for react-icons/fa6
+      config.resolve = {
+        ...config.resolve,
+        alias: {
+          ...config.resolve?.alias,
+          'react-icons/fa6': 'react-icons/fa',
+        },
+        fallback: {
+          ...(config.resolve?.fallback || {}),
+          fs: false,
+        },
+      };
+      
+      // Add snapshot configuration to improve module resolution during HMR
+      config.snapshot = {
+        ...(config.snapshot || {}),
+        managedPaths: [/^(.+?[\\/]node_modules[\\/])(.*)[\\/]*/],
+      };
+      
       // Only optimize in production
       if (!dev && !isServer) {
         // Optimize module concatenation
@@ -79,9 +102,17 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
                 priority: 35,
                 chunks: 'all',
               },
+              // Separate react-icons into its own chunk to improve HMR
+              icons: {
+                test: /[\\/]node_modules[\\/](react-icons|@heroicons)[\\/]/,
+                name: 'icons',
+                priority: 37, // Higher than lib priority
+                chunks: 'all',
+                enforce: true, // Added enforce: true
+              },
               // Break down lib chunks into smaller pieces
               lib: {
-                test: /[\\/]node_modules[\\/](!react)(!react-dom)(!next)(!framer-motion)[\\/]/,
+                test: /[\\/]node_modules[\\/](!react)(!react-dom)(!next)(!framer-motion)(!react-icons)(!@heroicons)[\\/]/,
                 name(module: any) {
                   // Get the name of the npm package
                   const packageName = module.context.match(
@@ -102,12 +133,6 @@ const configureNext = async (phase: string): Promise<NextConfig> => {
                 priority: 30,
                 chunks: 'all',
                 reuseExistingChunk: true,
-              },
-              icons: {
-                test: /[\\/]node_modules[\\/](react-icons|@heroicons)[\\/]/,
-                name: 'icons',
-                priority: 20,
-                chunks: 'all',
               },
               commons: {
                 name: 'commons',

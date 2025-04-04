@@ -45,60 +45,7 @@ const KalicomChatWidget = lazy(() =>
   import('@/app/components/dashboard/KalicomChatWidget').then(module => ({
     default: module.KalicomChatWidget
   }))
-);
-
-// Sample data interfaces - move these to separate types file
-// interface ProspectDataItem {
-//   name: string;
-//   prospects: number;
-//   leads: number;
-//   clients: number;
-// }
-
-// interface CallDataItem {
-//   date: string;
-//   heure: string;
-//   appels: number;
-//   duree: number;
-//   taux: number;
-//   entrants: number;
-//   sortants: number;
-//   internes: number;
-//   manques: number;
-// }
-
-// interface TicketData {
-//   id: string;
-//   client: string;
-//   subject: string;
-//   status: string;
-//   priority: string;
-//   created: string;
-//   updated: string;
-//   agent: string;
-//   sla: string;
-//   progress: number;
-// }
-
-// interface ChatMessage {
-//   id: number;
-//   user: string;
-//   avatar: string;
-//   message: string;
-//   time: string;
-//   unread: boolean;
-//   isOnline: boolean;
-// }
-
-// interface ActivityData {
-//   id: number;
-//   user: string;
-//   action: string;
-//   target: string;
-//   time: string;
-//   type: string;
-//   duration?: string;
-// }
+)
 
 // Import sample data from a separate file instead of including it here
 import { 
