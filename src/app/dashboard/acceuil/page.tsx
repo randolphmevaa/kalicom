@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiGrid } from 'react-icons/fi';
+import { FiCheckCircle, FiGrid } from 'react-icons/fi';
+import { useSearchParams } from 'next/navigation';
 
 // Lightweight loading components
 // import { LoadingCard } from '@/app/components/ui/LoadingCard';
@@ -76,10 +77,100 @@ const SectionSkeleton = ({ height = "h-64", title = true }) => (
   </div>
 );
 
+const AuthSuccessNotification: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -50 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -50 }}
+    className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-green-100 border border-green-200 text-green-800 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 z-50"
+  >
+    <FiCheckCircle className="w-6 h-6 text-green-600" />
+    <div>
+      <h3 className="font-medium">Connexion Keyyo réussie!</h3>
+      <p className="text-sm">Vous pouvez maintenant utiliser le poste de travail téléphonique.</p>
+    </div>
+    <button
+      onClick={onClose}
+      className="ml-4 bg-green-200 hover:bg-green-300 text-green-800 px-3 py-1 rounded-lg text-sm"
+    >
+      Fermer
+    </button>
+  </motion.div>
+);
+
 // Main Dashboard component
 export default function AccueilDashboard() {
   const [timeRange, setTimeRange] = useState('today');
   const [darkMode, setDarkMode] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isProcessingAuth, setIsProcessingAuth] = useState(false);
+  
+  const searchParams = useSearchParams();
+  // Process Keyyo OAuth callback
+  useEffect(() => {
+    const processKeyyoCallback = async () => {
+      const code = searchParams.get('code');
+      const error = searchParams.get('error');
+      
+      if (error) {
+        console.error('OAuth error:', error);
+        setAuthError(`Erreur d'authentification: ${error}`);
+        return;
+      }
+      
+      if (code && !isProcessingAuth) {
+        setIsProcessingAuth(true);
+        
+        try {
+          console.log('Processing authorization code...');
+          
+          // Exchange code for access token
+          const tokenResponse = await fetch('https://api.keyyo.com/oauth2/token.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+              client_id: '67e1f96262f4c',
+              client_secret: 'b9b83284780d5463fa1a1ff2',
+              grant_type: 'authorization_code',
+              code: code,
+              redirect_uri: 'https://kalicom.vercel.app/dashboard/acceuil'
+            })
+          });
+          
+          const tokenData = await tokenResponse.json();
+          
+          if (tokenData.error) {
+            console.error('Token error:', tokenData.error);
+            setAuthError(`Erreur d'authentification: ${tokenData.error}`);
+            setIsProcessingAuth(false);
+            return;
+          }
+          
+          // In a production app, you would need to make an additional API call to get the CSI token
+          // For now, we'll just use the access token (in a real app, replace this with proper CSI token retrieval)
+          localStorage.setItem('keyyoCSIToken', tokenData.access_token);
+          localStorage.setItem('keyyoAuthDate', new Date().toISOString());
+          
+          // Show success notification
+          setAuthSuccess(true);
+          
+          // Auto-dismiss after 5 seconds
+          setTimeout(() => {
+            setAuthSuccess(false);
+          }, 5000);
+          
+        } catch (err) {
+          console.error('Auth processing error:', err);
+          setAuthError(`Erreur de traitement: ${err instanceof Error ? err.message : 'Une erreur inconnue s\'est produite'}`);
+        } finally {
+          setIsProcessingAuth(false);
+        }
+      }
+    };
+    
+    processKeyyoCallback();
+  }, [searchParams, isProcessingAuth]);
   
   // Calculate summary statistics - consider moving this logic to a custom hook
   const totalCalls = callData.reduce((sum, item) => sum + item.appels, 0);
@@ -98,6 +189,24 @@ export default function AccueilDashboard() {
         darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50/50 text-gray-800'
       }`}
     >
+      {/* Auth success notification */}
+      {authSuccess && (
+        <AuthSuccessNotification onClose={() => setAuthSuccess(false)} />
+      )}
+
+      {/* Auth error notification */}
+      {authError && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-6 py-4 rounded-xl shadow-lg z-50">
+          <p>{authError}</p>
+          <button 
+            onClick={() => setAuthError(null)}
+            className="mt-2 bg-red-200 hover:bg-red-300 text-red-800 px-3 py-1 rounded-lg text-sm"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto space-y-8 px-4 md:px-6">
         {/* Dashboard Header - use error boundary with fallback */}
         <ErrorBoundary fallback={<div className="p-6 bg-white rounded-xl shadow">Failed to load dashboard header</div>}>

@@ -206,7 +206,7 @@ const EnhancedGeographicMap = () => {
             <div className="text-gray-500">Chargement de la carte...</div>
           </div>
         )}
-        <div ref={mapContainerRef} className="w-full h-[600px]" />
+        <div ref={mapContainerRef} className="w-full h-[600px] text-gray-600" />
         
         {/* Legend (Only shown when map is loaded) */}
         {mapboxLoaded && (

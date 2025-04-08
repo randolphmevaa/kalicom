@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiClock,
@@ -45,7 +45,6 @@ import {
   FiSearch,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { KalicomChatWidget } from '@/app/components/dashboard/KalicomChatWidget';
 
 // Types and interfaces
 interface Contact {
@@ -1145,10 +1144,6 @@ export default function PosteDeTravail() {
           </div>
         </motion.div>
       </div>
-      {/* Chat Widget */}
-            <Suspense fallback={<div className="skeleton-loader">Loading...</div>}>
-              <KalicomChatWidget />
-            </Suspense>
     </motion.div>
   );
 }

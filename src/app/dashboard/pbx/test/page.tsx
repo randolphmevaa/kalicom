@@ -22,7 +22,7 @@ interface Service {
   commitment_start_date: string | null;
   status: string;
   blocking_status: string | null;
-  options: Record<string, unknown>; // Replace 'unknown' with a more specific type if known
+  options: Record<string, unknown>;
   short_number?: string;
   first_name?: string;
   last_name?: string;
