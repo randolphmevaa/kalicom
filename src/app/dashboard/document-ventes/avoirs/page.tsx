@@ -1,7 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import CreateCreditNoteModal from './CreateCreditNoteModal';
 import { 
   FiFileText, 
   FiSearch, 
@@ -15,18 +14,29 @@ import {
   FiSend,
   FiClock,
   FiUser,
-  // FiCalendar,
   FiRefreshCw,
   FiPrinter,
   FiLink,
   FiCheckCircle,
-  FiInfo,
-  // FiPercent,
-  // FiCheck,
-  // FiX
-
+  FiInfo
 } from 'react-icons/fi';
 import { FaEuroSign } from 'react-icons/fa6';
+
+// Lazy load the modal component
+const CreateCreditNoteModal = lazy(() => import('./CreateCreditNoteModal'));
+
+// Loading fallback component for the modal
+const ModalLoadingFallback = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50"></div>
+    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto m-4 p-6 flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-700">Chargement en cours...</p>
+      </div>
+    </div>
+  </div>
+);
 
 export default function Avoirs() {
   // State for filters and search
@@ -38,12 +48,12 @@ export default function Avoirs() {
   
   // State for selected credit notes (for bulk actions)
   const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
-
   const [selectAll, setSelectAll] = useState(false);
-  // Add this to your Factures component's state definitions
+  
+  // State for modal visibility
   const [showCreateCreditNoteModal, setShowCreateCreditNoteModal] = useState<boolean>(false);
 
-  // Add this handler for opening the modal
+  // Handler for opening the modal
   const handleOpenCreateCreditNoteModal = () => {
     setShowCreateCreditNoteModal(true);
   };
@@ -588,11 +598,16 @@ export default function Avoirs() {
           </nav>
         </div>
       </div>
-      {/* Create Credit Note Modal */}
-      <CreateCreditNoteModal
-        isOpen={showCreateCreditNoteModal} 
-        onClose={() => setShowCreateCreditNoteModal(false)} 
-      />
+      
+      {/* Lazy loaded modal with Suspense */}
+      {showCreateCreditNoteModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <CreateCreditNoteModal
+            isOpen={showCreateCreditNoteModal} 
+            onClose={() => setShowCreateCreditNoteModal(false)} 
+          />
+        </Suspense>
+      )}
     </motion.div>
   );
 }

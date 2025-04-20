@@ -1,5 +1,5 @@
 // CreateCreditNoteModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSave } from 'react-icons/fi';
 
@@ -11,21 +11,28 @@ import useFormData from './hooks/useFormData';
 import useLineItems from './hooks/useLineItems';
 import useTotals from './hooks/useTotals';
 
-// Components
+// Primary components - loaded immediately
 import CreditNoteHeader from './components/CreditNoteHeader';
 import ClientInfoSection from './components/ClientInfoSection';
 import LineItemsTable from './components/LineItemsTable';
 import CreditNoteTotals from './components/CreditNoteTotals';
-import SaveConfirmation from './components/SaveConfirmation';
-import InvoiceSelectionModal from './components/modals/InvoiceSelectionModal';
-import ArticleSelectionModal from './components/modals/ArticleSelectionModal';
+
+// Lazy loaded modal components
+const InvoiceSelectionModal = lazy(() => import('./components/modals/InvoiceSelectionModal'));
+const ArticleSelectionModal = lazy(() => import('./components/modals/ArticleSelectionModal'));
+const SaveConfirmation = lazy(() => import('./components/SaveConfirmation'));
 
 // Sample data
 import { clients, sampleInvoices, articlesCommuns, moyensPaiement, refundReasons } from './data/sampleData';
 
+// Loading fallback component
+const ModalLoadingFallback = () => (
+  <div className="fixed inset-0 bg-black/10 flex items-center justify-center">
+    <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
+
 const CreateCreditNoteModal: React.FC<CreateCreditNoteModalProps> = ({ isOpen, onClose }) => {
-  // Don't return null here - let AnimatePresence handle the conditional rendering
-  
   // Initialize custom hooks
   const { formData, setFormData, handleInputChange } = useFormData();
   
@@ -33,7 +40,6 @@ const CreateCreditNoteModal: React.FC<CreateCreditNoteModalProps> = ({ isOpen, o
     lineItems,
     showArticleModal,
     setShowArticleModal,
-    // selectedLineId,
     handleLineItemChange,
     addLineItem,
     removeLineItem,
@@ -237,24 +243,36 @@ const CreateCreditNoteModal: React.FC<CreateCreditNoteModalProps> = ({ isOpen, o
               </div>
             </div>
             
-            {/* Child modals */}
-            <InvoiceSelectionModal 
-              isOpen={showInvoiceModal}
-              onClose={() => setShowInvoiceModal(false)}
-              invoiceSearch={invoiceSearch}
-              setInvoiceSearch={setInvoiceSearch}
-              filteredInvoices={filteredInvoices}
-              selectInvoice={selectInvoice}
-            />
+            {/* Lazy loaded child modals */}
+            {showInvoiceModal && (
+              <Suspense fallback={<ModalLoadingFallback />}>
+                <InvoiceSelectionModal 
+                  isOpen={showInvoiceModal}
+                  onClose={() => setShowInvoiceModal(false)}
+                  invoiceSearch={invoiceSearch}
+                  setInvoiceSearch={setInvoiceSearch}
+                  filteredInvoices={filteredInvoices}
+                  selectInvoice={selectInvoice}
+                />
+              </Suspense>
+            )}
             
-            <ArticleSelectionModal 
-              isOpen={showArticleModal}
-              onClose={() => setShowArticleModal(false)}
-              selectArticle={selectArticle}
-              articles={articlesCommuns}
-            />
+            {showArticleModal && (
+              <Suspense fallback={<ModalLoadingFallback />}>
+                <ArticleSelectionModal 
+                  isOpen={showArticleModal}
+                  onClose={() => setShowArticleModal(false)}
+                  selectArticle={selectArticle}
+                  articles={articlesCommuns}
+                />
+              </Suspense>
+            )}
             
-            <SaveConfirmation isOpen={showSaveConfirmation} />
+            {showSaveConfirmation && (
+              <Suspense fallback={<ModalLoadingFallback />}>
+                <SaveConfirmation isOpen={showSaveConfirmation} />
+              </Suspense>
+            )}
           </motion.div>
         </motion.div>
       )}

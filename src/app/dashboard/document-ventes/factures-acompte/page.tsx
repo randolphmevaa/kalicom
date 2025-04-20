@@ -1,7 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
-import CreateDepositInvoiceModal from './CreateDepositInvoiceModal';
 import { 
   FiFileText, 
   FiSearch, 
@@ -15,18 +14,30 @@ import {
   FiSend,
   FiClock,
   FiUser,
-  // FiCalendar,
   FiRefreshCw,
   FiPrinter,
-  // FiLink,
-  // FiCheckCircle,
-  // FiPercent,
   FiArrowRight,
   FiCheck,
   FiX,
   FiInfo
 } from 'react-icons/fi';
 import { FaEuroSign } from 'react-icons/fa6';
+
+// Lazy load the modal component
+const CreateDepositInvoiceModal = lazy(() => import('./CreateDepositInvoiceModal'));
+
+// Loading fallback component
+const ModalLoadingFallback = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50"></div>
+    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto m-4 p-6 flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-700">Chargement en cours...</p>
+      </div>
+    </div>
+  </div>
+);
 
 export default function FacturesAcompte() {
   // State for filters and search
@@ -40,22 +51,13 @@ export default function FacturesAcompte() {
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  // Add this to your Factures component's state definitions
-    // const [showCreateCreditNoteModal, setShowCreateCreditNoteModal] = useState<boolean>(false);
+  // Modal state
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   
-    // Add this handler for opening the modal
-    // const handleOpenCreateCreditNoteModal = () => {
-    //   setShowCreateCreditNoteModal(true);
-    // };
-
-     // Add this to your Factures component's state definitions
-      const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-    
-      // Add this handler for opening the modal
-      const handleOpenCreateModal = () => {
-        setShowCreateModal(true);
-      };
-    
+  // Handler for opening the modal
+  const handleOpenCreateModal = () => {
+    setShowCreateModal(true);
+  };
 
   // Sample deposit invoices data
   const depositInvoices = [
@@ -624,11 +626,16 @@ export default function FacturesAcompte() {
           </nav>
         </div>
       </div>
-      {/* Create Invoice Modal */}
-      <CreateDepositInvoiceModal 
-          isOpen={showCreateModal} 
-          onClose={() => setShowCreateModal(false)} 
-        />
+      
+      {/* Lazy loaded CreateInvoiceModal with Suspense */}
+      {showCreateModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <CreateDepositInvoiceModal 
+            isOpen={showCreateModal} 
+            onClose={() => setShowCreateModal(false)} 
+          />
+        </Suspense>
+      )}
     </motion.div>
   );
 }

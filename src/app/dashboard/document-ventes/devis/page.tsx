@@ -3,7 +3,6 @@ import React, { useState, ChangeEvent, lazy, Suspense, useMemo, useCallback } fr
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiClock,
-  // FiUser,
   FiCheck,
   FiInfo,
   FiPlus,
@@ -12,27 +11,39 @@ import {
   FiTrash2,
 } from 'react-icons/fi';
 import { FaEuroSign } from 'react-icons/fa6';
-import CreateQuoteModal from './CreateQuoteModal';
 
 // Fix: Use type-only imports to avoid naming conflicts
 import type { Devis as DevisType, FilterStatus, SortField, ExportFormat, FilterPeriod, Statistic, DevisStatus } from './types';
 
-// Lazy load components
+// Lazy load all components that aren't needed for immediate render
 const HeroSection = lazy(() => import('./components/HeroSection'));
 const StatisticsCards = lazy(() => import('./components/StatisticsCards'));
 const DevisTable = lazy(() => import('./components/DevisTable'));
-// New lazy loaded component
 const ActionsSearchBar = lazy(() => import('./components/ActionsSearchBar'));
+const CreateQuoteModal = lazy(() => import('./CreateQuoteModal'));
 
-// Loading fallback component
+// Loading fallback components
 const LoadingFallback: React.FC = () => (
   <div className="w-full p-8 flex justify-center items-center">
     <div className="h-8 w-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
   </div>
 );
 
+// Modal loading fallback with backdrop for better UX
+const ModalLoadingFallback: React.FC = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50"></div>
+    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto m-4 p-6 flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-700">Chargement en cours...</p>
+      </div>
+    </div>
+  </div>
+);
+
 // --------------------------------------------------------
-// 2) Type your component
+// Main component
 // --------------------------------------------------------
 export default function Devis() {
   // -----------------------------
@@ -248,6 +259,10 @@ export default function Devis() {
     setShowCreateModal(true);
   }, []);
 
+  const handleCloseCreateModal = useCallback(() => {
+    setShowCreateModal(false);
+  }, []);
+
   // --------------------------------------------------------
   // Memoized helper functions
   // --------------------------------------------------------
@@ -396,7 +411,7 @@ export default function Devis() {
             <StatisticsCards statistics={statistics} />
           </Suspense>
 
-          {/* Actions & Search Bar - Now lazy loaded */}
+          {/* Actions & Search Bar */}
           <Suspense fallback={<LoadingFallback />}>
             <ActionsSearchBar 
               searchTerm={searchTerm}
@@ -492,7 +507,7 @@ export default function Devis() {
             )}
           </AnimatePresence>
 
-          {/* Devis Table - Lazy loaded component */}
+          {/* Devis Table */}
           <Suspense fallback={<LoadingFallback />}>
             <DevisTable 
               devis={devis}
@@ -516,11 +531,15 @@ export default function Devis() {
           </Suspense>
         </div>
         
-        {/* Create Quote Modal */}
-        <CreateQuoteModal 
-          isOpen={showCreateModal} 
-          onClose={() => setShowCreateModal(false)} 
-        />
+        {/* Lazy loaded modal with Suspense */}
+        {showCreateModal && (
+          <Suspense fallback={<ModalLoadingFallback />}>
+            <CreateQuoteModal 
+              isOpen={showCreateModal} 
+              onClose={handleCloseCreateModal} 
+            />
+          </Suspense>
+        )}
       </motion.div>
     </div>
   );

@@ -1,10 +1,9 @@
-import React, {  useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiX, 
   FiSave, 
-  FiFileText,
-  // FiInfo
+  FiFileText
 } from 'react-icons/fi';
 import { FaEuroSign } from "react-icons/fa";
 
@@ -14,16 +13,25 @@ import { useLineItems } from './hooks/useLineItems';
 import { useTotals } from './hooks/useTotals';
 import { useModalState, useClientSelectionState, useSaveConfirmation } from './hooks/useModalState';
 
-// Import components
+// Import primary components needed immediately
 import ClientSelection from './components/ClientSelection';
 import LineItems from './components/LineItems';
 import QuoteTotals from './components/QuoteTotals';
-import SaveConfirmation from './components/SaveConfirmation';
-import ClientAddModal from './components/modals/ClientAddModal';
-import ArticleSelectionModal from './components/modals/ArticleSelectionModal';
+
+// Lazy load components that aren't needed immediately
+const SaveConfirmation = lazy(() => import('./components/SaveConfirmation'));
+const ClientAddModal = lazy(() => import('./components/modals/ClientAddModal'));
+const ArticleSelectionModal = lazy(() => import('./components/modals/ArticleSelectionModal'));
 
 // Import types
 import { CreateQuoteModalProps, Client, Article, sampleClients } from './types';
+
+// Loading fallback for lazy-loaded components
+const LoadingFallback = () => (
+  <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50">
+    <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 // Modal component for creating a new quote
 const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) => {
@@ -37,9 +45,7 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
     openArticleSelection,
     selectArticle,
     updateLineItemsWithCalculatedAmounts,
-    lineItemsDependencies,
-    // selectedLineId,
-    // setSelectedLineId
+    lineItemsDependencies
   } = useLineItems();
   
   const { totals, updateTotalField, calculateTotals, totalsDependencies } = useTotals(lineItems);
@@ -58,8 +64,7 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
     setClientSearch,
     openDropdown,
     closeDropdown,
-    handleSearchChange,
-    // setClientTypeAndCloseDropdown 
+    handleSearchChange
   } = useClientSelectionState();
 
   // Calculate totals when line items change
@@ -140,344 +145,354 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({ isOpen, onClose }) 
     }
   };
 
+  // Don't render anything if modal is closed
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto"
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto"
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+      >
+        {/* Backdrop */}
+        <motion.div 
+          className="fixed inset-0 bg-black bg-opacity-50"
+          variants={backdropVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
+          onClick={onClose}
+        />
+
+        {/* Modal Content */}
+        <motion.div
+          className="relative bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto m-4"
+          variants={modalVariants}
         >
-          {/* Backdrop */}
-          <motion.div 
-            className="fixed inset-0 bg-black bg-opacity-50"
-            variants={backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            onClick={onClose}
-          />
-
-          {/* Modal Content */}
-          <motion.div
-            className="relative bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto m-4"
-            variants={modalVariants}
-          >
-            {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b bg-white">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-[#1B0353]/10 rounded-lg">
-                  <FiFileText className="w-6 h-6 text-[#1B0353]" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">Nouveau Devis</h2>
+          {/* Header */}
+          <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b bg-white">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-[#1B0353]/10 rounded-lg">
+                <FiFileText className="w-6 h-6 text-[#1B0353]" />
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <FiX className="w-6 h-6 text-gray-500" />
-              </button>
+              <h2 className="text-2xl font-bold text-gray-900">Nouveau Devis</h2>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <FiX className="w-6 h-6 text-gray-500" />
+            </button>
+          </div>
 
-            <div className="p-6">
-              {/* Top Section */}
-              <div className="bg-gray-50 p-6 rounded-xl mb-6 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* Left Column */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Numéro</label>
-                      <input
-                        type="text"
-                        name="numero"
-                        value={formData.numero}
-                        onChange={handleInputChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        placeholder="DEV-2025-XXX"
-                      />
-                    </div>
-                    
-                    {/* Client Selection Component */}
-                    <ClientSelection 
-                      clientSearch={clientSearch}
-                      showClientDropdown={showClientDropdown}
-                      filteredClients={filteredClients}
-                      onSearchChange={handleSearchChange}
-                      onFocus={openDropdown}
-                      onAddClient={handleAddClient}
-                      onSelectClient={handleSelectClient}
+          <div className="p-6">
+            {/* Top Section */}
+            <div className="bg-gray-50 p-6 rounded-xl mb-6 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Numéro</label>
+                    <input
+                      type="text"
+                      name="numero"
+                      value={formData.numero}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      placeholder="DEV-2025-XXX"
                     />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
-                        <select
-                          name="civilite"
-                          value={formData.civilite}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        >
-                          <option value="">Sélectionner</option>
-                          <option value="M.">M.</option>
-                          <option value="Mme">Mme</option>
-                          <option value="Dr">Dr</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Référence</label>
-                        <input
-                          type="text"
-                          name="reference"
-                          value={formData.reference}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                          placeholder="Référence"
-                        />
-                      </div>
-                    </div>
                   </div>
+                  
+                  {/* Client Selection Component */}
+                  <ClientSelection 
+                    clientSearch={clientSearch}
+                    showClientDropdown={showClientDropdown}
+                    filteredClients={filteredClients}
+                    onSearchChange={handleSearchChange}
+                    onFocus={openDropdown}
+                    onAddClient={handleAddClient}
+                    onSelectClient={handleSelectClient}
+                  />
 
-                  {/* Middle Column */}
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                      <input
-                        type="text"
-                        name="nom"
-                        value={formData.nom}
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
+                      <select
+                        name="civilite"
+                        value={formData.civilite}
                         onChange={handleInputChange}
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        placeholder="Nom"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-                      <input
-                        type="text"
-                        name="prenom"
-                        value={formData.prenom}
-                        onChange={handleInputChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        placeholder="Prénom"
-                      />
+                      >
+                        <option value="">Sélectionner</option>
+                        <option value="M.">M.</option>
+                        <option value="Mme">Mme</option>
+                        <option value="Dr">Dr</option>
+                      </select>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Référence</label>
                       <input
                         type="text"
-                        name="adresse"
-                        value={formData.adresse}
+                        name="reference"
+                        value={formData.reference}
                         onChange={handleInputChange}
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        placeholder="Adresse"
+                        placeholder="Référence"
                       />
-                    </div>
-                  </div>
-
-                  {/* Right Column */}
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
-                        <input
-                          type="text"
-                          name="codePostal"
-                          value={formData.codePostal}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                          placeholder="Code postal"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
-                        <input
-                          type="text"
-                          name="ville"
-                          value={formData.ville}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                          placeholder="Ville"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Etat</label>
-                        <select
-                          name="etat"
-                          value={formData.etat}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        >
-                          <option value="En cours">En cours</option>
-                          <option value="En préparation">En préparation</option>
-                          <option value="En attente">En attente</option>
-                          <option value="Accepté">Accepté</option>
-                          <option value="Refusé">Refusé</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                        <input
-                          type="date"
-                          name="date"
-                          value={formData.date}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Validité</label>
-                        <input
-                          type="date"
-                          name="validite"
-                          value={formData.validite}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Mode de règlement</label>
-                        <select
-                          name="modeReglement"
-                          value={formData.modeReglement}
-                          onChange={handleInputChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
-                        >
-                          <option value="Virement">Virement</option>
-                          <option value="Chèque">Chèque</option>
-                          <option value="Espèces">Espèces</option>
-                          <option value="Carte bancaire">Carte bancaire</option>
-                          <option value="Prélèvement">Prélèvement</option>
-                        </select>
-                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Middle Column */}
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Mode de calcul</label>
-                    <div className="flex space-x-4">
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          name="modeCalcul"
-                          value="HT"
-                          checked={formData.modeCalcul === 'HT'}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">HT</span>
-                      </label>
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          name="modeCalcul"
-                          value="TTC"
-                          checked={formData.modeCalcul === 'TTC'}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">TTC</span>
-                      </label>
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    <input
+                      type="text"
+                      name="nom"
+                      value={formData.nom}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      placeholder="Nom"
+                    />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Montant HT</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaEuroSign className="text-gray-400" />
-                      </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                    <input
+                      type="text"
+                      name="prenom"
+                      value={formData.prenom}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      placeholder="Prénom"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                    <input
+                      type="text"
+                      name="adresse"
+                      value={formData.adresse}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      placeholder="Adresse"
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
                       <input
                         type="text"
-                        value={totals.totalNetHT}
-                        readOnly
-                        className="w-full p-2.5 pl-10 border border-gray-300 rounded-lg bg-gray-100 text-gray-800 font-medium"
+                        name="codePostal"
+                        value={formData.codePostal}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                        placeholder="Code postal"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+                      <input
+                        type="text"
+                        name="ville"
+                        value={formData.ville}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                        placeholder="Ville"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Etat</label>
+                      <select
+                        name="etat"
+                        value={formData.etat}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      >
+                        <option value="En cours">En cours</option>
+                        <option value="En préparation">En préparation</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Accepté">Accepté</option>
+                        <option value="Refusé">Refusé</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={formData.date}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Validité</label>
+                      <input
+                        type="date"
+                        name="validite"
+                        value={formData.validite}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mode de règlement</label>
+                      <select
+                        name="modeReglement"
+                        value={formData.modeReglement}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all text-gray-800"
+                      >
+                        <option value="Virement">Virement</option>
+                        <option value="Chèque">Chèque</option>
+                        <option value="Espèces">Espèces</option>
+                        <option value="Carte bancaire">Carte bancaire</option>
+                        <option value="Prélèvement">Prélèvement</option>
+                      </select>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Line Items Component */}
-              <LineItems 
-                lineItems={lineItems}
-                onLineItemChange={handleLineItemChange}
-                onRemoveLineItem={removeLineItem}
-                onAddLineItem={addLineItem}
-                onOpenArticleSelection={handleOpenArticleSelection}
-              />
-
-              {/* Quote Totals Component */}
-              <QuoteTotals 
-                totals={totals}
-                onUpdateTotalField={updateTotalField}
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="sticky bottom-0 z-10 flex justify-end items-center p-6 border-t bg-gray-50">
-              <div className="flex space-x-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onClose}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
-                >
-                  Annuler
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-4 py-2 text-white rounded-lg shadow-sm hover:shadow-md transition-all flex items-center"
-                  style={{ backgroundColor: '#1B0353' }}
-                  onClick={handleSaveQuote}
-                >
-                  <FiSave className="mr-2" />
-                  Enregistrer le devis
-                </motion.button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mode de calcul</label>
+                  <div className="flex space-x-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="modeCalcul"
+                        value="HT"
+                        checked={formData.modeCalcul === 'HT'}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">HT</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="modeCalcul"
+                        value="TTC"
+                        checked={formData.modeCalcul === 'TTC'}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">TTC</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Montant HT</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaEuroSign className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={totals.totalNetHT}
+                      readOnly
+                      className="w-full p-2.5 pl-10 border border-gray-300 rounded-lg bg-gray-100 text-gray-800 font-medium"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Save confirmation toast */}
-            <AnimatePresence>
-              {showSaveConfirmation && <SaveConfirmation show={showSaveConfirmation} />}
-            </AnimatePresence>
-          </motion.div>
 
-          {/* Client/Prospect Add Modal */}
+            {/* Line Items Component */}
+            <LineItems 
+              lineItems={lineItems}
+              onLineItemChange={handleLineItemChange}
+              onRemoveLineItem={removeLineItem}
+              onAddLineItem={addLineItem}
+              onOpenArticleSelection={handleOpenArticleSelection}
+            />
+
+            {/* Quote Totals Component */}
+            <QuoteTotals 
+              totals={totals}
+              onUpdateTotalField={updateTotalField}
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="sticky bottom-0 z-10 flex justify-end items-center p-6 border-t bg-gray-50">
+            <div className="flex space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
+              >
+                Annuler
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 text-white rounded-lg shadow-sm hover:shadow-md transition-all flex items-center"
+                style={{ backgroundColor: '#1B0353' }}
+                onClick={handleSaveQuote}
+              >
+                <FiSave className="mr-2" />
+                Enregistrer le devis
+              </motion.button>
+            </div>
+          </div>
+          
+          {/* Lazy loaded save confirmation toast */}
           <AnimatePresence>
-            {clientAddModal.isOpen && (
+            {showSaveConfirmation && (
+              <Suspense fallback={<LoadingFallback />}>
+                <SaveConfirmation show={showSaveConfirmation} />
+              </Suspense>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Lazy loaded modals */}
+        {/* Client/Prospect Add Modal */}
+        <AnimatePresence>
+          {clientAddModal.isOpen && (
+            <Suspense fallback={<LoadingFallback />}>
               <ClientAddModal 
                 isOpen={clientAddModal.isOpen}
                 onClose={clientAddModal.close}
                 clientType={clientType}
               />
-            )}
-          </AnimatePresence>
-          
-          {/* Article Selection Modal */}
-          <AnimatePresence>
-            {articleSelectionModal.isOpen && (
+            </Suspense>
+          )}
+        </AnimatePresence>
+        
+        {/* Article Selection Modal */}
+        <AnimatePresence>
+          {articleSelectionModal.isOpen && (
+            <Suspense fallback={<LoadingFallback />}>
               <ArticleSelectionModal 
                 isOpen={articleSelectionModal.isOpen}
                 onClose={articleSelectionModal.close}
                 onSelectArticle={handleSelectArticle}
               />
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
+            </Suspense>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </AnimatePresence>
   );
 };

@@ -1,5 +1,5 @@
 // src/app/dashboard/document-ventes/factures-acompte/CreateDepositInvoiceModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSave } from 'react-icons/fi';
 
@@ -11,18 +11,20 @@ import useFormData from './hooks/useFormData';
 import useLineItems from './hooks/useLineItems';
 import useTotals from './hooks/useTotals';
 
-// Components
+// Core components - imported directly because needed immediately
 import InvoiceHeader from './components/InvoiceHeader';
 import ProjectSection from './components/ProjectSection';
 import ClientInfoSection from './components/ClientInfoSection';
 import LineItemsTable from './components/LineItemsTable';
 import InvoiceTotals from './components/InvoiceTotals';
-import ClientModal from './components/modals/ClientModal';
-import ProjectSelectionModal from './components/modals/ProjectSelectionModal';
-import ArticleSelectionModal from './components/modals/ArticleSelectionModal';
-import SaveConfirmation from './components/SaveConfirmation';
 
-// Sample data
+// Lazy loaded components - these will only be loaded when needed
+const ClientModal = lazy(() => import('./components/modals/ClientModal'));
+const ProjectSelectionModal = lazy(() => import('./components/modals/ProjectSelectionModal'));
+const ArticleSelectionModal = lazy(() => import('./components/modals/ArticleSelectionModal'));
+const SaveConfirmation = lazy(() => import('./components/SaveConfirmation'));
+
+// Sample data - consider moving to a context or server component if possible
 import {
   clients,
   projetsList,
@@ -30,12 +32,19 @@ import {
   moyensPaiement,
 } from './data/sampleData';
 
+// Simple loading component for lazy loaded modals
+const ModalLoadingFallback = () => (
+  <div className="fixed inset-0 bg-white/10 flex items-center justify-center">
+    <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
+
 const CreateDepositInvoiceModal: React.FC<CreateDepositInvoiceModalProps> = ({
   isOpen,
   onClose,
 }) => {
   /** ------------------------------------------------
-   *  Hooks – must be called unconditionally (top‑level)
+   *  Hooks – must be called unconditionally (top‑level)
    * ------------------------------------------------*/
   // Modal visibility
   const [showClientModal, setShowClientModal] = useState(false);
@@ -58,7 +67,6 @@ const CreateDepositInvoiceModal: React.FC<CreateDepositInvoiceModalProps> = ({
     showArticleModal,
     setShowArticleModal,
     handleLineItemChange,
-    /* addLineItem,  <-- removed, wasn’t used */
     removeLineItem,
     openArticleSelection,
     selectArticle,
@@ -101,7 +109,7 @@ const CreateDepositInvoiceModal: React.FC<CreateDepositInvoiceModalProps> = ({
   // keep line‑item amounts in sync
   useEffect(() => {
     updateLineItemAmounts();
-  }, [lineItems, updateLineItemAmounts]); // ← added missing dep
+  }, [lineItems, updateLineItemAmounts]);
 
   /** ------------------------------------------------
    *  Event handlers
@@ -164,7 +172,7 @@ const CreateDepositInvoiceModal: React.FC<CreateDepositInvoiceModalProps> = ({
 
   const handleSaveDepositInvoice = () => {
     setShowSaveConfirmation(true);
-    console.log('Enregistrement de la facture d’acompte:', { formData, lineItems, totals });
+    console.log('Enregistrement de la facture dacompte:', { formData, lineItems, totals });
 
     setTimeout(() => {
       setShowSaveConfirmation(false);
@@ -258,25 +266,46 @@ const CreateDepositInvoiceModal: React.FC<CreateDepositInvoiceModalProps> = ({
             </motion.button>
           </div>
 
-          {/* Nested modals & toast */}
-          <ClientModal isOpen={showClientModal} onClose={() => setShowClientModal(false)} clientType={clientType} />
-          <ProjectSelectionModal
-            isOpen={showProjectModal}
-            onClose={() => setShowProjectModal(false)}
-            projectSearch={projectSearch}
-            setProjectSearch={setProjectSearch}
-            filteredProjects={filteredProjects}
-            selectProject={selectProject}
-          />
-          <ArticleSelectionModal
-            isOpen={showArticleModal}
-            onClose={() => setShowArticleModal(false)}
-            selectArticle={selectArticle}
-            articles={articlesCommuns}
-          />
-          <AnimatePresence>
-            <SaveConfirmation isOpen={showSaveConfirmation} />
-          </AnimatePresence>
+          {/* Lazy loaded nested modals & toast */}
+          {showClientModal && (
+            <Suspense fallback={<ModalLoadingFallback />}>
+              <ClientModal 
+                isOpen={showClientModal} 
+                onClose={() => setShowClientModal(false)} 
+                clientType={clientType} 
+              />
+            </Suspense>
+          )}
+          
+          {showProjectModal && (
+            <Suspense fallback={<ModalLoadingFallback />}>
+              <ProjectSelectionModal
+                isOpen={showProjectModal}
+                onClose={() => setShowProjectModal(false)}
+                projectSearch={projectSearch}
+                setProjectSearch={setProjectSearch}
+                filteredProjects={filteredProjects}
+                selectProject={selectProject}
+              />
+            </Suspense>
+          )}
+          
+          {showArticleModal && (
+            <Suspense fallback={<ModalLoadingFallback />}>
+              <ArticleSelectionModal
+                isOpen={showArticleModal}
+                onClose={() => setShowArticleModal(false)}
+                selectArticle={selectArticle}
+                articles={articlesCommuns}
+              />
+            </Suspense>
+          )}
+          
+          {showSaveConfirmation && (
+            <Suspense fallback={<ModalLoadingFallback />}>
+              <SaveConfirmation isOpen={showSaveConfirmation} />
+            </Suspense>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
