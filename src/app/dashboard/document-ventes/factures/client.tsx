@@ -1,23 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 
 // Types
 import { sampleInvoices, ViewMode } from './types';
 
-// Components
+// Directly import components needed for initial render
 import Header from './components/Header';
-import StatisticsCards from './components/StatisticsCards';
 import ActionBar from './components/ActionBar';
-import FilterPanel from './components/FilterPanel';
-import ExportPanel from './components/ExportPanel';
-import BulkActionBar from './components/BulkActionBar';
-import InvoicesTable from './components/InvoicesTable';
-import CreateInvoiceModal from './CreateInvoiceModal';
-import CreateCreditNoteModal from './CreateCreditNoteModal';
 
-// Hooks
+// Dynamically import components that can be deferred
+const StatisticsCards = dynamic(() => import('./components/StatisticsCards'), {
+  loading: () => <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                   {[1,2,3].map(i => (
+                     <div key={i} className="animate-pulse bg-gray-200 h-24 rounded"></div>
+                   ))}
+                 </div>
+});
+
+const FilterPanel = dynamic(() => import('./components/FilterPanel'));
+const ExportPanel = dynamic(() => import('./components/ExportPanel'));
+const BulkActionBar = dynamic(() => import('./components/BulkActionBar'));
+const InvoicesTable = dynamic(() => import('./components/InvoicesTable'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
+});
+
+// Lazily load modals as they aren't shown initially
+const CreateInvoiceModal = dynamic(() => import('./CreateInvoiceModal'));
+const CreateCreditNoteModal = dynamic(() => import('./CreateCreditNoteModal'));
+
+// Hooks - these are likely small and don't need lazy loading
 import { useInvoiceFilter } from './hooks/useInvoiceFilter';
 import { useInvoiceSort } from './hooks/useInvoiceSort';
 import { useInvoiceSelection } from './hooks/useInvoiceSelection';
@@ -33,16 +47,16 @@ const containerVariants = {
   },
 };
 
-const FacturesClient: React.FC = () => {
+const FacturesClient = () => {
   // Date range picker for export
-  const [showDateRangePicker, setShowDateRangePicker] = useState<boolean>(false);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('comfortable');
   
   // Modal states
-  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-  const [showCreateCreditNoteModal, setShowCreateCreditNoteModal] = useState<boolean>(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateCreditNoteModal, setShowCreateCreditNoteModal] = useState(false);
 
   // Custom hooks for invoice operations
   const {
@@ -96,7 +110,13 @@ const FacturesClient: React.FC = () => {
         <Header />
 
         {/* Statistics Cards */}
-        <StatisticsCards />
+        <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {[1,2,3].map(i => (
+                                <div key={i} className="animate-pulse bg-gray-200 h-24 rounded"></div>
+                              ))}
+                            </div>}>
+          <StatisticsCards />
+        </Suspense>
 
         {/* Actions & Search Bar */}
         <ActionBar
@@ -114,49 +134,68 @@ const FacturesClient: React.FC = () => {
         />
 
         {/* Filter Panel */}
-        <FilterPanel
-          showFilters={showFilters}
-          selectedStatus={selectedStatus}
-          setSelectedStatus={setSelectedStatus}
-          selectedPeriod={selectedPeriod}
-          setSelectedPeriod={setSelectedPeriod}
-          selectedClient={selectedClient}
-          setSelectedClient={setSelectedClient}
-          resetFilters={resetFilters}
-        />
+        {showFilters && (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-24 rounded"></div>}>
+            <FilterPanel
+              showFilters={showFilters}
+              selectedStatus={selectedStatus}
+              setSelectedStatus={setSelectedStatus}
+              selectedPeriod={selectedPeriod}
+              setSelectedPeriod={setSelectedPeriod}
+              selectedClient={selectedClient}
+              setSelectedClient={setSelectedClient}
+              resetFilters={resetFilters}
+            />
+          </Suspense>
+        )}
 
         {/* Export Panel */}
-        <ExportPanel
-          showDateRangePicker={showDateRangePicker}
-          setShowDateRangePicker={setShowDateRangePicker}
-        />
+        {showDateRangePicker && (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-16 rounded"></div>}>
+            <ExportPanel
+              showDateRangePicker={showDateRangePicker}
+              setShowDateRangePicker={setShowDateRangePicker}
+            />
+          </Suspense>
+        )}
 
         {/* Bulk Actions */}
-        <BulkActionBar selectedInvoices={selectedInvoices} />
+        {selectedInvoices.length > 0 && (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded"></div>}>
+            <BulkActionBar selectedInvoices={selectedInvoices} />
+          </Suspense>
+        )}
 
         {/* Invoices Table */}
-        <InvoicesTable
-          invoices={sampleInvoices}
-          filteredInvoices={sortedInvoices}
-          sortField={sortField}
-          sortDirection={sortDirection}
-          handleSort={handleSort}
-          selectAll={selectAll}
-          handleSelectAll={handleSelectAll}
-          selectedInvoices={selectedInvoices}
-          handleCheckboxChange={handleCheckboxChange}
-          resetFilters={resetFilters}
-        />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded"></div>}>
+          <InvoicesTable
+            invoices={sampleInvoices}
+            filteredInvoices={sortedInvoices}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            handleSort={handleSort}
+            selectAll={selectAll}
+            handleSelectAll={handleSelectAll}
+            selectedInvoices={selectedInvoices}
+            handleCheckboxChange={handleCheckboxChange}
+            resetFilters={resetFilters}
+          />
+        </Suspense>
 
-        {/* Modals */}
-        <CreateInvoiceModal 
-          isOpen={showCreateModal} 
-          onClose={() => setShowCreateModal(false)} 
-        />
-        <CreateCreditNoteModal
-          isOpen={showCreateCreditNoteModal} 
-          onClose={() => setShowCreateCreditNoteModal(false)} 
-        />
+        {/* Modals - only load them when they're visible */}
+        {showCreateModal && (
+          <CreateInvoiceModal 
+            isOpen={showCreateModal} 
+            onClose={() => setShowCreateModal(false)} 
+          />
+        )}
+        
+        {showCreateCreditNoteModal && (
+          <CreateCreditNoteModal
+            isOpen={showCreateCreditNoteModal} 
+            onClose={() => setShowCreateCreditNoteModal(false)} 
+          />
+        )}
       </div>
     </motion.div>
   );
