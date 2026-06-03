@@ -77,7 +77,8 @@ export default function PDFFormPage() {
     try {
       const randomNumber = Math.floor(Math.random() * 1000000);
 
-      const pdfUrl = 'https://cdn.prod.website-files.com/669d0652d02654086ead4f5f/66db352c6cb87b0be42c9820_BDC2_final.pdf';
+      // const pdfUrl = 'https://cdn.prod.website-files.com/669d0652d02654086ead4f5f/66db352c6cb87b0be42c9820_BDC2_final.pdf';
+      const pdfUrl = '/bdc_vierge1.pdf';
       const pdfDoc = await PDFDocument.load(await (await fetch(pdfUrl)).arrayBuffer());
 
       const form = pdfDoc.getForm();
