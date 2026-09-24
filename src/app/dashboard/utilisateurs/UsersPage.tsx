@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, JSX } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from "framer-motion";
 import {
   FiUsers,
   FiUserPlus,

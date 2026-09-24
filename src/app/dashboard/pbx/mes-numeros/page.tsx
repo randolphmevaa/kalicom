@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState } from 'react';
+import type { Variants } from "framer-motion";
 import { motion } from 'framer-motion';
 import {
   FiSearch,
@@ -62,7 +63,7 @@ const headerVariants = {
   }
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (custom: number) => ({
     opacity: 1,

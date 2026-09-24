@@ -3,6 +3,7 @@
 import React from "react";
 import { Prospect } from "../../types/crm-types";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 import {
   FiCheckSquare,
   FiSquare,
@@ -66,7 +67,7 @@ interface ProspectGridViewProps {
 }
 
 // Card animation variants
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, scale: 0.8, y: 20 },
   visible: { 
     opacity: 1, 

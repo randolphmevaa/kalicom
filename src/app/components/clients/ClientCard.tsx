@@ -7,9 +7,10 @@ import { FiMail, FiPhone, FiMapPin, FiMessageCircle, FiEdit, FiSend, FiCheckSqua
 import { FaEuroSign } from 'react-icons/fa';
 import { Client } from './types';
 import { getStatusColor, getTagColor, getInitials, getStatusBadgeColor } from './utils';
+import type { Variants } from "framer-motion";
 
 // Optimized animation variants
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, scale: 0.8, y: 20 },
   visible: { 
     opacity: 1, 

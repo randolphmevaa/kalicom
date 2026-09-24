@@ -1,4 +1,5 @@
 // app/dashboard/pbx/mes-lignes/utils/animations.ts
+import type { Variants } from "framer-motion";
 export const headerVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: { 
@@ -11,7 +12,7 @@ export const headerVariants = {
     }
   };
   
-  export const cardVariants = {
+  export const cardVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: (custom: number) => ({
       opacity: 1,
