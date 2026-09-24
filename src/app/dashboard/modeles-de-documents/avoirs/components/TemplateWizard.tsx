@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   FiArrowLeft, 
   FiCheck, 
@@ -74,7 +74,7 @@ export const TemplateWizard: React.FC<TemplateWizardProps> = ({
   onPreviousStep
 }) => {
   // Modal and animation variants
-  const modalVariants = {
+  const modalVariants: Variants = {
     hidden: { opacity: 0, scale: 0.95, y: 20 },
     visible: { 
       opacity: 1, 
@@ -91,7 +91,7 @@ export const TemplateWizard: React.FC<TemplateWizardProps> = ({
   };
 
   // Content animation variants
-  const contentVariants = {
+  const contentVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 

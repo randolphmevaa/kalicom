@@ -145,12 +145,12 @@ interface Role {
 }
 
 // Animation variants
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 }
 };
 
-const slideUp = {
+const slideUp: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: { y: 0, opacity: 1 }
 };
@@ -1062,7 +1062,7 @@ const saveNewUser = () => {
   };
   
   // Animation variants for new header
-  const headerVariants = {
+  const headerVariants: Variants = {
     hidden: { opacity: 0, y: -20 },
     show: {
       opacity: 1,
@@ -1072,7 +1072,7 @@ const saveNewUser = () => {
   };
 
   // Container variants for staggered animations
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,

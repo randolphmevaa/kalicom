@@ -51,7 +51,7 @@ interface LineOption {
 }
 
 // Animation variants
-const headerVariants = {
+const headerVariants: Variants = {
   hidden: { opacity: 0, y: -20 },
   visible: { 
     opacity: 1, 
@@ -75,7 +75,7 @@ const cardVariants: Variants = {
   })
 };
 
-const tableVariants = {
+const tableVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -86,7 +86,7 @@ const tableVariants = {
   }
 };
 
-const rowVariants = {
+const rowVariants: Variants = {
   hidden: { opacity: 0, x: -10 },
   visible: { 
     opacity: 1, 

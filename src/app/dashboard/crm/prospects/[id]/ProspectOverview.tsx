@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   FiHome, FiTruck, FiBriefcase, FiUser, FiDatabase, 
   FiBookmark, FiUsers, FiEdit, FiPlus, FiCheckSquare, 
@@ -175,7 +175,7 @@ const ProspectOverview: React.FC<ProspectOverviewProps> = ({ prospect, loading }
   };
   
   // Animation variants
-  const sectionAnimation = {
+  const sectionAnimation: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({ 
       opacity: 1, 

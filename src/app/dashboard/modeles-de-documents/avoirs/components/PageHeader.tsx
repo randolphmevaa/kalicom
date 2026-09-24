@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import {
   FiPrinter,
   FiKey,
@@ -23,7 +23,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   onSetDefault,
   onCreateNew
 }) => {
-  const headerVariants = {
+  const headerVariants: Variants = {
     hidden: { opacity: 0, y: -20 },
     show: {
       opacity: 1,

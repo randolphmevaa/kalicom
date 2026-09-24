@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   FiClock,
   FiUserPlus,
@@ -374,7 +374,7 @@ export default function PosteDeTravail() {
   };
   
   // Animate the bar container
-  const phoneBarVariants = {
+  const phoneBarVariants: Variants = {
     initial: { opacity: 0, y: 10 },
     animate: {
       opacity: 1,
@@ -395,7 +395,7 @@ export default function PosteDeTravail() {
     }
   };
   
-  const expandedSectionVariants = {
+  const expandedSectionVariants: Variants = {
     hidden: { opacity: 0, height: 0, overflow: 'hidden' },
     visible: { 
       opacity: 1, 

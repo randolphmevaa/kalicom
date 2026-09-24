@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, ChangeEvent, lazy, Suspense, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { 
   FiClock,
   FiCheck,
@@ -366,7 +366,7 @@ export default function Devis() {
   // --------------------------------------------------------
   // Animation variants
   // --------------------------------------------------------
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -376,7 +376,7 @@ export default function Devis() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,

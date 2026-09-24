@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { 
   FiX, 
   FiSave, 
@@ -126,12 +126,12 @@ const handleSelectInvoice = (invoice: Invoice) => {
   };
 
   // Animation variants
-  const backdropVariants = {
+  const backdropVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
   };
 
-  const modalVariants = {
+  const modalVariants: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.95 },
     visible: { 
       opacity: 1, 

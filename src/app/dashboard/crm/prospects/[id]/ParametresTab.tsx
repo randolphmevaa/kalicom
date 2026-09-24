@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import { 
   FiEdit,
   // FiSettings,
@@ -52,7 +52,7 @@ const ParametresTab: React.FC<ParametresProps> = ({ prospect, loading }) => {
   const [selectedStatus, setSelectedStatus] = useState<string>(prospect?.status || "active");
 
   // Animation variants
-  const sectionAnimation = {
+  const sectionAnimation: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({ 
       opacity: 1, 

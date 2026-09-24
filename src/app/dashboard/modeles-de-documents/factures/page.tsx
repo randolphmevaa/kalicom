@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, lazy } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import { FiFileText, FiInfo, FiPrinter, FiKey, FiStar, FiPlus } from 'react-icons/fi';
 
 import TemplateList from './components/TemplateList';
@@ -16,7 +16,7 @@ const TemplateWizard = lazy(() => import('./components/TemplateWizard'));
 const NotificationToast = lazy(() => import('./components/Modals/NotificationToast'));
 
 // Animation variants
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -26,7 +26,7 @@ const containerVariants = {
   },
 };
 
-const headerVariants = {
+const headerVariants: Variants = {
   hidden: { opacity: 0, y: -20 },
   show: {
     opacity: 1,

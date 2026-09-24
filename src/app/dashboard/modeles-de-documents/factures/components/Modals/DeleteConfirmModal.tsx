@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import { FiX } from 'react-icons/fi';
 import { DeleteConfirmModalProps } from '../../types';
 
-const modalVariants = {
+const modalVariants: Variants = {
   hidden: { opacity: 0, scale: 0.8 },
   visible: { 
     opacity: 1, 

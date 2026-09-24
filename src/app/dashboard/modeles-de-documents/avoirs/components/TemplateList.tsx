@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import { FiStar, FiEyeOff, FiChevronRight, FiCalendar, FiSearch, FiEye, FiInfo } from 'react-icons/fi';
 import { CreditNoteTemplate } from '../page';
 
@@ -25,7 +25,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   setShowHiddenTemplates,
   totalTemplates
 }) => {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -35,7 +35,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
     },
   };
 
-  const listItemVariants = {
+  const listItemVariants: Variants = {
     hidden: { opacity: 0, x: -10 },
     show: { 
       opacity: 1, 

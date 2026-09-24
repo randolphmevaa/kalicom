@@ -1,4 +1,5 @@
 import { Devis, DevisStatus, SortField, Statistic } from '../types';
+import type { Variants } from 'framer-motion';
 // import { ReactNode } from 'react';
 
 // Get color for status badge
@@ -53,7 +54,7 @@ export const containerVariants = {
   },
 };
 
-export const itemVariants = {
+export const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   FiSearch,
   FiPlus,
@@ -954,7 +954,7 @@ export default function ChatPage() {
     </div>
   );
   
-  const bubbleVariants = {
+  const bubbleVariants: Variants = {
     hidden: { opacity: 0, scale: 0.8, y: 20 },
     visible: { 
       opacity: 1, 
@@ -966,13 +966,13 @@ export default function ChatPage() {
   };
   
   // Animation variants 
-  const listItemVariants = {
+  const listItemVariants: Variants = {
     hidden: { opacity: 0, x: -20 },
     visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 25 } },
     hover: { scale: 1.02, x: 5, transition: { type: "spring", stiffness: 400, damping: 25 } }
   };
   
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { 
       opacity: 1,
@@ -982,7 +982,7 @@ export default function ChatPage() {
     }
   };
 
-  const modalVariants = {
+  const modalVariants: Variants = {
     hidden: { opacity: 0, scale: 0.9 },
     visible: { 
       opacity: 1, 
@@ -1002,7 +1002,7 @@ export default function ChatPage() {
     }
   };
 
-  const backdropVariants = {
+  const backdropVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
     exit: { opacity: 0 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import { FiCheck, FiClock, FiInfo, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { FaEuroSign } from 'react-icons/fa6';
 import { Statistic } from '../types';
@@ -17,7 +17,7 @@ import { Statistic } from '../types';
 //   },
 // };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,

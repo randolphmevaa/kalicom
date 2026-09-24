@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { FiMaximize2, FiMessageSquare, FiMinimize, FiSend, FiUser, FiX } from "react-icons/fi";
 // import { useRouter } from 'next/navigation';
@@ -87,7 +87,7 @@ export const KalicomChatWidget = () => {
   };
   
   // Elegant entry animation for the chat button
-  const buttonVariants = {
+  const buttonVariants: Variants = {
     hidden: { opacity: 0, scale: 0.8, y: 20 },
     visible: { 
       opacity: 1, 
@@ -103,7 +103,7 @@ export const KalicomChatWidget = () => {
   };
   
   // Window animations
-  const windowVariants = {
+  const windowVariants: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.9 },
     visible: { 
       opacity: 1, 

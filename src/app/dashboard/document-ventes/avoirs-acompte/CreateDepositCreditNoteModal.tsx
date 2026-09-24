@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { 
 //   FiPlus, 
   FiX, 
@@ -223,12 +223,12 @@ const CreateDepositCreditNoteModal: React.FC<CreateDepositCreditNoteModalProps> 
   };
 
   // Animation variants
-  const backdropVariants = {
+  const backdropVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
   };
 
-  const modalVariants = {
+  const modalVariants: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.95 },
     visible: { 
       opacity: 1, 
@@ -250,7 +250,7 @@ const CreateDepositCreditNoteModal: React.FC<CreateDepositCreditNoteModalProps> 
     }
   };
   
-  const confirmationVariants = {
+  const confirmationVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 

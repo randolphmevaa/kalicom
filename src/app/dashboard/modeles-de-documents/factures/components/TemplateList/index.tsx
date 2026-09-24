@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion';
+import { motion, Variants } from "framer-motion";
 import { FiSearch, FiInfo, FiEye, FiStar, FiEyeOff, FiCalendar, FiChevronRight } from 'react-icons/fi';
 import { TemplateListProps } from '../../types';
 import { memo } from 'react';
 
 // Animation variants
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -14,7 +14,7 @@ const containerVariants = {
   },
 };
 
-const listItemVariants = {
+const listItemVariants: Variants = {
   hidden: { opacity: 0, x: -10 },
   show: { 
     opacity: 1, 
