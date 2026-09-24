@@ -15,7 +15,6 @@ interface FormData {
   website: string;
   delegateName: string;
 
-  // Campaign details
   surfaceChoisie: string;
   secteurActivites: string;
   montantHT: string;
